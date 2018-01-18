@@ -1,0 +1,1 @@
+Scriptname AFT:TweakDiamondInterjections extends AFT:TweakInterjectionScript

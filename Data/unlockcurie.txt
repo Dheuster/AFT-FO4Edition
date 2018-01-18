@@ -1,0 +1,44 @@
+; USAGE: Open Console and type: bat unlockcurie
+;
+; NOTES: To open Vault81 later, open console, click on 
+;        vault door and type:
+;
+;        SendAnimEvent "Stage2"
+
+AddToMap 47650 1
+SetStage V81_00_Intro 30
+SetStage V81_00_Intro 51
+SetStage V81_00_Intro 50
+SetStage V81_00_Intro 55
+SetStage V81_00_Intro 320
+SetStage V81_00_Intro 330
+SetStage V81_00_Intro 340
+SetStage V81_00_Intro 500
+SetStage DialogueVault81 100
+SetStage DialogueVault81 102
+SetStage DialogueVault81 12
+SetStage DialogueVault81 13
+SetStage DialogueVault81 15
+SetStage V81_01 25
+SetStage V81_01 100
+SetStage MS19 3
+SetStage MS19 35
+SetStage MS19 60
+SetStage MS19 70
+SetStage V81_01 200
+SetStage V81_01 300
+SetStage MS19 150
+SetStage MS19MiscSeeForsythe 100
+SetStage MS19 710
+SetStage MS19 720
+SetStage MS19 750
+SetStage MS19 800
+SetStage MS19 900
+SetStage MS19 1000
+SetStage COMCurie 83
+
+
+; once script has ran, in console type:
+;
+; prid 102249
+; moveto player

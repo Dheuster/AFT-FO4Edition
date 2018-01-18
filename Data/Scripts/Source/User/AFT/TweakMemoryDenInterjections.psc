@@ -1,0 +1,1 @@
+Scriptname AFT:TweakMemoryDenInterjections extends AFT:TweakInterjectionScript

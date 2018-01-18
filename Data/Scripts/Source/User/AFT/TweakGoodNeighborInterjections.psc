@@ -1,0 +1,1 @@
+Scriptname AFT:TweakGoodNeighborInterjections extends AFT:TweakInterjectionScript
