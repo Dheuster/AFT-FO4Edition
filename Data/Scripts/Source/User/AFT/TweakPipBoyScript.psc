@@ -145,6 +145,8 @@ Quest    Property pCOMCurieQuest              Auto Const
 Quest    Property pFollowers                  Auto Const
 Quest    Property pTweakNames                 Auto Const
 Quest    Property pTweakVisualChoice          Auto Const
+Quest    Property pTweakGatherLooseItems      Auto Const
+
 
 Terminal Property pTweakRootTerminal          Auto Const
 Terminal Property pTweakImportTerminal        Auto Const
@@ -1602,10 +1604,7 @@ Function Test()
 	Utility.wait(0.1)
 			
 	If TerminalTarget
-		
-		GatherLooseItems()
-		return
-		
+				
 		; Scene interception?
 		; Scene is owned by Quest. We know we can't get Register for Quest stages until the quest is running. 
 		; So scenes may be similar.
@@ -2585,7 +2584,6 @@ Function ActivateAft(Actor npc = None)
 			if (0 == theCommand)
 				pTweakUnmanagedTerminal.ShowOnPipBoy()
 			else
-				; TODO: Check that it is an allowed command:
 				; GetBehindMe (1)
 				; Trade
 				; Wait Here
@@ -2664,6 +2662,8 @@ Function handleCommand(float theCommand)
 				; -------
 				if 1.0 == theCommand
 					SummonRelay()
+				elseif 125 == theCommand
+					GatherLooseItems()
 				elseif 2.0 == theCommand
 					pTweakFollowerScript.SetFollowerStayByNameId(0)
 				elseif 3.0 == theCommand ; AllHangout
@@ -3066,8 +3066,6 @@ Function handleCommand(float theCommand)
 				AssignNameSetup()
 				pTweakSelectNameTerminal.ShowOnPipBoy()	
 			endif
-
-			123			
 			
 		endIf		
 	endif	
@@ -3351,31 +3349,22 @@ EndFunction
 
 Function GatherLooseItems()
 
-    ; Food, Ammo, PipPistols, Turrets, Additional COntainers (Bags, Mailboxes, Stimpack/Med containers and
-	; bathroom mirrors)
-
-	; TODO: Ideally we would funnel the item to an intermediate container with 
-	; handlers so we could process them and decide if they are Quest Items, 
-	; Owned or Unique and possible handle them. Either put them back (Owned)
-	; or forward them to the player (Quest/Unique)
+	Trace("GatherLooseItems() v2 Called")
 	
-	if !TerminalTarget
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("GatherLooseItems", params)
 		return
 	endif
-	
-	FormList TweakConstructed_Cont = Game.GetFormFromFile(0x0100B02F,"AmazingFollowerTweaks.esp") as FormList
-	FormList TweakNonConstructed_Cont = Game.GetFormFromFile(0x0105B53C,"AmazingFollowerTweaks.esp") as FormList
-	
-	ScanContainersForItems(TweakConstructed_Cont,"TweakConstructed_Cont", TerminalTarget)
-	ScanContainersForItems(TweakNonConstructed_Cont, "TweakNonConstructed_Cont", TerminalTarget)
-	ScanActorsForItems(TerminalTarget)
-	
-	ScanForItems(Game.GetFormFromFile(0x010383F7,"AmazingFollowerTweaks.esp") as FormList, "TweakDedupe1", TerminalTarget)
-	ScanForItems(Game.GetFormFromFile(0x010161FB,"AmazingFollowerTweaks.esp") as FormList, "TweakDedupe2", TerminalTarget)
-	ScanForItems(Game.GetFormFromFile(0x010161FC,"AmazingFollowerTweaks.esp") as FormList, "TweakDedupe3", TerminalTarget)
-	ScanForItems(Game.GetFormFromFile(0x010161FD,"AmazingFollowerTweaks.esp") as FormList, "TweakDedupe4", TerminalTarget)
-	ScanForItems(Game.GetFormFromFile(0x010383F8,"AmazingFollowerTweaks.esp") as FormList, "TweakDedupeStackable", TerminalTarget)
-	
+		
+	AFT:TweakGatherLooseScript pTweakGatherLoose = pTweakGatherLooseItems as AFT:TweakGatherLooseScript
+	if pTweakGatherLoose
+		Trace("Calling GatherLooseItems")
+		pTweakGatherLoose.GatherLooseItems(TerminalTarget)
+	else
+		Trace("Aborting. pTweakGatherLoose Cast Failure")
+	endIf
+		
 EndFunction
 
 Function ScanActorsForItems(Actor target=None)
