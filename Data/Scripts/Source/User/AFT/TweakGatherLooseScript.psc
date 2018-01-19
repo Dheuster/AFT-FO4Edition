@@ -169,8 +169,8 @@ Function ScanContainersForItems(FormList containers, string name, ObjectReferenc
 		moveit = True
 		result = results[i]
 		if (result)
-			Trace("Found Container [" + result + "] Lock Level [" + result.GetLockLevel() + "]")
-			if (result.GetLockLevel() > 0)
+			Trace("Found Container [" + result + "] IsLocked [" + result.IsLocked() + "] Lock Level [" + result.GetLockLevel() + "]")
+			if (result.IsLocked())
 				Trace("Rejected: Container is Locked [" + result.GetLockLevel() + "]")
 				moveit = False
 				lockedCount += 1
@@ -356,7 +356,7 @@ Function ScanForLooseItems(FormList list, string name, ObjectReference target)
 					elseIf (containedin && !(containedin as Actor).IsDead())
 						Trace("Rejected: Container is Actor [" + (containedin as Actor) + "]")
 						moveit = False
-					elseIf (containedin.GetLockLevel() > 0)
+					elseIf (containedin.IsLocked())
 						Trace("Rejected: Container is Locked [" + containedin.GetLockLevel() + "]")
 						lockedCount += 1
 						moveit = False
