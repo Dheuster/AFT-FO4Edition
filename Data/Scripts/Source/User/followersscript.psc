@@ -68,6 +68,13 @@ float TimerInterval_SAECombatantExpiry = 0.25 const			;in gametime hours
 int iTimerID_GameTime_SAC_LastCombat = 4 const 	;timer id
 float TimerInterval_SAC_LastCombat = 0.25 const ;in gametime hours -- NOTE: this should be smaller than the smallest change between numbers in SAC_LastCombat_Times
 
+Function SetStandardLoiterCoolDownTime(float value)
+	StandardLoiterCoolDownTime = value
+EndFunction
+
+float Function GetStandardLoiterCoolDownTime()
+	return StandardLoiterCoolDownTime
+EndFunction
 
 Event OnTimer(int aiTimerID)
 	trace(self, "OnTimer [" + aiTimerID + "]")
