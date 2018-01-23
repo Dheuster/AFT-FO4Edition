@@ -181,7 +181,7 @@ GlobalVariable Property pTweakCloseTerminal   Auto Const
 GlobalVariable Property pTweakCampUFOEnabled  Auto Const
 GlobalVariable Property pTweakAllowMultInterjections Auto Const
 GlobalVariable Property pTweakCommand Auto Const
-
+GLobalVariable Property pTweakLoiterCooldown Auto Const
 ; GLOBAL CONDITIONS (Because we ran out of VMQUEST CONDITIONALS)
 GlobalVariable Property pTweakCombatStyle Auto Const ; 0 = Default, 1 = Gunslinger, 2 = Bruiser, 3 = Commando, 4 = Boomstick, 5 = Ninja, 6 = Sniper, 7 = Enhanced
 GlobalVariable Property pTweakOutfitManaged Auto Const
@@ -353,7 +353,7 @@ Function OnGameLoaded(bool firstTime = false)
 		ComeAlongTopics[6] = Game.GetForm(0x00127002) as Topic ; "Lets move out"	
 		ComeAlongStrong    = Game.GetForm(0x0010BA5C) as Topic
 		ComeAlongDog	   = Game.GetForm(0x0021686F) as Topic
-	endif
+	endIf
 	pHasBody.Clear()
 	ResetVariables()
 	TestTogggle = 0
@@ -408,8 +408,8 @@ Function ResetVariables()
 			ab = fl.GetAt(0) as ActorBase
 			if (ab) ; && (pHasBody.Find(ab) < 0)
 				pHasBody.Add(ab)
-			endif
-		endif
+			endIf
+		endIf
 		i += 1
 	endwhile
 	
@@ -431,6 +431,12 @@ Function AftReset()
 	ComeAlongTopics.Clear()
 	TestTogggle = 0
 	
+	FollowersScript pFollowersScript = (pFollowers AS FollowersScript)
+	if pFollowersScript
+		pTweakLoiterCooldown.SetValue(30.0)
+		pFollowersScript.SetStandardLoiterCoolDownTime(pTweakLoiterCooldown.GetValue())
+	endIf
+	
 	pc.RemoveItem(pTweakReadme, 999, true)
 	pc.RemoveItem(pTweakActivateAFT,999,true)
 	pc.RemoveItem(pTweakHoloTape, 999, true)
@@ -440,8 +446,8 @@ Function AftReset()
 		AFT:TweakInterjectionQuestScript  pTweakInterjectionQuestScript  = pTweakInterjections as AFT:TweakInterjectionQuestScript	
 		if pTweakInterjectionQuestScript
 			pTweakInterjectionQuestScript.UnRegisterInterjections()
-		endif
-	endif
+		endIf
+	endIf
 	
 EndFUnction
 
@@ -463,7 +469,7 @@ Event OnTimer(int aiTimerID)
 		if (!camp)
 			Trace("Camp is None")
 			return
-		endif
+		endIf
 		float distance = pc.GetDistance(camp)
 		if (distance > 3000)
 			Trace("Player too far away [" + distance + "]")
@@ -487,7 +493,7 @@ Event OnTimer(int aiTimerID)
 		if (!camp)
 			Trace("Camp is None")
 			return
-		endif
+		endIf
 		float distance = pc.GetDistance(camp)
 		if (distance < 2000)
 			Trace("Tearing Down Camp")
@@ -501,7 +507,7 @@ Event OnTimer(int aiTimerID)
 		if (CurrentGameTime < CampAvailableTS)
 			pTweakAvailableIn.Show((24 * (CampAvailableTS - CurrentGameTime)) as Int)
 			return
-		endif
+		endIf
 	
 		pTweakCampAvailableTS.SetValue(Utility.GetCurrentGameTime() + 1.0)		
 		pTweakShelterScript.TearDownCamp(true)
@@ -518,7 +524,7 @@ Event OnTimer(int aiTimerID)
 		Trace("Refreshing Camp with Beamup")
 		pTweakShelterScript.MakeCamp(true, true)
 		return
-	endif
+	endIf
 			
 EndEvent
 
@@ -544,13 +550,13 @@ Bool Function PlayerSheathe()
 			if PlayerIsFirstPerson
 				Game.ForceThirdPerson()
 				Utility.wait(0.5)
-			endif
+			endIf
 			pc.PlayIdle(pRaiderSheath)
 			if PlayerIsFirstPerson
 				Utility.wait(0.5)
 				Game.ForceFirstPerson()
 				return true
-			endif
+			endIf
 		else
 			Utility.wait(1.2)
 			sheatheLayer.DisablePlayerControls(abMovement = false, abMenu=false, abActivate=false, abVATS=false, abFavorites=false)
@@ -560,7 +566,7 @@ Bool Function PlayerSheathe()
 			sheatheLayer = None
 			return true
 		endIf
-	endif
+	endIf
 	return false
 	
 EndFunction
@@ -572,7 +578,7 @@ Function SetCompanionRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("SetCompanionRelay", params)
 		return
-	endif
+	endIf
 
 	if TerminalTarget
 		Topic theTopic
@@ -594,19 +600,19 @@ Function SetCompanionRelay()
 					Utility.wait(0.5)
 					maxwait -= 1
 				endwhile
-			endif
-		endif
+			endIf
+		endIf
 
 		AFT:TweakDFScript pTweakDFScript = (pFollowers AS AFT:TweakDFScript)
 		if (pTweakDFScript)
 			Trace("Calling DFScript SetCompanion for ID [" + TerminalTargetID + "]")
 			pTweakDFScript.SetCompanion(TerminalTarget, true, true, true)
-		endif
+		endIf
 		
 		; Say Acknowledgment
 		SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck")
 		
-	endif
+	endIf
 	
 endFunction
 
@@ -617,7 +623,7 @@ Function ViewReadmeRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ViewReadmeRelay", params)
 		return
-	endif
+	endIf
 	
 	Actor pc = Game.GetPlayer()
 	pc.RemoveItem(pTweakReadme, 999, true)
@@ -638,7 +644,7 @@ Function ViewReadmeRelay()
 		aftReadMe.Delete()
 		aftReadMe=None
 		pc.AddItem(pTweakReadme)
-	endif
+	endIf
 EndFUnction
 
 Function SalvageUFO()
@@ -648,7 +654,7 @@ Function SalvageUFO()
 	if !pTweakShelterScript
 		Trace("Cast to pTweakShelterScript failure")
 		return
-	endif
+	endIf
 	ObjectReference camp = pTweakShelterScript.pShelterMapTeleport.GetReference()
 	if !camp
 		Trace("camp is None...")
@@ -662,7 +668,7 @@ Function SalvageUFO()
 	if (!pTweakShelterScript.ShelterSetup)
 		Trace("ShelterSetup is false....")
 		return
-	endif
+	endIf
 	pTweakCampUFOEnabled.SetValue(2.0)
 	RefreshCamp()
 EndFunction
@@ -688,10 +694,10 @@ Function RefreshCamp()
 		if (!pTweakShelterScript.ShelterSetup)
 			Trace("TweakShelterScript.ShelterSetup is false. Skipping")
 			return
-		endif
+		endIf
 	else
 		Trace("TweakShelterScript Cast Failure()")
-	endif	
+	endIf	
 	Trace("STARTING TIMER")
 	StartTimer(0.2,REFRESH_CAMP)
 EndFunction
@@ -709,17 +715,17 @@ EndFunction
 					; Trace("Refreshing Camp")
 					; pTweakShelterScript.MakeCamp(true)
 					; return
-				; endif
+				; endIf
 				; if (2 == DoOnTerminalClose)
 					; Trace("Tearing Down Camp")
 					; pTweakShelterScript.TearDownCamp(false)
 					; return
-				; endif
+				; endIf
 			; else
 				; Trace("Unable to cast pTweakFollower to TweakShelterScript")
-			; endif	
-        ; endif
-    ; endif
+			; endIf	
+        ; endIf
+    ; endIf
 ; endEvent
 
 Function BeamMeUpRelay()
@@ -746,7 +752,7 @@ Function UnManageOutfits()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("UnManageOutfits", params)
 		return		
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -778,7 +784,7 @@ Function CombatOutfitSnapshotRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("CombatOutfitSnapshotRelay", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -794,7 +800,7 @@ Function HomeOutfitSnapshotRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("HomeOutfitSnapshotRelay", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -810,7 +816,7 @@ Function CityOutfitSnapshotRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("CityOutfitSnapshotRelay", params)
 		return
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -826,7 +832,7 @@ Function CampOutfitSnapshotRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("CampOutfitSnapshotRelay", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -842,7 +848,7 @@ Function StandardOutfitSnapshotRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("StandardOutfitSnapshotRelay", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -869,7 +875,7 @@ Function CombatOutfitReset()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("CombatOutfitReset", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -886,7 +892,7 @@ Function HomeOutfitReset()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("HomeOutfitReset", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -903,7 +909,7 @@ Function CityOutfitReset()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("CityOutfitReset", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -920,7 +926,7 @@ Function CampOutfitReset()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("CampOutfitReset", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -937,7 +943,7 @@ Function StandardOutfitReset()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("StandardOutfitReset", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -953,7 +959,7 @@ Function ClearAllOutfitsRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ClearAllOutfitsRelay", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -973,7 +979,7 @@ Function ExitPowerArmorRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ExitPowerArmorRelay", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -988,11 +994,11 @@ Function MakeCampRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("MakeCampRelay", params)
 		return
-	endif
+	endIf
 	
 	If 0 != TerminalTargetId
 		SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck")
-	endif
+	endIf
 		
 	AFT:TweakShelterScript pTweakShelterScript = (pTweakFollower as AFT:TweakShelterScript)
 	if pTweakShelterScript
@@ -1004,12 +1010,12 @@ Function MakeCampRelay()
 					pTweakExpandCamp.SetActive()
 				else
 					Trace("Failed to start TweakExpandCamp")
-				endif
-			endif
-		endif
+				endIf
+			endIf
+		endIf
 	else
 		Trace("Unable to cast pTweakFollower to TweakShelterScript")
-	endif
+	endIf
 	
 endFunction
 
@@ -1020,7 +1026,7 @@ Function ResetBuildLimit()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ResetBuildLimit", params)
 		return
-	endif
+	endIf
 	
 	WorkshopParentScript WorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 	WorkshopScript 		 WorkshopRef    = WorkshopParent.GetWorkshopFromLocation(Game.GetPlayer().GetCurrentLocation())
@@ -1038,7 +1044,7 @@ Function GetPlayerPowerArmor()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("GetPlayerPowerArmor", params)
 		return
-	endif
+	endIf
 
 	Actor player = Game.GetPlayer()
 	if !player.WornHasKeyword(pArmorTypePower)
@@ -1055,12 +1061,12 @@ Function GetPlayerPowerArmor()
 			else
 				pa.SetPosition(spawnMarker.GetPositionX(), spawnMarker.GetPositionY(), spawnMarker.GetPositionZ())
 				pa.SetAngle(0.0,0.0, spawnMarker.GetAngleZ())
-			endif
+			endIf
 			pa.Disable()
 			pa.Enable()
 			Utility.wait(0.1)	
-		endif
-	endif
+		endIf
+	endIf
 EndFunction
 
 int PrefabIndex = 0
@@ -1087,28 +1093,28 @@ Function ShowPrefab()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ShowPrefab", params)
 		return
-	endif
+	endIf
 
     Keyword TweakPrefabs = Game.GetFormFromFile(0x0100EF7B,"AmazingFollowerTweaks.esp") as Keyword
 	if !TweakPrefabs
 		Trace("No TweakPrefabs")
 		return
-	endif		
+	endIf		
 	WorkshopParentScript WorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 	if !WorkshopParent
 		Trace("No WorkshopParent")
 		return
-	endif
+	endIf
 	WorkshopScript WorkshopRef = WorkshopParent.GetWorkshopFromLocation(Game.GetPlayer().GetCurrentLocation())
 	if !WorkshopRef
 		Trace("No WorkshopRef (For current location) Found")
 		return
-	endif
+	endIf
 	; if !WorkshopRef.OwnedByPlayer
 		; Trace("Workshop Not Owned")
 		; pWorkshopUnownedMessage.Show()
 		; return None
-	; endif            
+	; endIf            
 	
 	ObjectReference[] local_prefabs = WorkshopRef.GetRefsLinkedToMe(TweakPrefabs)
 	if 0 == local_prefabs.length
@@ -1116,15 +1122,15 @@ Function ShowPrefab()
 		; "No prefabs have been defined for this settlement"
 		pTweakFailNoPrefab.ShowOnPipBoy()
 		return
-	endif
+	endIf
 		
 	if (PrefabIndex < 0)
 		PrefabIndex = (local_prefabs.length - 1)
-	endif
+	endIf
 
     if PrefabIndex > (local_prefabs.length - 1)
 		PrefabIndex
-	endif
+	endIf
 
 	TweakPrefabOption pTweakPrefab = local_prefabs[PrefabIndex] as TweakPrefabOption
 	if (!pTweakPrefab)
@@ -1132,13 +1138,13 @@ Function ShowPrefab()
 		; "This Prefab is Not compatible or Incorrectly configured."
 		pTweakFailBadPrefab.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	if (!pTweakPrefab.PrefabTerminal)
 		Trace("TweakPrefabOption did not provide a Terminal")
 		; "This Prefab is Not compatible or Incorrectly configured."
 		pTweakFailBadPrefab.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if 0 == PrefabIndex	
 		Trace("PrefabIndex == 0, Setting Show Previous to False")
@@ -1146,7 +1152,7 @@ Function ShowPrefab()
 	else
 		Trace("PrefabIndex > 0, Setting Show Previous to True")
 		TweakPrefabShowPrev.SetValue(1.0)
-	endif
+	endIf
 	
 	if PrefabIndex == (local_prefabs.length - 1)	
 		Trace("PrefabIndex = prefabs.length (-1). Setting Show Next to False")
@@ -1154,7 +1160,7 @@ Function ShowPrefab()
 	else
 		Trace("PrefabIndex < prefabs.length (-1). Setting Show Next to True")
 		TweakPrefabShowNext.SetValue(1.0)
-	endif
+	endIf
 	
 	if pTweakPrefab.PrefabHasFullOption
 		Trace("pTweakPrefab.PrefabHasFullOption is TRUE. Setting TweakPrefabShowFull to TRUE")
@@ -1162,7 +1168,7 @@ Function ShowPrefab()
 	else
 		Trace("pTweakPrefab.PrefabHasFullOption is FALSE. Setting TweakPrefabShowFull to False")
 		TweakPrefabShowFull.SetValue(0.0)
-	endif
+	endIf
 
 	if pTweakPrefab.PrefabHasWallOnlyOption
 		Trace("pTweakPrefab.PrefabHasWallOnlyOption is TRUE. Setting TweakPrefabShowWall to True")
@@ -1170,7 +1176,7 @@ Function ShowPrefab()
 	else
 		Trace("pTweakPrefab.PrefabHasWallOnlyOption is FALSE. Setting TweakPrefabShowWall to False")
 		TweakPrefabShowWall.SetValue(0.0)
-	endif
+	endIf
 		
 	; TODO : Update Globals to Control What shows up on PrefabTerminal
 	pTweakPrefab.PrefabTerminal.ShowOnPipBoy()
@@ -1183,7 +1189,7 @@ Function BuildFullPrefab()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("BuildFullPrefab", params)
 		return
-	endif
+	endIf
 	BuildPrefab(1)
 endFunction
 
@@ -1193,7 +1199,7 @@ Function BuildWallOnlyPrefab()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("BuildWallOnlyPrefab", params)
 		return
-	endif
+	endIf
 	BuildPrefab(0)
 endFunction
 
@@ -1203,46 +1209,46 @@ Function BuildPrefab(int type)
 	if !TweakPrefabs
 		Trace("No TweakPrefabs")
 		return
-	endif		
+	endIf		
 	WorkshopParentScript WorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 	if !WorkshopParent
 		Trace("No WorkshopParent")
 		return
-	endif
+	endIf
 	WorkshopScript WorkshopRef = WorkshopParent.GetWorkshopFromLocation(Game.GetPlayer().GetCurrentLocation())
 	if !WorkshopRef
 		Trace("No WorkshopRef")
 		return
-	endif
+	endIf
 	; if !WorkshopRef.OwnedByPlayer
 		; Trace("Workshop Not Owned")
 		; pWorkshopUnownedMessage.Show()
 		; return None
-	; endif            
+	; endIf            
 	
 	ObjectReference[] local_prefabs = WorkshopRef.GetRefsLinkedToMe(TweakPrefabs)
 	if 0 == local_prefabs.length
 		; TODO : "No prefabs have been defined for this settlement"
 		Trace("No Prefabs")
 		return
-	endif
+	endIf
 		
 	if (PrefabIndex < 0)
 		Trace("Unexpected Negative Index")
 		return
-	endif
+	endIf
 
     if PrefabIndex > (local_prefabs.length - 1)
 		Trace("Unexpected Index (Too Large)")
 		return
-	endif
+	endIf
 
 	TweakPrefabOption pTweakPrefab = local_prefabs[PrefabIndex] as TweakPrefabOption
 	if (!pTweakPrefab)
 		; TODO: "This Prefab is Not compatible or Incorrectly configured."
 		Trace("ObjectReference did not cast to TweakPrefabOption")
 		return
-	endif
+	endIf
 	
 	pTweakPrefab.Load(type)
 	
@@ -1256,25 +1262,25 @@ Function ToggleReadyWeapon(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleReadyWeapon", params)
 		return
-	endif
+	endIf
 
 	if TerminalTarget.HasKeyword(pTeammateReadyWeapon_DO)
 		TerminalTarget.RemoveKeyword(pTeammateReadyWeapon_DO)
 		if TerminalTarget.IsInFaction(pTweakReadyWeaponFaction)
 			TerminalTarget.RemoveFromFaction(pTweakReadyWeaponFaction)
-		endif
+		endIf
 		TerminalTargetReadyWeapon = false
 	else
 		TerminalTarget.AddKeyword(pTeammateReadyWeapon_DO)
 		if !TerminalTarget.IsInFaction(pTweakReadyWeaponFaction)
 			TerminalTarget.AddToFaction(pTweakReadyWeaponFaction)
-		endif
+		endIf
 		TerminalTargetReadyWeapon = true
-	endif	
+	endIf	
 	
 	if backToPip
 		pTweakSettingsAITerminal.ShowOnPipBoy()
-	endif
+	endIf
 	
 EndFunction
 
@@ -1289,12 +1295,12 @@ Function SetConfidenceRelay(int value, bool backToPip=True)
 		params[1] = backToPip
 		self.CallFunctionNoWait("SetConfidenceRelay", params)
 		return
-	endif
+	endIf
 
 	If !TerminalTarget
 		Trace("No Terminal Target")
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -1304,7 +1310,7 @@ Function SetConfidenceRelay(int value, bool backToPip=True)
 
 	if backToPip
 		pTweakCombatCaution.ShowOnPipBoy()
-	endif
+	endIf
 	
 EndFUnction
 
@@ -1337,18 +1343,18 @@ Function ChangeRace(int option)
 		params[0] = option
 		self.CallFunctionNoWait("ChangeRace", params)
 		return
-	endif
+	endIf
 
 	If !TerminalTarget
 		Trace("No Terminal Target")
 		return
-	endif
+	endIf
 
 	if (1.0 == TerminalTarget.GetValue(pTweakInPowerArmor) || TerminalTarget.WornHasKeyword(pArmorTypePower))
 		Trace("Follower in Power Armor. Aborting")
 		pTweakVisualFailPowerArmor.ShowOnPipBoy()
 		return
-	endif	
+	endIf	
 	
 	If !TerminalTarget.GetActorBase().isUnique()
 		Trace("Terminal Target Not Unique. Bailing.")
@@ -1360,13 +1366,13 @@ Function ChangeRace(int option)
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (!pTweakFollowerScript)
 		Trace("Failure to cast to TweakFOllowerScript")	
-	endif
+	endIf
 
 	; Backup, incase they werent initialized properly. 
 	int orace = TerminalTarget.GetValue(pTweakOriginalRace) as Int
 	if 0 == orace
 		TerminalTarget.SetValue(pTweakOriginalRace, TerminalTarget.GetRace().GetFormID())
-	endif
+	endIf
 	
 	race targetrace = None
 	if TerminalTarget && pTweakFollowerScript
@@ -1395,7 +1401,7 @@ Function ChangeRace(int option)
 			else
 				Trace("Setting TerminalTarget to SynthGen2Race")
 				targetrace = pSynthGen2Race
-			endif			
+			endIf			
 		elseif 5 == option
 			Trace("Setting TerminalTarget to RaiderDogRace")
 			targetrace = pRaiderDogRace
@@ -1428,7 +1434,7 @@ Function ChangeRace(int option)
 			targetrace = pSuperMutantBehemothRace
 		else
 			Trace("Unknown Race Option [" + option + "]")
-		endif
+		endIf
 		
 		if targetrace
 		
@@ -1466,9 +1472,9 @@ Function ChangeRace(int option)
 				
 				TerminalTarget.RemoveKeyword(pActorTypeSynth)
 				
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 
 	
 	Trace("Done")
@@ -1483,25 +1489,25 @@ Function ToggleIgnoreFriendlyHits(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleIgnoreFriendlyHits", params)
 		return
-	endif
+	endIf
 
 	if TerminalTarget.IsIgnoringFriendlyHits()
 		TerminalTarget.IgnoreFriendlyHits(false)
 		TerminalTargetIgnoreFriendlyHits = false
 		if !TerminalTarget.IsInFaction(TweakAllowFriendlyFire)
 			TerminalTarget.AddToFaction(TweakAllowFriendlyFire)
-		endif
+		endIf
 	else
 		TerminalTarget.IgnoreFriendlyHits(true)
 		TerminalTargetIgnoreFriendlyHits = true
 		if TerminalTarget.IsInFaction(TweakAllowFriendlyFire)
 			TerminalTarget.RemoveFromFaction(TweakAllowFriendlyFire)
-		endif
-	endif
+		endIf
+	endIf
 	
 	if backToPip
 		pTweakCombatAITerminal.ShowOnPipBoy()
-	endif
+	endIf
 	
 EndFunction
 
@@ -1513,7 +1519,7 @@ Function TogglePackMule(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("TogglePackMule", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
 	if (pTweakFollowerScript && TerminalTarget)
@@ -1523,13 +1529,13 @@ Function TogglePackMule(bool backToPip=True)
 		else
 			TerminalTarget.AddToFaction(pTweakPackMuleFaction)
 			pTweakFollowerScript.SetPackMule(TerminalTarget, true)
-		endif	
+		endIf	
 		TerminalTargetPackMule = TerminalTarget.IsInFaction(pTweakPackMuleFaction)
-	endif
+	endIf
 	
 	if backToPip
 		pTweakSettingsTerminal.ShowOnPipBoy()
-	endif
+	endIf
 	
 EndFunction
 
@@ -1541,7 +1547,7 @@ Function ToggleSyncPA(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleSyncPA", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTarget.IsInFaction(pTweakSyncPAFaction)
@@ -1549,15 +1555,15 @@ Function ToggleSyncPA(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakSyncPAFaction)
 		else
 			TerminalTarget.AddToFaction(pTweakSyncPAFaction)
-		endif
+		endIf
 
 		if backToPip
 			TerminalTargetSyncPA = TerminalTarget.IsInFaction(pTweakSyncPAFaction)		
 			if (TerminalTargetSyncPA != current)
 				pTweakSettingsAITerminal.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleAutoRelax(bool backToPip=True)
@@ -1569,7 +1575,7 @@ Function ToggleAutoRelax(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleAutoRelax", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTarget.IsInFaction(pTweakNoRelaxFaction)
@@ -1577,15 +1583,15 @@ Function ToggleAutoRelax(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakNoRelaxFaction)
 		else
 			TerminalTarget.AddToFaction(pTweakNoRelaxFaction)
-		endif
+		endIf
 		
 		if backToPip
 			TerminalTargetNoAutoRelax = TerminalTarget.IsInFaction(pTweakNoRelaxFaction)		
 			if (TerminalTargetNoAutoRelax != current)
 				pTweakSettingsAITerminal.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 	
 EndFunction
 
@@ -1598,7 +1604,7 @@ Function Test()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("Test", params)
 		return
-	endif
+	endIf
 	
 	Actor pc = Game.GetPlayer()
 	Utility.wait(0.1)
@@ -1612,7 +1618,7 @@ Function Test()
 		TestTogggle += 1
 		if 2 == TestTogggle
 			pTweakStopThat.Show()
-		endif
+		endIf
 		if TestTogggle > 3
 			int dchoice = pTweakLastWarning.Show()
 			; 0  = Full Diagnostics
@@ -1639,7 +1645,7 @@ Function Test()
 				else
 					Trace("Failed to cast TweakDiagnostics")
 				endIf
-			endif
+			endIf
 			if (1 == dchoice)
 				; Money/Items Cheats for testing
 				pc.AddItem(Game.GetForm(0x0000000F), 50000)
@@ -1654,11 +1660,11 @@ Function Test()
 				ObjectReference aChest = pc.PlaceAtMe(qaArmorChest)
 				aChest.SetPosition(p[0],p[1],p[2])
 				aChest.SetAngle(0.0,0.0, pc.GetAnglex())
-			endif
+			endIf
 			if (2 == dchoice)
 				Weather CommonwealthGSRadstorm = Game.GetForm(0x001C3D5E) as Weather
 				CommonwealthGSRadstorm.ForceActive()
-			endif
+			endIf
 			if (dchoice > 2 && dchoice < 7)
 				Quest TweakCOMSpouse = Game.GetFormFromFile(0x0104529E,"AmazingFollowerTweaks.esp") as Quest
 				if TweakCOMSpouse
@@ -1693,14 +1699,14 @@ Function Test()
 							endIf
 						else
 							trace("Spouse Reference Unfilled")
-						endif
+						endIf
 					else
 						trace("GetAlias(8) did not cast to ReferenceAlias (Is Quest Running?)")
 					endIf
 				else
 					trace("Quest TweakCOMSpouse not found")
 				endIf						
-			endif
+			endIf
 			if (7 == dchoice)
 				; EnergyShield : UFO Tech Upgrade?
 				MovableStatic Ms09ForceField = Game.GetForm(0x001E2F2B) as MovableStatic
@@ -1708,7 +1714,7 @@ Function Test()
 				ObjectReference mfx = pc.PlaceAtMe(Ms09ForceField)
 				mfx.SetAngle(0.0,0.0, pc.GetAnglex() - 180)
 				Utility.wait(0.1)
-			endif
+			endIf
 			if (8 == dchoice)
 				; DetectLife (Need to add this to a pair of glasses)
 				Spell TweakTargetingHud = Game.GetFormFromFile(0x010045B9,"AmazingFollowerTweaks.esp") as Spell
@@ -1721,22 +1727,22 @@ Function Test()
 					pc.AddSpell(TweakTargetingHud,false)
 					TweakTargetingHud.Cast(pc)
 				endIf
-			endif
+			endIf
 			if (9 == dchoice)
 				AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 				pTweakFollowerScript.SculptLeveledByNameId(3)
-			endif			
-		endif
+			endIf			
+		endIf
 	else
 		TestTogggle = 0
-	endif
+	endIf
 EndFunction
 
 Function AppearanceHint()
 	if !pAppearanceHintShown
 		pTweakAppearanceHint.show()
 		pAppearanceHintShown = true
-	endif
+	endIf
 EndFunction
 
 
@@ -1748,7 +1754,7 @@ Function EvaluateTerminalTarget()
 			TerminalTargetHasBody = 1
 		else
 			TerminalTargetHasBody = 0
-		endif		
+		endIf		
 
 		TerminalTargetId     = TerminalTarget.GetFactionRank(pTweakNamesFaction)
 		if (TerminalTargetId > 0)
@@ -1756,10 +1762,10 @@ Function EvaluateTerminalTarget()
 			; SPECIAL CASE: If Curie and her quest is not yet done:
 			if (3 == TerminalTargetId && pCOMCurieQuest.GetStage() < 500)
 				TerminalTargetHasBody = 0
-			endif			
+			endIf			
 		else
 			Trace("No ID Found in Names Faction Lookup")
-		endif
+		endIf
 		
 		TerminalTargetOId = TerminalTargetId
 		if (TerminalTargetOId > 18)
@@ -1802,63 +1808,63 @@ Function EvaluateTerminalTarget()
 				TerminalTargetOId = 15
 			elseif 0x0000881D == MaskedID ; Porter Gage
 				TerminalTargetOId = 16
-			endif			
-		endif
+			endIf			
+		endIf
 
 		if TerminalTarget.IsInFaction(pTweakManagedOutfit)
 			pTweakOutfitManaged.SetValue(1.0)
 		else
 			pTweakOutfitManaged.SetValue(0.0)			
-		endif
+		endIf
 		
 		
 		if (TerminalTarget.IsInFaction(pTweakCombatOutFitFaction))
 			TerminalTargetHasCombatOutfit = true
 		else
 			TerminalTargetHasCombatOutfit = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakHomeOutFitFaction))
 			pTweakTargetHasHomeOutfit.SetValue(1)
 		else
 			pTweakTargetHasHomeOutfit.SetValue(0)
-		endif
+		endIf
 		
 		if (TerminalTarget.IsInFaction(pTweakCityOutFaction))
 			TerminalTargetHasCityOutfit = true
 		else
 			TerminalTargetHasCityOutfit = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakCampOutFitFaction))
 			TerminalTargetHasCampOutfit = true
 		else
 			TerminalTargetHasCampOutfit = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pCurrentCompanionFaction))
 			TerminalTargetActiveFollower = true
 			if !TerminalTarget.IsInFaction(pTweakFollowerFaction)
 				TerminalTargetUnmanaged = true
 			else
 				TerminalTargetUnmanaged = false
-			endif			
+			endIf			
 		else
 			TerminalTargetActiveFollower = false
 			TerminalTargetUnmanaged      = false ; true when CurrentCompanionFaction but not TweakFollowerFaction
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakStandardOutFitFaction))
 			TerminalTargetHasStandardOutfit = true
 		else
 			TerminalTargetHasStandardOutfit = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakPAHelmetCombatToggleFaction))
 			TerminalTargetPAHelmetCombatOnly = true
 		else
 			TerminalTargetPAHelmetCombatOnly = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakSyncPAFaction))
 			TerminalTargetSyncPA = true
 		else
 			TerminalTargetSyncPA = false
-		endif
+		endIf
 		if (TerminalTarget.IsIgnoringFriendlyHits())
 			TerminalTargetIgnoreFriendlyHits = true
 		else
@@ -1873,67 +1879,67 @@ Function EvaluateTerminalTarget()
 			TerminalTargetPackMule = true
 		else
 			TerminalTargetPackMule = false
-		endif
+		endIf
 		if (42 == TerminalTarget.GetValue(pFavorsPerDay))
 			TerminalTargetAvoidsTraps = true
 		else
 			TerminalTargetAvoidsTraps = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakNoDisapprove))
 			TerminalTargetNoDisapprove = true
 		else
 			TerminalTargetNoDisapprove = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakNoApprove))
 			TerminalTargetNoApprove = true
 		else
 			TerminalTargetNoApprove = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakConvNegToPos))
 			TerminalTargetConvNegToPos = true
 		else
 			TerminalTargetConvNegToPos = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakConvPosToNeg))
 			TerminalTargetConvPosToNeg = true
 		else
 			TerminalTargetConvPosToNeg = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakNoIdleChatter))
 			TerminalTargetNoCommentIdle = true
 		else
 			TerminalTargetNoCommentIdle = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakNoRelaxFaction))
 			TerminalTargetNoAutoRelax = true
 		else
 			TerminalTargetNoAutoRelax = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakNoCommentGeneral))
 			TerminalTargetNoCommentGeneral = true
 		else
 			TerminalTargetNoCommentGeneral = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakNoCommentApprove))
 			TerminalTargetNoCommentApprove = true
 		else
 			TerminalTargetNoCommentApprove = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakNoCommentDisapprove))
 			TerminalTargetNoCommentDisapprove = true
 		else
 			TerminalTargetNoCommentDisapprove = false
-		endif
+		endIf
 		if (TerminalTarget.IsInFaction(pTweakNoCommentActivator))
 			TerminalTargetNoCommentActivator = true
 		else
 			TerminalTargetNoCommentActivator = false
-		endif
+		endIf
 		if (TerminalTarget.GetActorBase().IsUnique())
 			TerminalTargetUnique = true
 		else
 			TerminalTargetUnique = false
-		endif
+		endIf
 		
 		if TerminalTarget.IsInFaction(pTweakTrackKills)
 			TerminalTargetTrackKills = true
@@ -1972,7 +1978,7 @@ Function EvaluateTerminalTarget()
 			pTweakCombatStyle.SetValue(7)
 		else
 			pTweakCombatStyle.SetValue(0)
-		endif
+		endIf
 		
 		Race tt_race = TerminalTarget.GetRace()
 		if (tt_race == pHumanRace)
@@ -2001,7 +2007,7 @@ Function EvaluateTerminalTarget()
 			TerminalTargetRace = 12
 		else
 			TerminalTargetRace = 0
-		endif
+		endIf
 
 		int o_raceid = TerminalTarget.GetValue(pTweakOriginalRace) as Int
 		
@@ -2033,7 +2039,7 @@ Function EvaluateTerminalTarget()
 			TerminalTargetORace = 12
 		else
 			TerminalTargetORace = 0
-		endif		
+		endIf		
 		Trace("TerminalTargetORace [" + TerminalTargetORace + "]")
 
 		AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
@@ -2046,16 +2052,16 @@ Function EvaluateTerminalTarget()
 		TerminalTargetOEssential = False
 		if (pTweakFollowerScript)
 			TerminalTargetOEssential = pTweakFollowerScript.GetOriginallyEssential(TerminalTarget)
-		endif
+		endIf
 		
 		if (TerminalTarget.GetCurrentPackage() == pCommandMode_Travel)
 			if (TerminalTargetState != iFollower_Com_Wait.GetValue())
 				if (pTweakFollowerScript)
 					pTweakFollowerScript.SetFollowerStayByNameId(TerminalTargetId)
-				endif
+				endIf
 				TerminalTargetState  = iFollower_Com_Wait.GetValue()
-			endif
-		endif
+			endIf
+		endIf
 		
 		if (1 == TerminalTargetRace || 2 == TerminalTargetRace || 4 == TerminalTargetRace || tt_race == pPowerArmorRace)
 			if (1.0 == TerminalTarget.GetValue(pTweakInPowerArmor) || TerminalTarget.WornHasKeyword(pArmorTypePower))
@@ -2070,14 +2076,14 @@ Function EvaluateTerminalTarget()
 						Trace("3D is loaded (Nearby)")
 					else
 						Trace("3D is not loaded")
-					endif			
+					endIf			
 				else
 					TerminalTargetPAState = 0
-				endif
-			endif
+				endIf
+			endIf
 		else
 			TerminalTargetPAState = 3 ; Can not wear PA
-		endif
+		endIf
 		TerminalTargetLeveled = (TerminalTarget.GetLeveledActorBase() != TerminalTarget.GetActorBase())
 	else
 		TerminalTargetId = 0
@@ -2086,9 +2092,9 @@ Function EvaluateTerminalTarget()
 			CommentSynchronous = pTweakDFScript.CommentSynchronous
 		else
 			Trace("Unable to Cast Followers to TweakDFScript")
-		endif
+		endIf
 		
-	endif
+	endIf
 
 EndFunction
 
@@ -2120,35 +2126,35 @@ Function PrepSPECIAL()
 	if cStrength < 1
 		cStrength = 1
 		TerminalTarget.SetValue(Strength, 1)
-	endif
+	endIf
 	if cPerception < 1
 		cPerception = 1
 		TerminalTarget.SetValue(Perception, 1)
-	endif
+	endIf
 	if cEndurance < 1
 		cEndurance = 1
 		TerminalTarget.SetValue(Endurance, 1)
-	endif
+	endIf
 	if cCharisma < 1
 		cCharisma = 1
 		TerminalTarget.SetValue(Charisma, 1)
-	endif	
+	endIf	
 	if cIntelligence < 1
 		cIntelligence = 1
 		TerminalTarget.SetValue(Intelligence, 1)
-	endif	
+	endIf	
 	if cAgility < 1
 		cAgility = 1
 		TerminalTarget.SetValue(Agility, 1)
-	endif	
+	endIf	
 	if cLuck < 1
 		cLuck = 1
 		TerminalTarget.SetValue(Luck, 1)
-	endif	
+	endIf	
 	
 	if pAvailable < 0
 		pAvailable = 0
-	endif
+	endIf
 	
 	pAvailable += cStrength
 	pAvailable += cPerception
@@ -2168,11 +2174,11 @@ Function PrepSPECIAL()
 		minimum = 25.0 + plevel
 	else
 		minimum = 75.0 + ((((plevel - 50)/2) as Int) as float)
-	endif
+	endIf
 	
 	if pAvailable < minimum
 		pAvailable = minimum
-	endif
+	endIf
 
 	pAvailable -= cStrength
 	pAvailable -= cPerception
@@ -2184,7 +2190,7 @@ Function PrepSPECIAL()
 	
 	if pAvailable < 0
 		pAvailable = 0
-	endif
+	endIf
 
 	Trace("Player Level [" + plevel + "]")
 	Trace("Strength     [" + cStrength + "]")
@@ -2240,7 +2246,7 @@ Function IncreaseSPECIAL(int letter)
 		gTweakSpecial = pTweakSpecialLck
 	else
 		return
-	endif
+	endIf
 		
 	float pAvailable = TerminalTarget.GetValue(pTweakAvailable)	
 	if (pAvailable > 0)
@@ -2255,9 +2261,9 @@ Function IncreaseSPECIAL(int letter)
 			AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 			if (pTweakFollowerScript)
 				pTweakFollowerScript.EvaluateSynergy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 	
 EndFunction
 
@@ -2277,7 +2283,7 @@ Function SetSPECIAL(Actor Target=None, int pStrength=1, int pPerception=1, int p
 	float pAvailable = Target.GetValue(pTweakAvailable)
 	if pAvailable < 0
 		pAvailable = 0
-	endif
+	endIf
 	
 	pAvailable += Target.GetBaseValue(Strength)
 	pAvailable += Target.GetBaseValue(Perception)
@@ -2296,12 +2302,12 @@ Function SetSPECIAL(Actor Target=None, int pStrength=1, int pPerception=1, int p
 		minimum = 25.0 + plevel
 	else
 		minimum = 75.0 + ((((plevel - 50)/2) as Int) as float)
-	endif
+	endIf
 	
 	if (pAvailable < minimum)
 		Trace("Assigning Alternative Minimum [" + minimum + "]")
 		pAvailable = minimum
-	endif
+	endIf
 		
 	if distribute
 	
@@ -2357,7 +2363,7 @@ Function SetSPECIAL(Actor Target=None, int pStrength=1, int pPerception=1, int p
 				index += 1
 			endwhile
 			
-		endif
+		endIf
 		
 		pPerception   = attributes[0]
 		pEndurance    = attributes[1]
@@ -2369,36 +2375,36 @@ Function SetSPECIAL(Actor Target=None, int pStrength=1, int pPerception=1, int p
 		
 	else
 		Trace("Distribute is False")
-	endif
+	endIf
 	
 	if pStrength < 1
 		Trace("Fixing pStrength")
 		pStrength = 1
-	endif
+	endIf
 	if pPerception < 1
 		Trace("Fixing pPerception")
 		pPerception = 1
-	endif
+	endIf
 	if pEndurance < 1
 		Trace("Fixing pEndurance")
 		pEndurance = 1
-	endif
+	endIf
 	if pCharisma < 1
 		Trace("Fixing pCharisma")
 		pCharisma = 1
-	endif	
+	endIf	
 	if pIntelligence < 1
 		Trace("Fixing pIntelligence")
 		pIntelligence = 1
-	endif	
+	endIf	
 	if pAgility < 1
 		Trace("Fixing pAgility")
 		pAgility = 1
-	endif	
+	endIf	
 	if pLuck < 1
 		Trace("Fixing pLuck")
 		pLuck = 1
-	endif	
+	endIf	
 		
 	Trace("Final Values")
 	
@@ -2441,7 +2447,7 @@ Function SetSPECIAL(Actor Target=None, int pStrength=1, int pPerception=1, int p
 	
 	if pAvailable < 0
 		pAvailable = 0
-	endif	
+	endIf	
 	
 	Trace("Computing Available. Final [" + pAvailable + "]")
 	Target.SetValue(pTweakAvailable, pAvailable)	
@@ -2451,10 +2457,17 @@ Function SetSPECIAL(Actor Target=None, int pStrength=1, int pPerception=1, int p
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.EvaluateSynergy()
-	endif
+	endIf
 	
 EndFunction
 
+Function SetLoiterCooldown(float value)
+	FollowersScript pFollowersScript = (pFollowers AS FollowersScript)
+	if pFollowersScript
+		pTweakLoiterCooldown.SetValue(value)
+		pFollowersScript.SetStandardLoiterCoolDownTime(pTweakLoiterCooldown.GetValue())
+	endIf
+EndFunction
 
 Function SetCombatStyle(int option, bool backToPip=True)
 
@@ -2468,7 +2481,7 @@ Function SetCombatStyle(int option, bool backToPip=True)
 		params[1] = backToPip
 		self.CallFunctionNoWait("SetCombatStyle", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 	
@@ -2517,16 +2530,16 @@ Function SetCombatStyle(int option, bool backToPip=True)
 			SetSPECIAL(TerminalTarget, 22, 22, 21, 1, 5, 21, 8, true)
 		else
 			pTweakCombatStyle.SetValue(0)		
-		endif
+		endIf
 		if (option > 0 && option < 8)
 			pTweakStatUpdate.Show()
-		endif
+		endIf
 		
 		if backToPip
 			pTweakCombatStyleTerminal.ShowOnPipBoy()
-		endif
+		endIf
 		
-	endif
+	endIf
 		
 EndFunction
 
@@ -2555,7 +2568,7 @@ Function ActivateAft(Actor npc = None)
 	TerminalTargetId = 0
 	if (npc != None)
 		TerminalTarget = npc
-	endif
+	endIf
 	
 	EvaluateTerminalTarget() ; Retreive ID and other things
 	
@@ -2565,10 +2578,10 @@ Function ActivateAft(Actor npc = None)
 		
 			if (TerminalTarget.IsInFaction(DisallowedCompanionFaction) == True)
 				pTweakDisallowedWarn.Show()
-			endif
+			endIf
 			if (!TerminalTarget.IsInFaction(pTweakPosedFaction))
 				SpeakDialogue(TerminalTarget, pTweakTopicHello, pTweakTopicHelloModID, "pTweakTopicHello",  75, 80)
-			endif
+			endIf
 			
 			Trace("TerminalTarget ID Found [" + TerminalTargetId + "]")
 			float theCommand = pTweakCommand.GetValue()
@@ -2576,7 +2589,7 @@ Function ActivateAft(Actor npc = None)
 				pTweakRootTerminal.ShowOnPipBoy()
 			else
 				handleCommand(theCommand)
-			endif
+			endIf
 			
 		elseif (TerminalTarget.IsInFaction(pCurrentCompanionFaction))
 			; Use this if they run out of management slots...
@@ -2599,7 +2612,7 @@ Function ActivateAft(Actor npc = None)
 				
 				
 				handleCommand(theCommand)
-			endif			
+			endIf			
 		else
 			Trace("TerminalTarget is not in TweakFOllowerFaction")
 			float theCommand = pTweakCommand.GetValue()
@@ -2614,9 +2627,9 @@ Function ActivateAft(Actor npc = None)
 				; Only Scan and Import allowed
 				if (10 == theCommand || 11 == theCommand)
 					handleCommand(theCommand)
-				endif
-			endif
-		endif
+				endIf
+			endIf
+		endIf
 		
 	else
 		Trace("TerminalTarget is NONE")
@@ -2628,17 +2641,17 @@ Function ActivateAft(Actor npc = None)
 				pTweakRootTerminal.ShowOnPipBoy()
 			else
 				handleCommand(theCommand)
-			endif
+			endIf
 		else
 			TweakChangeAppearance pTweakChangeAppearance = (pTweakFollower as TweakChangeAppearance)
 			if pTweakChangeAppearance
 				; End Move Pose State
 				pTweakChangeAppearance.OnChooseDown()
-			endif
-		endif
+			endIf
+		endIf
 		
 		
-	endif	
+	endIf	
 	
 	EnsurePlayerHasAFT()
 
@@ -2714,15 +2727,15 @@ Function handleCommand(float theCommand)
 					else
 						UnManageNPCSetup(); 
 						pTweakSelectNameTerminal.ShowOnPipBoy()
-					endif
+					endIf
 				elseif 15.0 == theCommand ; Camp Expansion Buyout
 					Terminal TweakCampQuestExpansion = Game.GetFormFromFile(0x010279BF,"AmazingFollowerTweaks.esp") as Terminal
 					if TweakCampQuestExpansion
 						Actor player = Game.GetPlayer()
 						if (player.GetItemCount(TweakCampQuestExpansion) < 1)
 							player.AddItem(TweakCampQuestExpansion)
-						endif
-					endif
+						endIf
+					endIf
 				elseif 16.0 == theCommand ; Clear Settlement
 					pTweakFollowerScript.ClearSettlement()
 				elseif 17.0 == theCommand ; Reset Build Limit
@@ -2732,11 +2745,11 @@ Function handleCommand(float theCommand)
 					pTweakSelectNameTerminal.ShowOnPipBoy()
 				elseif 19.0 == theCommand ; Load Prefab
 					StartPrefab()
-				endif
+				endIf
 				
 				if None == TerminalTarget
 					return
-				endif
+				endIf
 
 				if theCommand < 20
 					return
@@ -2788,31 +2801,31 @@ Function handleCommand(float theCommand)
 						elseif 1 == TerminalTargetHasCombatOutfit
 							CombatOutfitReset()
 						endIf
-					endif
+					endIf
 				elseif 30.0 == theCommand ; Set/Unset City Outfit 
 					if TerminalTargetPAState != 1
 						if 0 == TerminalTargetHasCityOutfit
 							CityOutfitSnapshotRelay()
 						elseif 1 == TerminalTargetHasCityOutfit
 							CityOutfitReset()
-						endif
-					endif
+						endIf
+					endIf
 				elseif 31.0 == theCommand ; Set/Unset Camp Outfit 
 					if TerminalTargetPAState != 1
 						if 0 == TerminalTargetHasCampOutfit
 							CampOutfitSnapshotRelay()
 						elseif 1 == TerminalTargetHasCampOutfit
 							CampOutfitReset()
-						endif		
-					endif
+						endIf		
+					endIf
 				elseif 32.0 == theCommand ; Set/Unset Home Outfit 
 					if TerminalTargetPAState != 1
 						if 0.0 == pTweakTargetHasHomeOutfit.GetValue()
 							HomeOutfitSnapshotRelay()
 						elseif 1.0 == pTweakTargetHasHomeOutfit.GetValue()
 							HomeOutfitReset()
-						endif
-					endif
+						endIf
+					endIf
 				elseif 33.0 == theCommand ; Clear All Outfits
 					if TerminalTargetPAState != 1
 						ClearAllOutfitsRelay()
@@ -2820,7 +2833,7 @@ Function handleCommand(float theCommand)
 				elseif 34.0 == theCommand ; UnManage Outfits
 					if TerminalTargetPAState != 1
 						UnManageOutfits()
-					endif
+					endIf
 					
 				elseif 35.0 == theCommand ; Dedupe
 					TakePlayerDuplicatesRelay()
@@ -2832,8 +2845,8 @@ Function handleCommand(float theCommand)
 					if TerminalTargetOId == 9
 						AddNickItemsRelay()
 					endIf
-				endif
-			endif
+				endIf
+			endIf
 
 		else ; theCommand >= 39
 		
@@ -2884,11 +2897,11 @@ Function handleCommand(float theCommand)
 							EnablePAHelmetCombatRelay(false)
 						elseif 1 == TerminalTargetPAHelmetCombatOnly
 							DisablePAHelmetCombatRelay(false)
-						endif
-					endif
+						endIf
+					endIf
 				elseif 58.0 == theCommand ; Toggle Ignore Friendly Hits
 					ToggleIgnoreFriendlyHits(false)
-				endif
+				endIf
 
 			else ; theCommand >= 59
 			
@@ -2914,9 +2927,9 @@ Function handleCommand(float theCommand)
 					Info(7)
 				elseif 68 == theCommand ; Info Keywords
 					Info(8)
-				endif
+				endIf
 			endIf			
-		endif
+		endIf
 	else ; theCommand >= 69
 	
 		if theCommand < 104
@@ -2927,11 +2940,11 @@ Function handleCommand(float theCommand)
 			if 69 == theCommand ; Pose
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4)
 					PoseRelay()
-				endif
+				endIf
 			elseif 70 == theCommand ; Pose Stop 
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4)
 					StopPoseRelay()
-				endif
+				endIf
 			elseif 71 == theCommand ; Pose Move
 				MovePosedRelay()
 			elseif 72 == theCommand ; Scale 200%
@@ -2959,17 +2972,17 @@ Function handleCommand(float theCommand)
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4)
 					AppearanceHint()
 					EyePartsRelay()
-				endif
+				endIf
 			elseif 83 == theCommand ; Parts Beard
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4)
 					AppearanceHint()
 					BeardPartsRelay()
-				endif
+				endIf
 			elseif 84 == theCommand ; Parts Head
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4 || TerminalTargetOID == 9)
 					AppearanceHint()
 					HeadPartsRelay()
-				endif
+				endIf
 			elseif 85 == theCommand ; Set Race Human\Synth
 				ChangeRace(0)
 			elseif 86 == theCommand ; Set Race Ghoul
@@ -3006,12 +3019,12 @@ Function handleCommand(float theCommand)
 			elseif 101 == theCommand ; New Body
 				if 1 == TerminalTargetHasBody
 					NewBodyRelay()
-				endif
+				endIf
 			elseif 102 == theCommand ; Posture
 				ChangePostureRelay()
 			elseif 103 == theCommand ; Expression
 				ChangeExpressionRelay()
-			endif
+			endIf
 
 		else ; theCommand >= 104
 		
@@ -3056,7 +3069,7 @@ Function handleCommand(float theCommand)
 				ToggleNoPADamage(false)
 			elseif 122 == theCommand ; Toggle Mortality
 				ToggleEssential(false)
-			endif
+			endIf
 			
 			; Extra/Additional
 			if 123 == theCommand ; Edit Special Attributes
@@ -3065,10 +3078,10 @@ Function handleCommand(float theCommand)
 			elseif 124 == theCommand ; Assign Name
 				AssignNameSetup()
 				pTweakSelectNameTerminal.ShowOnPipBoy()	
-			endif
+			endIf
 			
 		endIf		
-	endif	
+	endIf	
 EndFunction
 
 Function EnsurePlayerHasAFT(bool MarkAsFavorite = false)
@@ -3084,21 +3097,21 @@ Function EnsurePlayerHasAFT(bool MarkAsFavorite = false)
 				theHolotape = pc.PlaceAtMe(pTweakHoloTape)
 				if (theHolotape)
 					pAftSettingsHolotape.ForceRefTo(theHolotape)
-				endif
+				endIf
 			endIf
 			if (theHolotape)
 				Trace("Adding HoloTape to players inventory")
 				pc.AddItem(theHolotape,1, true)
 				pc.AddItem(pTweakReadme,1, true)
-			endif		
-		endif
+			endIf		
+		endIf
 		
 		if (pc.GetItemCount(pTweakActivateAFT) <= 0)
 			pc.AddItem( pTweakActivateAFT,1,true)
 			if MarkAsFavorite
 				pc.MarkItemAsFavorite(pTweakActivateAFT, 2)
-			endif
-		endif
+			endIf
+		endIf
 	elseif (2.0 == ritems)
 		; HoloTape Only
 		Actor pc = Game.GetPlayer()
@@ -3109,17 +3122,17 @@ Function EnsurePlayerHasAFT(bool MarkAsFavorite = false)
 				theHolotape = pc.PlaceAtMe(pTweakHoloTape)
 				if (theHolotape)
 					pAftSettingsHolotape.ForceRefTo(theHolotape)
-				endif
+				endIf
 			endIf
 			if (theHolotape)
 				Trace("Adding HoloTape to players inventory")
 				pc.AddItem(theHolotape,1, true)
-			endif
+			endIf
 		endIf
 	elseif (3.0 == ritems)
 		; Activator Only
 		RestoreAFTActivator()
-	endif
+	endIf
 	
 EndFunction
 
@@ -3127,7 +3140,7 @@ Function RestoreAFTActivator()
 	Actor pc = Game.GetPlayer()
 	if (pc.GetItemCount(pTweakActivateAFT) <= 0)
 		pc.AddItem( pTweakActivateAFT,1,true)
-	endif	
+	endIf	
 EndFunction
 
 Function ToggleEssential(bool backToPip=True)
@@ -3144,7 +3157,7 @@ Function ToggleEssential(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleEssential", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
@@ -3158,14 +3171,14 @@ Function ToggleEssential(bool backToPip=True)
 			else
 				if (TerminalTarget.GetValue(pConfidence) > 1.0)
 					pTweakFollowerScript.SetConfidence(TerminalTarget,1)
-				endif
+				endIf
 				pTweakFollowerScript.SetFollowerStanceDefensiveByNameId(TerminalTargetId)
 				if backToPip
 					pTweakSettingsTerminal.ShowOnPipBoy()
-				endif					
-			endif
-		endif
-	endif
+				endIf					
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function Info(int type)
@@ -3178,7 +3191,7 @@ Function Info(int type)
 		params[0] = type
 		self.CallFunctionNoWait("Info", params)
 		return
-	endif
+	endIf
 	Trace("Info() Continuing. Var = [" + type + "]")
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
@@ -3186,7 +3199,7 @@ Function Info(int type)
 		pTweakFollowerScript.FollowerInfo(TerminalTarget, type)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif	
+	endIf	
 EndFunction
 
 Function AssignHomeRelay()
@@ -3196,7 +3209,7 @@ Function AssignHomeRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("AssignHomeRelay", params)
 		return
-	endif
+	endIf
 	
 	; Give Hand Time to Lower...
 	Utility.wait(0.75)
@@ -3205,7 +3218,7 @@ Function AssignHomeRelay()
 		pTweakFollowerScript.AssignHome(TerminalTarget)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif	
+	endIf	
 	
 EndFunction
 
@@ -3216,14 +3229,14 @@ Function ResetNameRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ResetNameRelay", params)
 		return
-	endif
+	endIf
 	
 	AFT:TweakNamesScript pTweakNamesScript = (pTweakNames as AFT:TweakNamesScript)
 	if (pTweakNamesScript)
 		pTweakNamesScript.ResetName(TerminalTarget)
 	else
 		Trace("Unable to Cast TweakNames to TweakNamesScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -3238,8 +3251,8 @@ Function ToggleAFTgnored()
 		else
 			TerminalTarget.AddToFaction(pDanversFaction)
 			pTweakMarkedForIgnore.SetValue(1.0)
-		endif		
-	endif
+		endIf		
+	endIf
 	
 endFunction
 	
@@ -3251,7 +3264,7 @@ Function ImportNPCRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ImportNPCRelay", params)
 		return
-	endif
+	endIf
 	
 	int potential = TerminalTarget.GetFactionRank(PotentialCompanionFaction)
 	if (potential > -2 && pTweakNoImportRestrictions.GetValue() == 0.0)
@@ -3278,18 +3291,18 @@ Function ImportNPCRelay()
 					Utility.wait(0.5)
 					maxwait -= 1
 				endwhile
-			endif
-		endif
+			endIf
+		endIf
 		
 		; Topic WorkshopVendorSharedTopicB =     Game.GetForm(0x0016CC60) as Topic 
 		if WorkshopVendorSharedTopicB
 			TerminalTarget.Say(WorkshopVendorSharedTopicB, TerminalTarget, false, Game.GetPlayer())
-		endif
+		endIf
 		
 		pFollowersScript.SetCompanion(TerminalTarget)
 	else
 		Trace("Unable to Cast Followers to FollowersScript")
-	endif
+	endIf
 	
 EndFunction
 
@@ -3301,17 +3314,17 @@ Function ChangeExpressionRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ChangeExpressionRelay", params)
 		return
-	endif
+	endIf
 
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest is not Running. Aborting")
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInCombat()
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 
 	if (TerminalTarget.IsInFaction(pTweakPosedFaction) && TerminalTarget.GetDistance(Game.GetPlayer()) > 300)
 		Trace("NPC too far away. Aborting")
@@ -3324,7 +3337,7 @@ Function ChangeExpressionRelay()
 		pTweakFollowerScript.ChangeExpressionByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -3336,14 +3349,14 @@ Function StopPoseRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("StopPoseRelay", params)
 		return
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.StopPoseByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -3355,7 +3368,7 @@ Function GatherLooseItems()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("GatherLooseItems", params)
 		return
-	endif
+	endIf
 		
 	AFT:TweakGatherLooseScript pTweakGatherLoose = pTweakGatherLooseItems as AFT:TweakGatherLooseScript
 	if pTweakGatherLoose
@@ -3376,7 +3389,7 @@ Function ScanActorsForItems(Actor target=None)
 	Actor pc     = Game.GetPlayer()
 	if (None == target)
 		target = pc
-	endif
+	endIf
 	
 	ObjectReference[] nearby
 	Actor npc
@@ -3402,10 +3415,10 @@ Function ScanActorsForItems(Actor target=None)
 				if npc && npc.IsDead() && 0 != npc.GetItemCount(None)
 					Trace("Dead actor [" + npc + "] within 1600 of player with items. Looting")
 					npc.RemoveAllItems(target, true)
-				endif
+				endIf
 				j += 1
 			endWhile
-		endif
+		endIf
 		i += 1
 	EndWhile
 	
@@ -3425,7 +3438,7 @@ Function ScanContainersForItems(FormList containers, String name, Actor target=N
 		Trace(name + " has [" + containers.GetSize() + "] containers")
 	else
 		Trace(name + " is None")
-	endif
+	endIf
 
 	ObjectReference[] results
 	ObjectReference result
@@ -3455,7 +3468,7 @@ Function ScanContainersForItems(FormList containers, String name, Actor target=N
 			if result.GetActorOwner()
 				Trace("Owned By [" + result.GetActorOwner() + "]")
 				moveit = false
-			endif
+			endIf
 			if (0 != result.GetLockLevel())
 				Trace("Container is Locked [" + (result.GetLockLevel()) + "]")
 				moveit = false
@@ -3463,7 +3476,7 @@ Function ScanContainersForItems(FormList containers, String name, Actor target=N
 			if (0 == result.GetItemCount(None))
 				Trace("Container is Empty [" + (result.GetItemCount(None)) + "]")
 				moveit = false
-			endif
+			endIf
 		else
 			Trace("Result [" + result + "] Not a Container")
 		endIf
@@ -3474,7 +3487,7 @@ Function ScanContainersForItems(FormList containers, String name, Actor target=N
 			; result.RemoveItem(TweakDedupe3,         -1, true, target)
 			; result.RemoveItem(TweakDedupe4,         -1, true, target)
 			; result.RemoveItem(TweakDedupeStackable, -1, true, target)
-		endif		
+		endIf		
 		i += 1
 	endwhile
 	
@@ -3486,14 +3499,14 @@ Function ScanForItems(FormList list, String name, Actor target=None)
 		Trace(name + " has [" + list.GetSize() + "] elements")
 	else
 		Trace(name + " is None")
-	endif
+	endIf
 	
 	ObjectReference[] results
 	ObjectReference result
 	Actor pc = Game.GetPlayer()
 	if None == target
 		target = pc
-	endif
+	endIf
 	
 	Trace("Scanning [" + name + "]...")
 	ObjectReference center = pc as ObjectReference
@@ -3519,7 +3532,7 @@ Function ScanForItems(FormList list, String name, Actor target=None)
 				Trace("Owned By Faction [" + result.GetFactionOwner() + "]")
 			else
 				Trace("Owned By Non-Loaded Entity")
-			endif
+			endIf
 		elseif result.IsQuestItem()
 			Trace("Quest Item [" + result +"]")
 		else
@@ -3536,7 +3549,7 @@ Function ScanForItems(FormList list, String name, Actor target=None)
 						Trace("Container is Dead")
 					else
 						moveit = false
-					endif
+					endIf
 				elseif (0 != containedin.GetLockLevel())
 					Trace("Container is Locked [" + (containedin.GetLockLevel()) + "]")
 					moveit = false
@@ -3544,8 +3557,8 @@ Function ScanForItems(FormList list, String name, Actor target=None)
 			endIf
 			if moveit
 				target.AddItem(result,1,true)
-			endif
-		endif
+			endIf
+		endIf
 		i += 1
 	endwhile
 		
@@ -3559,24 +3572,24 @@ Function MovePosedRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("MovePosedRelay", params)
 		return
-	endif
+	endIf
 	
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest is not Running. Aborting")
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInCombat()
 		Trace("NPC in combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInScene()
 		Trace("NPC in scene. Aborting")
 		pTweakVisualFailScene.ShowOnPipBoy()
 		return
-	endif
+	endIf
 
 	if (TerminalTarget.GetDistance(Game.GetPlayer()) > 300)
 		Trace("NPC too far away. Aborting")
@@ -3589,7 +3602,7 @@ Function MovePosedRelay()
 		pTweakFollowerScript.MovePosedByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -3601,37 +3614,37 @@ Function ChangePostureRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ChangePostureRelay", params)
 		return
-	endif
+	endIf
 
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest not running. Aborting")
 		return
-	endif
+	endIf
 
 	if (TerminalTarget.IsInFaction(pTweakPosedFaction))
 		Trace("Follower is Posed. Aborting")
 		pTweakVisualFailPosed.ShowOnPipBoy()
 		return
-	endif
+	endIf
 
 	if (1.0 == TerminalTarget.GetValue(pTweakInPowerArmor) || TerminalTarget.WornHasKeyword(pArmorTypePower))
 		Trace("Follower in Power Armor. Aborting")
 		pTweakVisualFailPowerArmor.ShowOnPipBoy()
 		return
-	endif	
+	endIf	
 	
 	if TerminalTarget.IsInCombat()
 		Trace("Follower in Combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 		
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.ChangePostureByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -3652,24 +3665,24 @@ Function EyePartsRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("EyePartsRelay", params)
 		return
-	endif
+	endIf
 
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest not running. Aborting")
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInCombat()
 		Trace("Follower in Combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInScene()
 		Trace("Follower in Scene. Aborting")
 		pTweakVisualFailScene.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if (TerminalTarget.IsInFaction(pTweakPosedFaction) && TerminalTarget.GetDistance(Game.GetPlayer()) > 300)
 		Trace("Follower too far away. Aborting")
@@ -3681,14 +3694,14 @@ Function EyePartsRelay()
 		Trace("Follower in Power Armor. Aborting")
 		pTweakVisualFailPowerArmor.ShowOnPipBoy()
 		return
-	endif	
+	endIf	
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.EyePartsByNameId(id=TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -3700,24 +3713,24 @@ Function HairPartsRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("HairPartsRelay", params)
 		return
-	endif
+	endIf
 	
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest not running. Aborting")
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInCombat()
 		Trace("Follower in Combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInScene()
 		Trace("Follower in Scene. Aborting")
 		pTweakVisualFailScene.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if (TerminalTarget.IsInFaction(pTweakPosedFaction) && TerminalTarget.GetDistance(Game.GetPlayer()) > 300)
 		Trace("Follower too far away. Aborting")
@@ -3730,7 +3743,7 @@ Function HairPartsRelay()
 		pTweakFollowerScript.HairPartsByNameId(id=TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 		
 EndFunction
 
@@ -3742,24 +3755,24 @@ Function HeadPartsRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("HeadPartsRelay", params)
 		return
-	endif
+	endIf
 	
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest not running. Aborting")
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInCombat()
 		Trace("Follower in Combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInScene()
 		Trace("Follower in Scene. Aborting")
 		pTweakVisualFailScene.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if (TerminalTarget.IsInFaction(pTweakPosedFaction) && TerminalTarget.GetDistance(Game.GetPlayer()) > 300)
 		Trace("Follower too far away. Aborting")
@@ -3771,14 +3784,14 @@ Function HeadPartsRelay()
 		Trace("Follower in Power Armor. Aborting")
 		pTweakVisualFailPowerArmor.ShowOnPipBoy()
 		return
-	endif	
+	endIf	
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.HeadPartsByNameId(id=TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -3790,24 +3803,24 @@ Function BeardPartsRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("BeardPartsRelay", params)
 		return
-	endif
+	endIf
 	
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest not running. Aborting")
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInCombat()
 		Trace("Follower in Combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInScene()
 		Trace("Follower in Scene. Aborting")
 		pTweakVisualFailScene.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if (TerminalTarget.IsInFaction(pTweakPosedFaction) && TerminalTarget.GetDistance(Game.GetPlayer()) > 300)
 		Trace("Follower too far away. Aborting")
@@ -3820,7 +3833,7 @@ Function BeardPartsRelay()
 		pTweakFollowerScript.BeardPartsByNameId(id=TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -3834,7 +3847,7 @@ Function SculptRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("SculptRelay", params)
 		return
-	endif
+	endIf
 
 	; SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 50)
 	
@@ -3842,25 +3855,25 @@ Function SculptRelay()
 		Trace("Follower is Posed. Aborting")
 		pTweakVisualFailPosed.ShowOnPipBoy()
 		return
-	endif
+	endIf
 
 	if (1.0 == TerminalTarget.GetValue(pTweakInPowerArmor) || TerminalTarget.WornHasKeyword(pArmorTypePower))
 		Trace("Follower in Power Armor. Aborting")
 		pTweakVisualFailPowerArmor.ShowOnPipBoy()
 		return
-	endif	
+	endIf	
 	
 	if TerminalTarget.IsInCombat()
 		Trace("Follower in Combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInScene()
 		Trace("Follower in Scene. Aborting")
 		pTweakVisualFailScene.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if (TerminalTargetLeveled && TerminalTargetHasBody)
 		Trace("TerminalTargetLeveled True and TerminalTargetHasBody Calling SculptLeveledByNameId")
@@ -3872,8 +3885,8 @@ Function SculptRelay()
 			return
 		else
 			Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-		endif		
-	endif
+		endIf		
+	endIf
 
 	if (TerminalTargetLeveled)	
 		Trace("TerminalTargetLeveled True (And Has Body is false)")
@@ -3883,10 +3896,10 @@ Function SculptRelay()
 			pSculptLeveledHintShown = True
 		else
 			Trace("pSculptLeveledHintShown is True. Skipping hint...")
-		endif
+		endIf
 	else
 		Trace("TerminalTargetLeveled is false...")
-	endif
+	endIf
 	
 	PlayerSheathe()
 	
@@ -3895,7 +3908,7 @@ Function SculptRelay()
 		pTweakFollowerScript.SculptByNameId(id=TerminalTargetId, uiMenu=1)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 			
 EndFunction
 
@@ -3907,31 +3920,31 @@ Function PoseRelay(int startBrowse=-1)
 		params[0] = startBrowse
 		self.CallFunctionNoWait("PoseRelay", params)
 		return
-	endif
+	endIf
 
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest not running. Aborting")
 		return
-	endif
+	endIf
 
 	; Maybe later....
 	if (1.0 == TerminalTarget.GetValue(pTweakInPowerArmor) || TerminalTarget.WornHasKeyword(pArmorTypePower))
 		Trace("Follower in Power Armor. Aborting")
 		pTweakVisualFailPowerArmor.ShowOnPipBoy()
 		return
-	endif	
+	endIf	
 	
 	if TerminalTarget.IsInCombat()
 		Trace("Follower in Combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInScene()
 		Trace("Follower in Scene. Aborting")
 		pTweakVisualFailScene.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if (TerminalTarget.IsInFaction(pTweakPosedFaction) && TerminalTarget.GetDistance(Game.GetPlayer()) > 300)
 		Trace("Follower too far away. Aborting")
@@ -3947,7 +3960,7 @@ Function PoseRelay(int startBrowse=-1)
 		pTweakFollowerScript.PoseByNameId(TerminalTargetId, startBrowse)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 		
 EndFunction
 
@@ -3958,36 +3971,36 @@ Function NewBodyRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("NewBodyRelay", params)
 		return
-	endif
+	endIf
 
 	if !pTweakVisualChoice.IsRunning()
 		Trace("TweakVisualChoice Quest not running. Aborting")
 		return
-	endif
+	endIf
 
 	if (TerminalTarget.IsInFaction(pTweakPosedFaction))
 		Trace("Follower is Posed. Aborting")
 		pTweakVisualFailPosed.ShowOnPipBoy()
 		return
-	endif
+	endIf
 
 	if (1.0 == TerminalTarget.GetValue(pTweakInPowerArmor) || TerminalTarget.WornHasKeyword(pArmorTypePower))
 		Trace("Follower in Power Armor. Aborting")
 		pTweakVisualFailPowerArmor.ShowOnPipBoy()
 		return
-	endif	
+	endIf	
 	
 	if TerminalTarget.IsInCombat()
 		Trace("Follower in Combat. Aborting")
 		pTweakVisualFailCombat.ShowOnPipBoy()
 		return
-	endif
+	endIf
 	
 	if TerminalTarget.IsInScene()
 		Trace("Follower in Scene. Aborting")
 		pTweakVisualFailScene.ShowOnPipBoy()
 		return
-	endif
+	endIf
 		
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -3995,7 +4008,7 @@ Function NewBodyRelay()
 		pTweakFollowerScript.NewBodyByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 		
 EndFunction
 
@@ -4006,7 +4019,7 @@ Function AddNickItemsRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("AddNickItemsRelay", params)
 		return		
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -4015,7 +4028,7 @@ Function AddNickItemsRelay()
 		pTweakFollowerScript.ViewGearByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFUnction
 
@@ -4026,13 +4039,13 @@ Function TradeRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("TradeRelay", params)
 		return		
-	endif
+	endIf
 
 	if TerminalTarget && TerminalTargetUnmanaged
 		Trace("UnManaged NPC Detected. Using Raw implementation")
 		if !SpeakDialogue(TerminalTarget, pTweakTopicTrade, pTweakTopicTradeModID, "pTweakTopicTrade", 60)
 			TerminalTarget.OpenInventory(true)
-		endif
+		endIf
 		return
 	endIf
 	
@@ -4043,8 +4056,8 @@ Function TradeRelay()
 			pTweakFollowerScript.ViewGearByNameId(TerminalTargetId)
 		else
 			Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-		endif
-	endif	
+		endIf
+	endIf	
 EndFunction
 
 Function EnablePAHelmetCombatRelay(bool backToPip=True)
@@ -4061,7 +4074,7 @@ Function EnablePAHelmetCombatRelay(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("EnablePAHelmetCombatRelay", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
@@ -4074,12 +4087,12 @@ Function EnablePAHelmetCombatRelay(bool backToPip=True)
 				TerminalTargetPAHelmetCombatOnly = TerminalTarget.IsInFaction(pTweakPAHelmetCombatToggleFaction)						
 				if (current != TerminalTargetPAHelmetCombatOnly)
 					pTweakCombatAITerminal.ShowOnPipBoy()
-				endif
-			endif
+				endIf
+			endIf
 		else
 			Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-		endif
-	endif
+		endIf
+	endIf
 EndFunction
 
 
@@ -4099,7 +4112,7 @@ Function DisablePAHelmetCombatRelay(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("DisablePAHelmetCombatRelay", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
@@ -4112,12 +4125,12 @@ Function DisablePAHelmetCombatRelay(bool backToPip=True)
 				TerminalTargetPAHelmetCombatOnly = TerminalTarget.IsInFaction(pTweakPAHelmetCombatToggleFaction)
 				if (current != TerminalTargetPAHelmetCombatOnly)
 					pTweakCombatAITerminal.ShowOnPipBoy()
-				endif
-			endif					
+				endIf
+			endIf					
 		else
 			Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-		endif
-	endif
+		endIf
+	endIf
 EndFunction
 
 Function ToggleUseAmmo(bool backToPip=True)
@@ -4130,7 +4143,7 @@ Function ToggleUseAmmo(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleUseAmmo", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetUseAmmo
@@ -4139,16 +4152,16 @@ Function ToggleUseAmmo(bool backToPip=True)
 			TerminalTarget.RemoveKeyword(pTeammateDontUseAmmoKeyword)
 		else
 			TerminalTarget.AddKeyword(pTeammateDontUseAmmoKeyword)
-		endif
+		endIf
 
 		if backToPip
 			Utility.waitmenumode(0.2)
 			TerminalTargetUseAmmo = !TerminalTarget.HasKeyword(pTeammateDontUseAmmoKeyword)
 			if (current != TerminalTargetUseAmmo)
 				pTweakSettingsTerminal.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 	
 EndFunction
 
@@ -4164,7 +4177,7 @@ Function ToggleNoPADamage(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleNoPADamage", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetPANoDamage
@@ -4173,16 +4186,16 @@ Function ToggleNoPADamage(bool backToPip=True)
 			TerminalTarget.RemoveKeyword(pPowerArmorPreventArmorDamageKeyword)
 		else
 			TerminalTarget.AddKeyword(pPowerArmorPreventArmorDamageKeyword)
-		endif
+		endIf
 		
 		if backToPip
 			Utility.waitmenumode(0.2)
 			TerminalTargetPANoDamage = TerminalTarget.HasKeyword(pPowerArmorPreventArmorDamageKeyword)
 			if (current != TerminalTargetPANoDamage)
 				pTweakSettingsTerminal.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 	
 endFunction
 	
@@ -4197,7 +4210,7 @@ Function ToggleAvoidTrapRelay(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleAvoidTrapRelay", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetAvoidsTraps
@@ -4205,16 +4218,16 @@ Function ToggleAvoidTrapRelay(bool backToPip=True)
 			TerminalTarget.SetValue(pFavorsPerDay,0)
 		else
 			TerminalTarget.SetValue(pFavorsPerDay,42)
-		endif
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetAvoidsTraps = (42 == TerminalTarget.GetValue(pFavorsPerDay))
 			if (current != TerminalTargetAvoidsTraps)
 				pTweakSettingsAITerminal.ShowOnPipBoy()
-			endif
-		endif
-	endif	
+			endIf
+		endIf
+	endIf	
 EndFunction
 
 Function ToggleNoDisapprove(bool backToPip=True)
@@ -4225,7 +4238,7 @@ Function ToggleNoDisapprove(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleNoDisapprove", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTarget.IsInFaction(pTweakNoDisapprove)
@@ -4233,16 +4246,16 @@ Function ToggleNoDisapprove(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakNoDisapprove)
 		else
 			TerminalTarget.AddToFaction(pTweakNoDisapprove)
-		endif
+		endIf
 		
 		if backToPip
 			Utility.waitmenumode(0.2)
 			TerminalTargetNoDisapprove = TerminalTarget.IsInFaction(pTweakNoDisapprove)
 			if (current != TerminalTargetNoDisapprove)
 				pTweakSettingsPersonality.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleNoApprove(bool backToPip=True)
@@ -4253,7 +4266,7 @@ Function ToggleNoApprove(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleNoApprove", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTarget.IsInFaction(pTweakNoApprove)
@@ -4261,16 +4274,16 @@ Function ToggleNoApprove(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakNoApprove)
 		else
 			TerminalTarget.AddToFaction(pTweakNoApprove)
-		endif
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetNoApprove = TerminalTarget.IsInFaction(pTweakNoApprove)		
 			if (current != TerminalTargetNoApprove)
 				pTweakSettingsPersonality.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleTrackKills(bool backToPip=True)
@@ -4281,12 +4294,12 @@ Function ToggleTrackKills(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleTrackKills", params)
 		return
-	endif
+	endIf
 
 	If !TerminalTarget
 		Trace("No Terminal Target")
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
@@ -4298,8 +4311,8 @@ Function ToggleTrackKills(bool backToPip=True)
 			TerminalTargetTrackKills = TerminalTarget.IsInFaction(pTweakTrackKills)
 			if (current != TerminalTargetTrackKills)
 				pTweakSettingsAITerminal.ShowOnPipBoy()
-			endif
-		endif
+			endIf
+		endIf
 	endIf
 
 EndFunction
@@ -4313,7 +4326,7 @@ Function ToggleConvNegToPos(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleConvNegToPos", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 	
@@ -4328,17 +4341,17 @@ Function ToggleConvNegToPos(bool backToPip=True)
 				TerminalTarget.AddToFaction(pTweakNoCommentDisapprove)
 				TerminalTargetNoCommentDisapprove = true
 				pTweakNegativeCommentsAlert.Show()
-			endif
-		endif
+			endIf
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetConvNegToPos = TerminalTarget.IsInFaction(pTweakConvNegToPos)	
 			if (current != TerminalTargetConvNegToPos)
 				pTweakSettingsPersonality.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleConvPosToNeg(bool backToPip=True)
@@ -4349,7 +4362,7 @@ Function ToggleConvPosToNeg(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleConvPosToNeg", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetConvPosToNeg
@@ -4362,17 +4375,17 @@ Function ToggleConvPosToNeg(bool backToPip=True)
 				TerminalTarget.AddToFaction(pTweakNoCommentApprove)
 				TerminalTargetNoCommentApprove = true
 				pTweakPositiveCommentsAlert.Show()
-			endif			
-		endif
+			endIf			
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetConvPosToNeg = TerminalTarget.IsInFaction(pTweakConvPosToNeg)
 			if (current != TerminalTargetConvPosToNeg)
 				pTweakSettingsPersonality.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleNoCommentIdle(bool backToPip=True)
@@ -4383,7 +4396,7 @@ Function ToggleNoCommentIdle(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleNoCommentIdle", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetNoCommentIdle
@@ -4393,16 +4406,16 @@ Function ToggleNoCommentIdle(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakNoIdleChatter)
 		else
 			TerminalTarget.AddToFaction(pTweakNoIdleChatter)
-		endif
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetNoCommentIdle = TerminalTarget.IsInFaction(pTweakNoIdleChatter)
 			if (current != TerminalTargetNoCommentIdle)
 				pTweakSettingsChat.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleNoCommentGeneral(bool backToPip=True)
@@ -4413,7 +4426,7 @@ Function ToggleNoCommentGeneral(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleNoCommentGeneral", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetNoCommentGeneral
@@ -4422,16 +4435,16 @@ Function ToggleNoCommentGeneral(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakNoCommentGeneral)
 		else
 			TerminalTarget.AddToFaction(pTweakNoCommentGeneral)
-		endif
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetNoCommentGeneral = TerminalTarget.IsInFaction(pTweakNoCommentGeneral)
 			if (current != TerminalTargetNoCommentGeneral)
 				pTweakSettingsChat.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleNoCommentApprove(bool backToPip=True)
@@ -4442,7 +4455,7 @@ Function ToggleNoCommentApprove(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleNoCommentApprove", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetNoCommentApprove
@@ -4450,16 +4463,16 @@ Function ToggleNoCommentApprove(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakNoCommentApprove)
 		else
 			TerminalTarget.AddToFaction(pTweakNoCommentApprove)
-		endif
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetNoCommentApprove = TerminalTarget.IsInFaction(pTweakNoCommentApprove)
 			if (current != TerminalTargetNoCommentApprove)
 				pTweakSettingsChat.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleNoCommentDisapprove(bool backToPip=True)
@@ -4470,7 +4483,7 @@ Function ToggleNoCommentDisapprove(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleNoCommentDisapprove", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetNoCommentDisapprove
@@ -4478,16 +4491,16 @@ Function ToggleNoCommentDisapprove(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakNoCommentDisapprove)
 		else
 			TerminalTarget.AddToFaction(pTweakNoCommentDisapprove)
-		endif
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetNoCommentDisapprove = TerminalTarget.IsInFaction(pTweakNoCommentDisapprove)
 			if (current != TerminalTargetNoCommentDisapprove)
 				pTweakSettingsChat.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleNoCommentActivator(bool backToPip=True)
@@ -4498,7 +4511,7 @@ Function ToggleNoCommentActivator(bool backToPip=True)
 		params[0] = backToPip
 		self.CallFunctionNoWait("ToggleNoCommentActivator", params)
 		return
-	endif
+	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTargetNoCommentActivator
@@ -4506,16 +4519,16 @@ Function ToggleNoCommentActivator(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakNoCommentActivator)
 		else
 			TerminalTarget.AddToFaction(pTweakNoCommentActivator)
-		endif
+		endIf
 		
 		if backToPip
 			utility.waitmenumode(0.2)
 			TerminalTargetNoCommentActivator = TerminalTarget.IsInFaction(pTweakNoCommentActivator)
 			if (current != TerminalTargetNoCommentActivator)
 				pTweakSettingsChat.ShowOnPipBoy()
-			endif
-		endif
-	endif
+			endIf
+		endIf
+	endIf
 EndFunction
 
 Function ToggleAllowMultInterjections()
@@ -4524,12 +4537,12 @@ Function ToggleAllowMultInterjections()
 		pTweakAllowMultInterjections.SetValue(1.0)
 		if pTweakInterjectionQuestScript
 			pTweakInterjectionQuestScript.RegisterInterjections()
-		endif
+		endIf
 	else
 		pTweakAllowMultInterjections.SetValue(0.0)
 		if pTweakInterjectionQuestScript
 			pTweakInterjectionQuestScript.UnRegisterInterjections()
-		endif
+		endIf
 	endIf
 EndFunction
 
@@ -4541,7 +4554,7 @@ Function ToggleCommentSynchronous()
 		pTweakDFScript.SetCommentSynchronous(!current)
 	else
 		Trace("Unable to Cast Followers to TweakDFScript")
-	endif
+	endIf
 
 EndFunction
 
@@ -4553,27 +4566,27 @@ Function ScaleRelay(float change)
 		params[0] = change
 		self.CallFunctionNoWait("ScaleRelay", params)
 		return		
-	endif
+	endIf
 	
 	if TerminalTarget
 		if (0 == change) ; Reset
 			TerminalTarget.SetScale(1.0)
 			TerminalTarget.SetValue(pTweakScale,100.0)
 			return
-		endif
+		endIf
 		float current = TerminalTarget.GetValue(pTweakScale)
 		if current < 1.0
 			current = 1.0
-		endif
+		endIf
 		current = current * change
 		if current < 1.0
 			current = 1.0
-		endif
+		endIf
 		TerminalTarget.SetValue(pTweakScale,current)
 		float percent = current/100		
 		TerminalTarget.SetScale(percent)
 		pTweakCurrentScale.Show(percent)
-	endif
+	endIf
 		
 EndFunction		
 		
@@ -4588,7 +4601,7 @@ Function CancelRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("CancelRelay", params)
 		return
-	endif
+	endIf
 	
 	; Hack : Bethedsa disabled this by adding the condition Global TrueValue == false. Luckily, 
 	; the global is not marked as a constant, so we can enable briefly to allow disabled Topics
@@ -4601,7 +4614,7 @@ Function CancelRelay()
 		TrueValue.SetValue(1.0)
 	else
 		Trace("Unable to Retrieve TrueValue GlobalVariable")
-	endif
+	endIf
 		
 	
 endFunction
@@ -4616,7 +4629,7 @@ Function DistFarRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("DistFarRelay", params)
 		return
-	endif
+	endIf
 	
 	SpeakDialogue(TerminalTarget, pTweakTopicDistFar, pTweakTopicDistFarModID, "pTweakTopicDistFar")
 
@@ -4625,7 +4638,7 @@ Function DistFarRelay()
 		pTweakFollowerScript.SetFollowerDistanceFarByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -4638,7 +4651,7 @@ Function DistMedRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("DistMedRelay", params)
 		return
-	endif
+	endIf
 	
 	SpeakDialogue(TerminalTarget, pTweakTopicDistMed, pTweakTopicDistMedModID, "pTweakTopicDistMed")
 
@@ -4647,7 +4660,7 @@ Function DistMedRelay()
 		pTweakFollowerScript.SetFollowerDistanceMedByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -4660,7 +4673,7 @@ Function DistNearRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("DistNearRelay", params)
 		return
-	endif
+	endIf
 	
 	SpeakDialogue(TerminalTarget, pTweakTopicDistNear, pTweakTopicDistNearModID, "pTweakTopicDistNear")
 
@@ -4669,7 +4682,7 @@ Function DistNearRelay()
 		pTweakFollowerScript.SetFollowerDistanceNearByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -4682,7 +4695,7 @@ Function StyleAggRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("StyleAggRelay", params)
 		return
-	endif
+	endIf
 	
 	SpeakDialogue(TerminalTarget, pTweakTopicStyleAgg, pTweakTopicStyleAggModID, "pTweakTopicStyleAgg")
 
@@ -4691,7 +4704,7 @@ Function StyleAggRelay()
 		pTweakFollowerScript.SetFollowerStanceAggressiveByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -4704,7 +4717,7 @@ Function StyleDefRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("StyleDefRelay", params)
 		return
-	endif
+	endIf
 	
 	SpeakDialogue(TerminalTarget, pTweakTopicStyleDef, pTweakTopicStyleDefModID, "pTweakTopicStyleDef")
 	
@@ -4713,7 +4726,7 @@ Function StyleDefRelay()
 		pTweakFollowerScript.SetFollowerStanceDefensiveByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -4726,14 +4739,14 @@ Function StayRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("StayRelay", params)
 		return
-	endif
+	endIf
 	
 	if TerminalTarget && TerminalTargetUnmanaged
 		Trace("UnManaged NPC Detected. Using Raw implementation")
 		AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
 		if DFScript
 			DFScript.FollowerWait(TerminalTarget)
-		endif
+		endIf
 		return
 	endIf
 
@@ -4742,7 +4755,7 @@ Function StayRelay()
 		pTweakFollowerScript.SetFollowerStayByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFUnction
 
@@ -4755,14 +4768,14 @@ Function HangoutRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("HangoutRelay", params)
 		return
-	endif
+	endIf
 	
 	if TerminalTarget && TerminalTargetUnmanaged
 		Trace("UnManaged NPC Detected. Using Raw implementation")
 		AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
 		if DFScript
 			DFScript.FollowerHangout(TerminalTarget)
-		endif
+		endIf
 		return
 	endIf
 
@@ -4771,7 +4784,7 @@ Function HangoutRelay()
 		pTweakFollowerScript.SetFollowerHangoutByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFUnction
 
@@ -4784,14 +4797,14 @@ Function FollowRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("FollowRelay", params)
 		return
-	endif
+	endIf
 
 	if TerminalTarget && TerminalTargetUnmanaged
 		Trace("UnManaged NPC Detected. Using Raw implementation")
 		AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
 		if DFScript
 			DFScript.FollowerFollow(TerminalTarget)
-		endif
+		endIf
 		return
 	endIf
 	
@@ -4800,7 +4813,7 @@ Function FollowRelay()
 		pTweakFollowerScript.SetFollowerFollowByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFUnction
 
@@ -4815,7 +4828,7 @@ Function DismissRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("DismissRelay", params)
 		return
-	endif
+	endIf
 	
 	SpeakDialogue(TerminalTarget, pTweakTopicDismiss, pTweakTopicDismissModID, "pTweakTopicDismiss")
 	
@@ -4824,7 +4837,7 @@ Function DismissRelay()
 		AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
 		if DFScript
 			DFScript.DismissCompanion(TerminalTarget)
-		endif
+		endIf
 		return
 	endIf
 	
@@ -4833,7 +4846,7 @@ Function DismissRelay()
 		pTweakFollowerScript.DismissFollowerByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 
 endFunction
 
@@ -4845,7 +4858,7 @@ Function BehindMeRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("BehindMeRelay", params)
 		return
-	endif
+	endIf
 
 	if TerminalTarget && TerminalTargetUnmanaged
 		Trace("UnManaged NPC Detected. Using Raw implementation")	
@@ -4859,7 +4872,7 @@ Function BehindMeRelay()
 		pTweakFollowerScript.MoveToPlayerByNameId(id=TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -4872,7 +4885,7 @@ Function SummonRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("SummonRelay", params)
 		return
-	endif
+	endIf
 
 	; SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 50, 50)
 	
@@ -4881,7 +4894,7 @@ Function SummonRelay()
 		pTweakFollowerScript.MoveToPlayerByNameId(id=TerminalTargetId, excludeWaiting=false, startingOffset = 0)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -4893,7 +4906,7 @@ Function UnEquipAllRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("UnEquipAllRelay", params)
 		return
-	endif
+	endIf
 
 	SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 50, 50)
 	
@@ -4902,7 +4915,7 @@ Function UnEquipAllRelay()
 		pTweakFollowerScript.UnEquipGearByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFunction
 
@@ -4914,7 +4927,7 @@ Function TakePlayerJunkRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("TakePlayerJunkRelay", params)
 		return
-	endif
+	endIf
 
 	SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
 	
@@ -4923,7 +4936,7 @@ Function TakePlayerJunkRelay()
 		pTweakFollowerScript.TakePlayerJunk(TerminalTarget)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFunction
 
@@ -4935,7 +4948,7 @@ Function TakePlayerDuplicatesRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("TakePlayerDuplicatesRelay", params)
 		return
-	endif
+	endIf
 
 	SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
 	
@@ -4944,7 +4957,7 @@ Function TakePlayerDuplicatesRelay()
 		pTweakFollowerScript.TakePlayerDuplicates(TerminalTarget)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFunction
 
@@ -4956,7 +4969,7 @@ Function ScrapJunkRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("ScrapJunkRelay", params)
 		return
-	endif
+	endIf
 
 	SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
 	
@@ -4965,7 +4978,7 @@ Function ScrapJunkRelay()
 		pTweakFollowerScript.ScrapJunk(TerminalTarget)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFunction
 
@@ -4977,18 +4990,18 @@ Function GivePlayerJunkRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("GivePlayerJunkRelay", params)
 		return
-	endif
+	endIf
 
 	if (0 != TerminalTargetId)
 		SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.GivePlayerJunkByNameID(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFunction
 
@@ -5000,18 +5013,18 @@ Function GivePlayerScrapRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("GivePlayerScrapRelay", params)
 		return
-	endif
+	endIf
 
 	if (0 != TerminalTargetId)
 		SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.GivePlayerScrapByNameID(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFunction
 
@@ -5023,7 +5036,7 @@ Function SellUnusedRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("SellUnusedRelay", params)
 		return
-	endif
+	endIf
 
 	SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
 	
@@ -5032,7 +5045,7 @@ Function SellUnusedRelay()
 		pTweakFollowerScript.SellUnused(TerminalTarget)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFunction
 
@@ -5044,14 +5057,14 @@ Function UnManageNPC()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("UnManageNPC", params)
 		return
-	endif
+	endIf
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.UnManageFollower(TerminalTarget)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -5063,18 +5076,18 @@ Function TransferUnusedRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("TransferUnusedRelay", params)
 		return
-	endif
+	endIf
 
 	if (0 != TerminalTargetId)
 		SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.TransferUnusedByNameID(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFUnction
 
@@ -5086,18 +5099,18 @@ Function TransferAllRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("TransferAllRelay", params)
 		return
-	endif
+	endIf
 
 	if (0 != TerminalTargetId)
 		SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.TransferAllByNameID(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 
 EndFUnction
 
@@ -5110,18 +5123,18 @@ Function EnterPowerArmorRelay()
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("EnterPowerArmorRelay", params)
 		return
-	endif
+	endIf
 
 	if (0 != TerminalTargetId)
 		SpeakDialogue(TerminalTarget, pTweakTopicAck, pTweakTopicAckModID, "pTweakTopicAck", 15, 15)
-	endif
+	endIf
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.EnterPowerArmorByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
-	endif
+	endIf
 	
 EndFunction
 
@@ -5130,12 +5143,12 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 	if aSpeaker.IsInFaction(pTweakNoCommentActivator)
 		Trace("Returning False. Actor member of NoCommentActivator")
 		return false
-	endif	
+	endIf	
 	if aSpeaker.IsUnconscious()
 		Trace("Returning False. Actor isn't conscious")
 		; This wouldn't make sense...
 		return false
-	endif	
+	endIf	
 	if aSpeaker.IsTalking()
 		Trace("Skipping. NPC is already talking.")
 		int maxwait = 20
@@ -5145,7 +5158,7 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 			maxwait -= 1
 		endwhile
 		return false
-	endif
+	endIf
 
 	Actor playerRef = Game.GetPlayer()
 	
@@ -5153,7 +5166,7 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 	if (!pTweakFollowerScript)
 		Trace("Cast to AFT:TweakFollowerScript Failed")	
 		return false
-	endif
+	endIf
 	
 	int formAV = (aSpeaker.GetValue(pTopicAV) as Int)
 	if (0 == formAV)
@@ -5162,10 +5175,10 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 			formAV = 0x0016CC60 ; Generic "Yes"
 		else
 			return false
-		endif
+		endIf
 	else
 		Trace("Topic [" + hint + "] found for NPC [" + aSpeaker + "]")
-	endif
+	endIf
 	
 	Form flookup = None
 	int modID  = aSpeaker.GetValue(pModIDAV) as Int	
@@ -5202,16 +5215,16 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 			; to avoid constant GetFormFromFile() operations...
 			
 			flookup = Game.GetFormFromFile(formAV, "DLCNukaWorld.esm")
-		endif
+		endIf
 	else
 		Trace("FormID [" + formAV + "]")
 		flookup = Game.GetForm(formAV)
-	endif
+	endIf
 	
 	if (None == flookup)
 		Trace("Invalid FormID (" + formAV + ") for Topic [" + hint + "] on NPC [" + aSpeaker + "]")
 		return false
-	endif	
+	endIf	
 	Topic t = (flookup as Topic)
 	if (None == t)
 		; Try FormList
@@ -5219,13 +5232,13 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 		if (None == fl)
 			Trace("Failed to cast FormID (" + formAV + "), Topic [" + hint + "], NPC [" + aSpeaker + "] to Topic or FormList")
 			return false
-		endif
+		endIf
 		int numtopics = fl.GetSize()
 		Trace("ActorValue points at formlist [" + fl + "] with [" + numtopics + "] Topics")
 		if (0 == numtopics)
 			Trace("FormList (" + formAV + "), Topic [" + hint + "], NPC [" + aSpeaker + "] is empty. Skipping")
 			return false
-		endif	
+		endIf	
 		if (Utility.RandomInt(1,100) < first_prob)
 			Trace("First Roll below [" + first_prob + "] Using Offset [0]")
 			t = (fl.GetAt(0) as Topic)
@@ -5236,12 +5249,12 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 			if (!t)
 				Trace("Unable to cast FormList[" + sindex + "] (" + formAV + "), Topic [" + hint + "], NPC [" + aSpeaker + "] to Topic. Using primary")
 				t = (fl.GetAt(0) as Topic)
-			endif
+			endIf
 		else
 			Trace("Skipping Voice (didn't role)")
 			return false
-		endif
-	endif
+		endIf
+	endIf
 	if (t)
 		aSpeaker.SetHeadTracking(true)
 		if !aSpeaker.HasDetectionLOS(playerRef)
@@ -5250,17 +5263,17 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 					Trace("Skipping Voice (out of range)")
 					aSpeaker.SetHeadTracking(false)
 					return false
-				endif			
+				endIf			
 				Trace("NPC is not facing Player. Attempting Translate")
 				float zOffset = aSpeaker.GetHeadingAngle(playerRef)
 				aSpeaker.TranslateTo(aSpeaker.GetPositionX(), aSpeaker.GetPositionY(), aSpeaker.GetPositionZ(), aSpeaker.GetAngleX(), aSpeaker.GetAngleY(), aSpeaker.GetAngleZ() + zOffset, 100.0, 200.0)
 				Utility.Wait(1.0)
 			else
 				Trace("NPC is posed. Skipping translation")
-			endif	
+			endIf	
 		else
 			Trace("NPC has LOS with player. Skipping translation")
-		endif
+		endIf
 		
 
 		Trace("Speaking topic: " + t)
@@ -5274,7 +5287,7 @@ Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pMod
 		endwhile
 		aSpeaker.SetHeadTracking(false)
 		return true	
-	endif
+	endIf
 		
 	Trace("Unable to cast FormList[0] (" + formAV + "), Topic [" + hint + "], NPC [" + aSpeaker + "] to Topic.")
 	return false
@@ -5315,15 +5328,15 @@ Function OnNameSelected(int id)
 					pTweakNamesScript.AssignName(TerminalTarget,id)
 				else
 					Trace("Unable to Cast TweakNames to TweakNamesScript")		
-				endif
+				endIf
 				return
-			endif
+			endIf
 
 			if (2 == ActivateOnNameSelect)
 				pTweakFollowerScript.LocateFollowerByNameID(id)
 				ActivateOnNameSelect = 0
 				return
-			endif
+			endIf
 			
 			if (3 == ActivateOnNameSelect)
 				ActivateOnNameSelect = 0
@@ -5334,7 +5347,7 @@ Function OnNameSelected(int id)
 				params[0] = id
 				pTweakFollowerScript.CallFunctionNoWait("UnManageByNameID", params)
 				return
-			endif
+			endIf
 												
 			
 			; 0 == ActivateOnNameSelect : Load the specified follower into the Terminal Target...
@@ -5346,11 +5359,11 @@ Function OnNameSelected(int id)
 
 			EvaluateTerminalTarget()
 			
-		endif
+		endIf
 	else
 		TerminalTarget   = None
 		TerminalTargetId = 0
-	endif
+	endIf
 	
 EndFunction
 
@@ -5374,7 +5387,7 @@ Function AssignNameSetup()
 		Trace("No Terminal Target Detected")
 		AllTogglesOff()
 		return
-	endif
+	endIf
 	AvailableCustomNameTogglesOn()
 	ActivateOnNameSelect = 1
 	return
@@ -5397,7 +5410,7 @@ Function AllTogglesOn()
 			toggle.SetValue(1.0)
 			i += 1
 		endWhile
-	endif
+	endIf
 EndFunction
 
 Function AllTogglesOff()
@@ -5411,7 +5424,7 @@ Function AllTogglesOff()
 			toggle.SetValue(0.0)
 			i += 1
 		endWhile
-	endif
+	endIf
 EndFunction
 
 Function CurrentManagedTogglesOn()
@@ -5423,13 +5436,13 @@ Function CurrentManagedTogglesOn()
 		return
 	else	
 		mask = pTweakFollowerScript.GetManagedNameSlots()
-	endif
+	endIf
 	
 	int masklen = mask.Length
 	if (masklen > pTweakToggles.GetSize())
 		Trace("GetManagedNameSlots() returned more slots than supported. Truncating")
 		masklen = pTweakToggles.GetSize()
-	endif
+	endIf
 	
     int i = 0
 	while (i < masklen)
@@ -5438,7 +5451,7 @@ Function CurrentManagedTogglesOn()
 			toggle.SetValue(1.0)
 		else
 			toggle.SetValue(0.0)
-		endif
+		endIf
 		i += 1
 	endWhile
 endFunction
@@ -5450,7 +5463,7 @@ Function CurrentFollowerTogglesOn()
 	if (!pTweakFollowerScript)
 		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
 		return
-	endif	
+	endIf	
 	int[] followerNameIds = pTweakFollowerScript.GetCurrentFollowerNameSlots()
 	int followerNameIdslen = followerNameIds.Length
 	Trace("GetCurrentFollowerNameSlots() returned [" + followerNameIdslen + "] Name Ids")			
@@ -5486,7 +5499,7 @@ Function AvailableCustomNameTogglesOn()
 	if (size < 52)
 		Trace("TweakToggles size < 52. Aborting...")
 		return
-	endif
+	endIf
 	
 	int maxnumcustom = (size - 51) ; should be 60...
 	
@@ -5503,13 +5516,13 @@ Function AvailableCustomNameTogglesOn()
 		endwhile
 	else
 		mask = pTweakFollowerScript.GetAvailableCustomNameSlots()
-	endif
+	endIf
 	
 	int masklen = mask.Length
 	if (masklen > maxnumcustom)
 		Trace("GetUsedCustomNameSlots() returned more slots than supported. Truncating")
 		masklen = maxnumcustom
-	endif
+	endIf
 	
 	int valueplus51 = 51
 
@@ -5520,7 +5533,7 @@ Function AvailableCustomNameTogglesOn()
 			toggle.SetValue(1.0)
 		else
 			toggle.SetValue(0.0)
-		endif
+		endIf
 		i += 1
 		valueplus51 += 1
 	endWhile
@@ -5556,9 +5569,9 @@ EndFunction
 Float Function Enforce360Bounds(float a)
     if (a < 0) 
         a = a + 360
-    endif
+    endIf
     if (a > 360)
         a = a - 360
-    endif 
+    endIf 
 	return a
 EndFunction  
