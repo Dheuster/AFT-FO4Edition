@@ -274,8 +274,6 @@ Perk	  Property pTweakRangedDmgBoost			Auto Const ; Perk increases Ranged Damage
 Perk	  Property pTweakPlayerSynergyChrPerk	Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakPlayerSynergyLckPerk	Auto Const ; Perk increases Ranged Damage with perception
 
-
-
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 	string logName = "TweakFollowerScript"
 	debug.OpenUserLog(logName)
@@ -1533,29 +1531,114 @@ EndFunction
 Location Function GetHomeLoc(Actor npc, int type = 0) ; 0 = assigned, 1 = original
 
 	Trace("GetHomeLoc()")
-	int id = npc.GetFactionRank(pTweakFollowerFaction) As Int	
-	if (id < 1)
-		Trace("GetHomeLoc : Follower Unknown. Ignoring Event")
-		return None
+	
+	TweakSettings s = None	
+	int followerId = npc.GetFactionRank(pTweakFollowerFaction)
+	if (followerId > 0)
+		s = (pManagedMap[followerId] as TweakSettings)
+		if s && !s.assignedHome
+			s.AssignHome()
+			Utility.wait(0.1)
+		endif
+	endif	
+	
+	; Special Case : Managed Follower Assigned to AFT Camp
+	if ((0 == type) && s && npc.IsInFaction(pTweakCampHomeFaction))
+		return s.assignedHome
+		; return pTweakCampLocation
 	endif
 	
-	ReferenceAlias a = pManagedMap[id]
-	if !a.GetActorRef()
-		Trace("GetHomeLoc : Follower ID mapped to unfilled reference. Ignoring Event.")
-		return None
-	endif
+	WorkshopNPCScript    WNS = npc as WorkshopNPCScript
+	CompanionActorScript CAS = npc as CompanionActorScript
+	DogmeatActorScript   DAS = npc as DogmeatActorScript
+	
 	if (0 == type)
-		Location ret = (a As TweakSettings).assignedHome
-		if !ret
-			AssignHome(npc)
-			Utility.wait(0.1)
-			ret = (a As TweakSettings).assignedHome
+	
+		Location assignedHome = None
+		if (CAS)
+			assignedHome = CAS.HomeLocation
+		elseIf (DAS)
+			assignedHome = DAS.HomeLocation
+		endIf
+		If (WNS)
+			; WNS Trumps CAS for assignment, but only if it is assigned or the NPC is not CAS/DAS
+			int workshopID = WNS.GetWorkshopID() ; npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
+			if (!assignedHome || workshopID > -1)
+				WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+				RefCollectionAlias wscollection = pWorkshopParent.WorkshopsCollection
+				if (workshopID < wscollection.GetCount())
+					WorkshopScript workshopRef = wscollection.GetAt(workshopID) as WorkshopScript
+					if workshopRef
+						assignedHome = workshopRef.GetCurrentLocation()
+					endIf
+				endIf
+			endIf			
+		endIf
+		if (!assignedHome && s)
+			assignedHome = s.assignedHome
 		endIf		
-		return ret
-	elseif (1 == type)
-		return (a As TweakSettings).originalHome
+		return assignedHome
+	endIf
+
+	; TYPE = 1 : original
+	Location originalHome = None
+	if (s && s.originalHome)
+		originalHome = s.originalHome
 	endif
-	return None
+	if !originalHome
+		ActorBase base = npc.GetActorBase()
+		if (base == Game.GetForm(0x00079249) as ActorBase)     ; 1 ---=== Cait ===---
+			originalHome = Game.GetForm(0x0001905B) as Location ; CombatZoneLocation		
+		elseIf (base == Game.GetForm(0x000179FF) as ActorBase) ; 2 ---=== Codsworth ===---
+			originalHome = Game.GetForm(0x0001F229) as Location ; SanctuaryHillsPlayerHouseLocation
+		elseIf (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
+			originalHome = Game.GetForm(0x0002BE8D) as Location ; Vault81Location
+		elseIf (base == Game.GetForm(0x00027683) as ActorBase) ; 4 ---=== Danse ===---
+			originalHome = Game.GetForm(0x0001FA4A) as Location ; CambridgePDLocation
+		elseIf (base == Game.GetForm(0x00045AC9) as ActorBase) ; 5 ---=== Deacon ===---
+			originalHome = Game.GetForm(0x000482C2) as Location ; RailroadHQLocation
+		elseIf (base == Game.GetForm(0x0001D15C) as ActorBase) ; 6 ---=== Dogmeat ===---
+			originalHome = Game.GetForm(0x00024FAB) as Location ; RedRocketTruckStopLocation
+		elseIf (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
+			originalHome = Game.GetForm(0x0002260F) as Location ; GoodneighborOldStateHouseLocation
+		elseIf (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
+			originalHome = Game.GetForm(0x0002267F) as Location ; GoodneighborTheThirdRailLocation	
+		elseIf (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
+			originalHome = Game.GetForm(0x00003979) as Location ; DiamondCityValentinesLocation	
+		elseIf (base == Game.GetForm(0x00002F1E) as ActorBase) ; 10 ---=== Piper ===---	
+			originalHome = Game.GetForm(0x00003962) as Location ; DiamondCityPublickOccurrencesLocation
+		elseIf (base == Game.GetForm(0x00019FD9) as ActorBase) ; 11 ---=== Preston ===---
+			originalHome = Game.GetForm(0x0001F228) as Location ; SanctuaryHillsLocation
+		elseIf (base == Game.GetForm(0x00027682) as ActorBase) ; 12 ---=== Strong ===---	
+			originalHome = Game.GetForm(0x0001DAF7) as Location ; TrinityTowerLocation	
+		elseIf (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
+			originalHome = Game.GetForm(0x001BBC22) as Location ; InstituteSRBLocation				
+		elseIf (CAS)
+			originalHome = CAS.HomeLocation
+		elseIf (DAS)
+			originalHome = DAS.HomeLocation
+		elseIf (WNS)
+			WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+			int workshopID = npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
+			if (workshopID > -1)
+				RefCollectionAlias wscollection = pWorkshopParent.WorkshopsCollection
+				if (workshopID < wscollection.GetCount())
+					WorkshopScript workshopRef = wscollection.GetAt(workshopID) as WorkshopScript
+					if workshopRef
+						originalHome = workshopRef.GetCurrentLocation()
+					endIf
+				endIf
+			endIf
+		endIf
+	endif
+	
+	if !originalHome
+		originalHome = npc.GetCurrentLocation()
+	endif
+	if !originalHome
+		originalHome = Game.GetForm(0x0001F229) as Location ; SanctuaryHillsPlayerHouseLocation
+	endif
+	return originalHome
 
 EndFunction
 
@@ -2394,54 +2477,19 @@ Function FollowerInfo(Actor npc, int type = 0)
 			endif
 		endif
 		if (0 == type || 4 == type)
+		
+			Location assignedHome = GetHomeLoc(npc)
+			Location originalHome = GetHomeLoc(npc,1)
+			
 			if s
-				pTweakInfoScript.UpdateTraits(s.originalRace, s.originalHome, s.assignedHome)
+				pTweakInfoScript.UpdateTraits(s.originalRace, originalHome, assignedHome)
 			else
-				Location originalHome = None
 				Race originalRace = npc.GetRace()
-				
-				CompanionActorScript CAS = npc as CompanionActorScript
-				DogmeatActorScript DAS = npc as DogmeatActorScript
-
 				ActorBase base = npc.GetActorBase()
-				if (base == Game.GetForm(0x00079249) as ActorBase)     ; 1 ---=== Cait ===---
-					originalHome = Game.GetForm(0x0001905B) as Location ; CombatZoneLocation		
-				elseif (base == Game.GetForm(0x000179FF) as ActorBase) ; 2 ---=== Codsworth ===---
-					originalHome = Game.GetForm(0x0001F229) as Location ; SanctuaryHillsPlayerHouseLocation
-				elseif (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
-					originalHome = Game.GetForm(0x0002BE8D) as Location ; Vault81Location
+				if (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
 					originalRace = Game.GetForm(0x000359F4) as Race		; HandyRace
-				elseif (base == Game.GetForm(0x00027683) as ActorBase) ; 4 ---=== Danse ===---
-					originalHome = Game.GetForm(0x0001FA4A) as Location ; CambridgePDLocation
-				elseif (base == Game.GetForm(0x00045AC9) as ActorBase) ; 5 ---=== Deacon ===---
-					originalHome = Game.GetForm(0x000482C2) as Location ; RailroadHQLocation
-				elseif (base == Game.GetForm(0x0001D15C) as ActorBase) ; 6 ---=== Dogmeat ===---
-					originalHome = Game.GetForm(0x00024FAB) as Location ; RedRocketTruckStopLocation
-				elseif (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
-					originalHome = Game.GetForm(0x0002260F) as Location ; GoodneighborOldStateHouseLocation
-				elseif (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
-					originalHome = Game.GetForm(0x0002267F) as Location ; GoodneighborTheThirdRailLocation	
-				elseif (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
-					originalHome = Game.GetForm(0x00003979) as Location ; DiamondCityValentinesLocation	
-				elseif (base == Game.GetForm(0x00002F1E) as ActorBase) ; 10 ---=== Piper ===---	
-					originalHome = Game.GetForm(0x00003962) as Location ; DiamondCityPublickOccurrencesLocation
-				elseif (base == Game.GetForm(0x00019FD9) as ActorBase) ; 11 ---=== Preston ===---
-					originalHome = Game.GetForm(0x0001F228) as Location ; SanctuaryHillsLocation
-				elseif (base == Game.GetForm(0x00027682) as ActorBase) ; 12 ---=== Strong ===---	
-					originalHome = Game.GetForm(0x0001DAF7) as Location ; TrinityTowerLocation	
-				elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
-					originalHome = Game.GetForm(0x001BBC22) as Location ; InstituteSRBLocation					
-				elseif (CAS)
-					originalHome = CAS.HomeLocation
-				elseif (DAS)
-					originalHome = DAS.HomeLocation
-				else
-					originalHome = npc.GetCurrentLocation()
-					if !originalHome
-						originalHome = Game.GetForm(0x0001F229) as Location ; SanctuaryHillsPlayerHouseLocation
-					endif
 				endif
-				pTweakInfoScript.UpdateTraits(originalRace, originalHome, None)
+				pTweakInfoScript.UpdateTraits(originalRace, originalHome, assignedHome)
 			endif
 		endif
 		pTweakInfoScript.ShowInfo()
