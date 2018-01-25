@@ -375,95 +375,74 @@ EndFunction
 
 Function UnManageOutfits()
 
+	if !managed
+		return
+	endif
+
 	Actor npc = self.GetActorRef()
 	ActorBase base = npc.GetActorBase()
 	ClearAllOutfits()
 	if (base == Game.GetForm(0x00079249) as ActorBase)     ; 1 ---=== Cait ===---
 		; 1.14 BUG: If you call SetOutfit on the Actor without first calling it on the
 		;           Actorbase, it removes most of the inventory...
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x00086204) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x00086204) as Outfit)		
+		SetOutfitFix(npc, Game.GetForm(0x00086204) as Outfit)
 	elseif (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
 		if npc.GetRace() == (Game.GetForm(0x00013746) as Race) ; HumanRace
-			npc.GetActorBase().SetOutfit(Game.GetForm(0x001E2F26) as Outfit)
-			npc.SetOutfit(Game.GetForm(0x001E2F26) as Outfit)				
-		endif				
+			SetOutfitFix(npc, Game.GetForm(0x001E2F26) as Outfit)
+		endif			
 	elseif (base == Game.GetForm(0x00027683) as ActorBase) ; 4 ---=== Danse ===---
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x000E04A1) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x000E04A1) as Outfit)
+		SetOutfitFix(npc, Game.GetForm(0x000E04A1) as Outfit)
 	elseif (base == Game.GetForm(0x00045AC9) as ActorBase) ; 5 ---=== Deacon ===---
-		if managed
-			TweakFollowerScript pTweakFollowerScript = (GetOwningQuest() as TweakFollowerScript)
-			if pTweakFollowerScript
-				pTweakFollowerScript.RemoveDeaconItems()	
-			endif
-			Quest COMDeacon = Game.GetForm(0x000BBD9B) as Quest
-			if (COMDeacon)
-				COMDeaconScript pCOMDeacon = (COMDeacon as COMDeaconScript)
-				if pCOMDeacon
-					Trace("Unregistering COMDeacon OnLocationChange Event Monitoring")
-					pCOMDeacon.RegisterForRemoteEvent(Game.GetPlayer(),"OnLocationChange")
-					pCOMDeacon.bCanSwapDisguises = 1
-				else
-					Trace("Cast to COMDeaconScript Failed")
-				endif
+		TweakFollowerScript pTweakFollowerScript = (GetOwningQuest() as TweakFollowerScript)
+		if pTweakFollowerScript
+			pTweakFollowerScript.RemoveDeaconItems()	
+		endif
+		Quest COMDeacon = Game.GetForm(0x000BBD9B) as Quest
+		if (COMDeacon)
+			COMDeaconScript pCOMDeacon = (COMDeacon as COMDeaconScript)
+			if pCOMDeacon
+				Trace("Unregistering COMDeacon OnLocationChange Event Monitoring")
+				pCOMDeacon.RegisterForRemoteEvent(Game.GetPlayer(),"OnLocationChange")
+				pCOMDeacon.bCanSwapDisguises = 1
 			else
-				Trace("Cast to COMDeacon Quest Failed")
+				Trace("Cast to COMDeaconScript Failed")
 			endif
+		else
+			Trace("Cast to COMDeacon Quest Failed")
 		endif
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x0018AAD8) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x0018AAD8) as Outfit)
+		SetOutfitFix(npc, Game.GetForm(0x0018AAD8) as Outfit)
 	elseif (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x0010B6C0) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x0010B6C0) as Outfit)
+		SetOutfitFix(npc, Game.GetForm(0x0010B6C0) as Outfit)
 	elseif (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
-		if managed
-			Armor Armor_MacCready_Raider_Underarmor = Game.GetForm(0x0004A53B) as Armor
-			Armor TweakArmor_MacCready_Raider_Underarmor = Game.GetFormFromFile(0x0100367F,"AmazingFollowerTweaks.esp") as Armor
-			if (0 != npc.GetItemCount(TweakArmor_MacCready_Raider_Underarmor))
-				npc.RemoveItem(TweakArmor_MacCready_Raider_Underarmor)
-			endif
-			if (0 == npc.GetItemCount(Armor_MacCready_Raider_Underarmor))
-				npc.AddItem(Armor_MacCready_Raider_Underarmor)
-			endIf
+		Armor Armor_MacCready_Raider_Underarmor = Game.GetForm(0x0004A53B) as Armor
+		Armor TweakArmor_MacCready_Raider_Underarmor = Game.GetFormFromFile(0x0100367F,"AmazingFollowerTweaks.esp") as Armor
+		if (0 != npc.GetItemCount(TweakArmor_MacCready_Raider_Underarmor))
+			npc.RemoveItem(TweakArmor_MacCready_Raider_Underarmor)
 		endif
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x00171858) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x00171858) as Outfit)
+		if (0 == npc.GetItemCount(Armor_MacCready_Raider_Underarmor))
+			npc.AddItem(Armor_MacCready_Raider_Underarmor)
+		endIf
+		SetOutfitFix(npc, Game.GetForm(0x00171858) as Outfit)
 	elseif (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x000EBE75) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x000EBE75) as Outfit)
+		SetOutfitFix(npc, Game.GetForm(0x000EBE75) as Outfit)
 	elseif (base == Game.GetForm(0x00002F1E) as ActorBase) ; 10 ---=== Piper ===---	
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x0009F253) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x0009F253) as Outfit)
+		SetOutfitFix(npc, Game.GetForm(0x0009F253) as Outfit)
 	elseif (base == Game.GetForm(0x00019FD9) as ActorBase) ; 11 ---=== Preston ===---
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x0001F158) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x0001F158) as Outfit)
+		SetOutfitFix(npc, Game.GetForm(0x0001F158) as Outfit)
 	elseif (base == Game.GetForm(0x00027682) as ActorBase) ; 12 ---=== Strong ===---	
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x001B51AB) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x001B51AB) as Outfit)
+		SetOutfitFix(npc, Game.GetForm(0x001B51AB) as Outfit)
 	elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
-		npc.GetActorBase().SetOutfit(Game.GetForm(0x001275C0) as Outfit)
-		npc.SetOutfit(Game.GetForm(0x001275C0) as Outfit)
+		SetOutfitFix(npc, Game.GetForm(0x001275C0) as Outfit)
 	else
 		AFT:TweakDLC03Script pTweakDLC03Script = (Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest) as AFT:TweakDLC03Script
 		AFT:TweakDLC04Script pTweakDLC04Script = (Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest) as AFT:TweakDLC04Script
 		if (pTweakDLC03Script && pTweakDLC03Script.Installed && base == pTweakDLC03Script.OldLongfellowBase)
-			npc.GetActorBase().SetOutfit(pTweakDLC03Script.DLC03OldLongfellowOutfit)
-			npc.SetOutfit(pTweakDLC03Script.DLC03OldLongfellowOutfit)
+			SetOutfitFix(npc, pTweakDLC03Script.DLC03OldLongfellowOutfit)
 		elseif (pTweakDLC04Script && pTweakDLC04Script.Installed && base == pTweakDLC04Script.PorterGageBase)
-			npc.GetActorBase().SetOutfit(pTweakDLC04Script.DLC04_GageOutfit)
-			npc.SetOutfit(pTweakDLC04Script.DLC04_GageOutfit)				
-		elseif npc.GetRace() == (Game.GetForm(0x00013746) as Race) ; HumanRace
-			if npc.GetActorBase().IsUnique()
-				npc.GetActorBase().SetOutfit(Game.GetForm(0x0006D7BA) as Outfit)
-			endif
-			npc.SetOutfit(Game.GetForm(0x0006D7BA) as Outfit)		
-			; npc.SetOutfit(Game.GetForm(0x0006D7BA) as Outfit)
-		elseif npc.GetRace() == (Game.GetForm(0x000EAFB6) as Race) ; GhoulRace
-			if npc.GetActorBase().IsUnique()
-				npc.GetActorBase().SetOutfit(Game.GetForm(0x0006D7BA) as Outfit)
-			endif
-			npc.SetOutfit(Game.GetForm(0x0006D7BA) as Outfit)
+			SetOutfitFix(npc, pTweakDLC04Script.DLC04_GageOutfit)
+		elseif (npc.GetRace() == (Game.GetForm(0x00013746) as Race) || npc.GetRace() == (Game.GetForm(0x000EAFB6) as Race)) 
+			; HumanRace or GhoulRace
+			SetOutfitFix(npc, Game.GetForm(0x0006D7BA) as Outfit)
 		endif
 	endif
 	managed = false
@@ -473,6 +452,52 @@ Function UnManageOutfits()
 	BumpArmorAI()
 EndFunction
 
+Function SetOutfitFix(Actor theActor, Outfit theOutfit)
+	if theActor.GetActorBase().IsUnique()		
+		theActor.GetActorBase().SetOutfit(theOutfit)
+		theActor.SetOutfit(theOutfit)
+	else
+		Actor pc = Game.GetPlayer()
+		ObjectReference theContainer = pc.placeAtMe(Game.GetForm(0x00020D57), 1, False, False, True)
+		
+		theContainer.SetPosition(pc.GetPositionX(), pc.GetPositionY(),pc.GetPositionZ() - 200)
+		if theContainer
+			theActor.RemoveAllItems(theContainer, True)
+			int maxwait = 10
+			while (theActor.GetItemCount(None) > 0 && maxwait > 0)
+				Utility.WaitMenuMode(0.2)
+				maxwait -= 1
+			endWhile
+			if (0 == maxwait)
+				Trace("Warning : Not all items removed from follower")
+				Utility.WaitMenuMode(0.2)
+			endIf
+		endif
+		theActor.SetOutfit(theOutfit)
+		if theContainer
+			; If theActor is not loaded in memory, the items will be deleted. So in that 
+			; case, move items to player.
+			if theActor.Is3DLoaded()
+				theContainer.RemoveAllItems(theActor, True)
+			else
+				theContainer.RemoveAllItems(pc, True)
+			endif			
+			int maxwait = 10
+			while (theContainer.GetItemCount(None) > 0 && maxwait > 0)
+				Utility.WaitMenuMode(0.2)
+				maxwait -= 1
+			endWhile
+			if (0 == maxwait)
+				Trace("Warning : Not all items removed from theContainer")
+				Utility.WaitMenuMode(0.2)
+				theContainer.Disable(False)
+			else
+				theContainer.Disable(False)
+				theContainer.Delete()
+			endIf
+		endif		
+	endif
+EndFunction
 
 ;===============================================================================
 ; POWER ARMOR Management
@@ -892,10 +917,8 @@ Function UnequipAllGear(bool InvokedFromFurniture=false)
 		ExitPA()
 	endif	
 
-	npc.GetActorBase().SetOutfit(pTweakNoOutfit)
-	npc.SetOutfit(pTweakNoOutfit)
-	
 	if !managed 
+		SetOutfitFix(npc, pTweakNoOutfit)
 		; Deacon Check....
 		if (npc.GetActorBase() == Game.GetForm(0x00045AC9) as ActorBase)
 			TweakFollowerScript pTweakFollowerScript = (GetOwningQuest() as TweakFollowerScript)
@@ -930,11 +953,8 @@ Function UnequipAllGear(bool InvokedFromFurniture=false)
 		endif
 	endif
 	
-	
-	
 	npc.UnEquipAll()
 	BumpArmorAI()
-
 	managed = true
 	npc.AddToFaction(pTweakManagedOutfit)
 	RemoveDefaultWeapon()
@@ -1903,10 +1923,8 @@ Function GivePlayerAll()
 		ExitPA()
 	endif	
 	
-	npc.GetActorBase().SetOutfit(pTweakNoOutfit)
-	npc.SetOutfit(pTweakNoOutfit)
-
 	if !managed
+		SetOutfitFix(npc, pTweakNoOutfit)
 		; Deacon check
 		if (npc.GetActorBase() == Game.GetForm(0x00045AC9) as ActorBase)
 			TweakFollowerScript pTweakFollowerScript = (GetOwningQuest() as TweakFollowerScript)
