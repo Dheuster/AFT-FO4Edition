@@ -74,6 +74,7 @@ Group Injected
 
 	; AI Package Settings
 	ActorValue      Property pAggression					Auto  Const
+	ActorValue		Property pFollowerStance				Auto  Const
 	;   0 = Unaggressive (attack no one), 
 	;   1 = Aggresive (Attack actively hostile enemies)
 	;   2 = Very Aggressive (Attack any non-alies including neutral factions and enemies that haven't gone hostile yet)
@@ -210,6 +211,43 @@ Event OnInit()
 	originalFactions[1] = Game.GetForm(0x001EC1B9) as Faction ; PotentialCompanionFaction
 EndEvent
 
+Function EventPlayerSneakStart()
+
+	if (2 == enforceAggression)
+		Actor npc = self.GetActorRef()
+		
+		; When we make them unaggressive, we actually have to increase the assistance
+		; value or they wont even defend the player when the player is attacked. 
+		
+		npc.SetValue(pFollowerStance, 0.0)
+		npc.SetValue(pAggression,     0.0)
+		npc.SetValue(pAssistance,     2.0)
+		
+		; NOTE: Bringing up the PipBoy to activate INFO causes PlayerSneak to
+		; exit. So the info will not reflect these values unless done as 
+		; a hotkey. 
+		
+	endIf
+EndFunction
+
+Function EventPlayerSneakExit()
+	if (2 == enforceAggression)
+		Actor npc = self.GetActorRef()
+		
+		; When we make them Aggressive, we dont need such a high assistance value		
+		npc.SetValue(pFollowerStance, 1.0)
+		npc.SetValue(pAggression,     1.0)
+		npc.SetValue(pAssistance,     1.0)
+
+		; NOTE: Bringing up the PipBoy to activate INFO causes PlayerSneak to
+		; exit. So the info will not reflect these values unless done as 
+		; a hotkey. If we want this to show up in info, we would need to 
+		; set a timer and delay the actual change by 3 to 5 seconds. But that 
+		; defeats the point....
+		
+	endIf	
+EndFunction
+
 ; ObjectReference Cache:
 ;
 ;   ObjectReferences (instances) are normally only loaded when 
@@ -300,9 +338,15 @@ Function initialize()
 	; NOTE That iFollower_Stance_Aggressive is not used by the vanilla game. We keep it
 	; synched with Aggression as a courtesy in case a future patch or DLC 
 	; begins to make use of it. 
-	npc.SetValue(Game.GetCommonProperties().FollowerStance, iFollower_Stance_Aggressive.GetValue())
+	npc.SetValue(pFollowerStance, iFollower_Stance_Aggressive.GetValue())
+
+	; Default : Auto Aggression based on Sneak State. Start them off Aggressive
+	npc.SetValue(pFollowerStance, 1.0)
+	npc.SetValue(pAggression,     1.0)
+	npc.SetValue(pAssistance,     1.0)
+	SetFollowerStanceAuto()	; enforceAggression	 = 2
 	
-	enforceAggression	 = 1 ; Aggressive : Attack Enemies on Sight
+	
 	enforceCarryWeight   = -1
 	enforceConfidence    = originalConfidence
 
@@ -1147,6 +1191,9 @@ Function EventNotFollowingPlayer()
 	npc.SetNotShowOnStealthMeter(false)
 	npc.IgnoreFriendlyHits(originalIgnoreHits)
 	npc.SetValue(pAggression, originalAggression)
+	npc.SetValue(pFollowerStance, 1.0)
+	npc.SetValue(pAssistance,1)
+	
 
 endFunction
 
@@ -1322,16 +1369,35 @@ Function EventFollowerWait()
 		
 EndFunction
 
+Function SetFollowerStanceAuto()
+	Faction TweakAutoStanceFaction = Game.GetFormFromFile(0x0101AE9A,"AmazingFollowerTweaks.esp") as Faction
+	if TweakAutoStanceFaction
+		self.GetActorRef().AddToFaction(TweakAutoStanceFaction)
+	endif
+	enforceAggression = 2
+EndFunction
+
 Function SetFollowerStanceAggressive()
 	Actor npc = self.GetActorRef()
-	npc.SetValue(Game.GetCommonProperties().FollowerStance, iFollower_Stance_Aggressive.GetValue())
+	Faction TweakAutoStanceFaction = Game.GetFormFromFile(0x0101AE9A,"AmazingFollowerTweaks.esp") as Faction
+	if TweakAutoStanceFaction
+		if npc.IsInFaction(TweakAutoStanceFaction)
+			npc.RemoveFromFaction(TweakAutoStanceFaction)
+		endIf			
+	endif
 	enforceAggression = 1
 	enforceSettings()
 EndFunction
 
 Function SetFollowerStanceDefensive()
 	Actor npc = self.GetActorRef()
-	npc.SetValue(Game.GetCommonProperties().FollowerStance, iFollower_Stance_Defensive.GetValue())
+	Faction TweakAutoStanceFaction = Game.GetFormFromFile(0x0101AE9A,"AmazingFollowerTweaks.esp") as Faction
+	if TweakAutoStanceFaction
+		if npc.IsInFaction(TweakAutoStanceFaction)
+			npc.RemoveFromFaction(TweakAutoStanceFaction)
+		endIf			
+	endif
+	npc.SetValue(pFollowerStance, iFollower_Stance_Defensive.GetValue())
 	enforceAggression = 0
 	enforceSettings()
 EndFunction
@@ -1864,18 +1930,21 @@ Function enforceSettings()
 		npc.SetValue(pCarryWeight, enforceCarryWeight)
 	endif
 	
-	npc.SetValue(pAggression,  enforceAggression) ; 1 = Aggresive (Attack actively hostile enemies)
+	if (enforceAggression < 2)
+		npc.SetValue(pAggression,  enforceAggression) ; 1 = Aggresive (Attack actively hostile enemies)
+		if (0 == enforceAggression)
+			; Problem with 2 (help friends) is they can become hostile if you attack their faction.
+			; However when aggression is unaggressive, we need the boost to make them react when
+			; the player is attacked...
+			npc.SetValue(pAssistance,2)
+		else
+			; 1 = Helps Allies only. This is fine when they are set to aggressive
+			npc.SetValue(pAssistance,1)
+		endif		
+	endif
+	
 	npc.SetValue(pMorality,0)                     ; 0 = Will steal anything and murder anyone on command (defer to your judgement)
 	npc.SetValue(pConfidence,enforceConfidence)   ; 3 = Brave : Wont run, but also avoid putting themself in harmsway (keep distance from Deathclaw)
-	if (0 == enforceAggression)
-		; Problem with 2 (help friends) is they can become hostile if you attack their faction.
-		; However when aggression is unaggressive, we need the boost to make them react when
-		; the player is attacked...
-		npc.SetValue(pAssistance,2)
-	else
-		; 1 = Helps Allies only. This is fine when they are set to aggressive
-		npc.SetValue(pAssistance,1)
-	endif
 	
 	
 	if (npc.IsInFaction(pTweakAllowFriendlyFire) || 0.0 == pTweakIgnoreFriendlyFire.GetValue())

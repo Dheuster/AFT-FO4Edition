@@ -360,7 +360,7 @@ Function UpdateAI(int oAggression, int oConfidence, int oAssistance, int oMorals
 	else
 		theBook.AddTextReplacementData("TweakCurrentAggression", pTweakInfoUnaggressive)
 		if (0 != cAggression)
-			Trace("cAggression is [" + cAggression + "]. Using Default of 0")
+			Trace("Aggression is [" + cAggression + "]. Using Default of 0")
 		endif
 	endif
 
