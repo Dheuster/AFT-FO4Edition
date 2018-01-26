@@ -1207,13 +1207,18 @@ Function EventPlayerSneakStart()
 	Actor npc
 	while (i < pFollowerMapLength)
 		npc = pFollowerMap[i].GetActorRef()
-		if (npc && npc.Is3DLoaded() && !npc.HasSpell(pTweakFollowerStealth))
-			npc.AddSpell(pTweakFollowerStealth)
-			; int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
-			; if (followerId > 0)
-			;	ReferenceAlias a = pManagedMap[followerId]
-			;	(a as TweakInventoryControl).EnterAssignedPA()
-			; endif
+		if (npc && npc.Is3DLoaded())
+		
+			if !npc.HasSpell(pTweakFollowerStealth)
+				npc.AddSpell(pTweakFollowerStealth)
+			endif
+			
+			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+			if (followerId > 0)
+				ReferenceAlias a = pManagedMap[followerId]
+				(a as TweakSettings).EventPlayerSneakStart()
+			endIf
+
 		endif
 		i += 1
 	endWhile
@@ -1225,13 +1230,16 @@ Function EventPlayerSneakExit()
 	Actor npc
 	while (i < pFollowerMapLength)
 		npc = pFollowerMap[i].GetActorRef()
-		if (npc && npc.Is3DLoaded() && npc.HasSpell(pTweakFollowerStealth))
-			npc.RemoveSpell(pTweakFollowerStealth)
-			; int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
-			; if (followerId > 0)
-			;	ReferenceAlias a = pManagedMap[followerId]
-			;	(a as TweakInventoryControl).EnterAssignedPA()
-			; endif
+		if (npc && npc.Is3DLoaded())
+			if npc.HasSpell(pTweakFollowerStealth)
+				npc.RemoveSpell(pTweakFollowerStealth)
+			endIf
+			
+			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+			if (followerId > 0)
+				ReferenceAlias a = pManagedMap[followerId]
+				(a as TweakSettings).EventPlayerSneakExit()
+			endIf
 		endif
 		i += 1
 	endWhile
@@ -2749,6 +2757,18 @@ Bool Function SetFollowerDistanceNearByNameId(int id = 0)
 	
 	pFollowersScript.FollowerSetDistanceNear(npcref.GetActorReference())
 
+EndFunction
+
+Bool Function SetFollowerStanceAutoByNameId(int id = 0)
+
+	Trace("SetFollowerStanceAutoByNameId [" + id + "]")	
+	ReferenceAlias npcref = NameIdToManagedRef(id)
+	if (!npcref)
+		Trace("SetFollowerStanceAutoByNameId : No id matching [" + id + "] found")
+		return false
+	endif	
+	(npcref as TweakSettings).SetFollowerStanceAuto()
+	
 EndFunction
 
 Bool Function SetFollowerStanceAggressiveByNameId(int id = 0)

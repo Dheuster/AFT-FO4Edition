@@ -131,6 +131,7 @@ Faction  Property pTweakGunslingerFaction	Auto Const
 Faction  Property pTweakNinjaFaction		Auto Const
 Faction  Property pTweakSniperFaction		Auto Const
 Faction	 Property pTweakEnhancedFaction		Auto Const
+Faction	 Property pTweakAutoStanceFaction	Auto Const
 
 Faction	 Property pTweakManagedOutfit		Auto Const
 Faction	 Property pDanversFaction			Auto Const
@@ -368,7 +369,7 @@ Function ResetVariables()
 	TerminalTargetId					= 0
 	TerminalTargetOId					= 0
 	TerminalTargetDist					= 0
-	TerminalTargetStance				= 0
+	TerminalTargetStance				= 2
 	TerminalTargetState					= 0
 	TerminalTargetPAState				= 0
 	TerminalTargetHasBody				= 0
@@ -2046,8 +2047,14 @@ Function EvaluateTerminalTarget()
 		
 		TerminalTargetEssential = TerminalTarget.IsEssential()
 		TerminalTargetDist      = TerminalTarget.GetValue(Game.GetCommonProperties().FollowerDistance)
-		TerminalTargetStance    = TerminalTarget.GetValue(Game.GetCommonProperties().FollowerStance)
 		TerminalTargetState     = TerminalTarget.GetValue(Game.GetCommonProperties().FollowerState)
+
+		; Need to CHeck Faction and only use Stance if Faction is not Auto
+		if TerminalTarget.IsInFaction(pTweakAutoStanceFaction)
+			TerminalTargetStance    = 2.0
+		else
+			TerminalTargetStance    = TerminalTarget.GetValue(Game.GetCommonProperties().FollowerStance)
+		endif
 		
 		TerminalTargetOEssential = False
 		if (pTweakFollowerScript)
@@ -4680,6 +4687,26 @@ Function DistNearRelay()
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.SetFollowerDistanceNearByNameId(TerminalTargetId)
+	else
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
+	endIf
+	
+EndFunction
+
+Function StyleAutoRelay()
+	Trace("StyleAutoRelay()")
+	
+	Utility.waitmenumode(0.1)
+	
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("StyleAutoRelay", params)
+		return
+	endIf
+	
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+		pTweakFollowerScript.SetFollowerStanceAutoByNameId(TerminalTargetId)
 	else
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
 	endIf
