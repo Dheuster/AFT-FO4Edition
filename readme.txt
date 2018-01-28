@@ -4886,6 +4886,7 @@ X. > > > >  Version History
   1.15
   - Added Cooldown settings for auto-relax
   - Added Action "Gather Loose Items" See Readme for usage details.
+  - Added "Auto" Aggression setting so followers wont attack when in stealth.
   - Fixed Environmental commentary bug when traveling with only 1 companion. 
   - Fixed (info) home detection so it recognizes changes made outside AFT
   - Fixed random item loss bug when managing/unmanaging non-unique NPC outfits
