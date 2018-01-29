@@ -1989,8 +1989,7 @@ IV. > > > >  Usage
              Toggle this setting to prevent the specific follower from 
              auto relaxing when you holster your weapon. This is the 
              individualized version. There is a global version under
-             the AFT Settings Holotape. Note that disabling auto-relax
-             indirectly disables Idle Comments as well.  
+             the AFT Settings Holotape. 
                           
            [ ] Avoid Traps
                  
@@ -2606,12 +2605,7 @@ IV. > > > >  Usage
            TALK IDLE FOLLOWING 
 
 		   Controls the games Idle Commentary cooldown when a companion
-		   is following you. However, regardless of your setting, the 
-		   vanilla game only allows idle comments when your followers are 
-		   relaxing. Followers can not relax while their weapon is drawn 
-		   or while they are in PowerArmor. So if you want to hear more 
-		   idle comments, you have to make a habit of holstering your 
-		   weapon and keep your followers out of PowerArmor. 
+		   is following you.  
 
            TALK IDLE DISMISSED
 
@@ -3368,8 +3362,9 @@ V. > > > > Hot Keys
      45: Set Sniper Combat Style
      46: Set Dynamic Combat Style
 
-     47: Set Aggressive
-     48: Set Defensive
+     47:  Set Aggressive
+     48:  Set Defensive
+     126: Set Auto Aggression
 
      49: Set Coward
      50: Set Cautious
@@ -4887,10 +4882,13 @@ X. > > > >  Version History
   - Added Cooldown settings for auto-relax
   - Added Action "Gather Loose Items" See Readme for usage details.
   - Added "Auto" Aggression setting so followers wont attack when in stealth.
+  - Carryweight reduced in combat to stop new weapon pickup. (managed outfits only)
   - Fixed Environmental commentary bug when traveling with only 1 companion. 
   - Fixed (info) home detection so it recognizes changes made outside AFT
-  - Fixed random item loss bug when managing/unmanaging non-unique NPC outfits
-
+  - Fixed Item loss bug when first managing/unmanaging non-unique NPC outfits
+  - Fixed bug with Perception Boost (Ranged weapon damage boost)
+  - Follower Idle Comments now allowed outside auto-relax
+  
 -------------------------------------------------------------------------------
 XI. Credits
 -------------------------------------------------------------------------------         

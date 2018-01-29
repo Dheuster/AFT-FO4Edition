@@ -312,6 +312,7 @@ Message Property pTweakUniqueOnly Auto Const
 
 FormList Property pTweakNewBodyData Auto Const
 Topic Property WorkshopVendorSharedTopicB Auto Const
+Perk Property pTweakRangedDmgBoost Auto Const
 
 ActorBase[] pHasBody
 
@@ -2466,6 +2467,14 @@ Function SetSPECIAL(Actor Target=None, int pStrength=1, int pPerception=1, int p
 		pTweakFollowerScript.EvaluateSynergy()
 	endIf
 	
+	; Ranged Damage Perk only applies change when added (doesn't monitor for changes). 
+	; So we have to remove and re-add the perk when stats change to account for new
+	; changes...
+	if Target.HasPerk(pTweakRangedDmgBoost)
+		Target.RemovePerk(pTweakRangedDmgBoost)
+		Target.AddPerk(pTweakRangedDmgBoost)
+	endIf
+	
 EndFunction
 
 Function SetLoiterCooldown(float value)
@@ -2682,7 +2691,7 @@ Function handleCommand(float theCommand)
 				; -------
 				if 1.0 == theCommand
 					SummonRelay()
-				elseif 125 == theCommand
+				elseif 125.0 == theCommand
 					GatherLooseItems()
 				elseif 2.0 == theCommand
 					pTweakFollowerScript.SetFollowerStayByNameId(0)
@@ -2882,6 +2891,8 @@ Function handleCommand(float theCommand)
 					StyleAggRelay()
 				elseif 48.0 == theCommand ; Set Defensive
 					StyleDefRelay()
+				elseif 126.0 == theCommand ; Set Auto Aggression
+					StyleAutoRelay()
 				elseif 49.0 == theCommand ; Set Coward
 					SetConfidenceRelay(0,false)
 				elseif 50.0 == theCommand ; Set Cautious
