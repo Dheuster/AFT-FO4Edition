@@ -366,7 +366,7 @@ Function ScanForLooseItems(FormList list, string name, ObjectReference target)
 			if (moveit)
 				gatheredCount += 1
 				target.AddItem(result, 1, True)
-				; result.Disable()
+				result.Disable()
 			endIf
 		endif
 		i += 1

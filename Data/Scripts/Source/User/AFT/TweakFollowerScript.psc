@@ -273,6 +273,7 @@ Perk	  Property pTweakDmgResistBoost			Auto Const ; Perk increases Damage Resist
 Perk	  Property pTweakRangedDmgBoost			Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakPlayerSynergyChrPerk	Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakPlayerSynergyLckPerk	Auto Const ; Perk increases Ranged Damage with perception
+Perk	  Property pTweakZeroCarryInCombat		Auto Const ; Perk prevent weapon pickup during combat
 
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 	string logName = "TweakFollowerScript"
@@ -349,7 +350,7 @@ Function OnGameLoaded(bool firstTime=false)
 	
 	RegisterForKickOut()
 	
-	if (1.14 != version)
+	if (1.15 != version)
 		; In case this is new game, wait for pInstalled to be true....
 		StartTimer(0, CONFIRM_VERSION)
 	else
@@ -379,7 +380,7 @@ Event OnTimer(int aiTimerID)
 		; if it appears we beat the script initializer...
 
 		if (pInstalled)
-			if (version  < 1.14)
+			if (version  < 1.15)
 				StartTimer(0,UPDATE_VERSION)
 			else
 				CheckForErrors()
@@ -413,7 +414,7 @@ Event OnTimer(int aiTimerID)
 		Actor player	= Game.GetPlayer()
 		float ov        = version
 		float ov_102fix = version
-		version  = 1.14
+		version  = 1.15
 
 		if ov < 1.13 ; 1.13 : Added Home Outfit and Outfit Management Reset
 			if ov < 1.12 ; 1.11 : Health/Endurance boosts. 1.12 : Fixed Ghosting artifacts 
@@ -605,7 +606,10 @@ Event OnTimer(int aiTimerID)
 						if !afix.HasPerk(pTweakRangedDmgBoost)
 							afix.AddPerk(pTweakRangedDmgBoost)
 						endif
-						
+						; 1.15
+						if !afix.HasPerk(pTweakZeroCarryInCombat)
+							afix.AddPerk(pTweakZeroCarryInCombat)
+						endif
 					endif
 				endif
 				p += 1
@@ -1265,12 +1269,26 @@ Function UnManageFollower(Actor npc)
 		return
 	endIf
 
-	npc.RemovePerk(pTweakCarryBoost)
-	npc.RemovePerk(pTweakHealthBoost)
-	npc.RemovePerk(pTweakDmgResistBoost)
-	npc.RemovePerk(pTweakRangedDmgBoost)
+	Perk crNoFallDamage = Game.GetForm(0x0002A6FC) as Perk
 	
-	
+	if npc.HasPerk(crNoFallDamage)
+		npc.RemovePerk(crNoFallDamage)
+	endif
+	if npc.HasPerk(pTweakCarryBoost)
+		npc.RemovePerk(pTweakCarryBoost)
+	endif
+	if npc.HasPerk(pTweakHealthBoost)
+		npc.RemovePerk(pTweakHealthBoost)
+	endif
+	if npc.HasPerk(pTweakDmgResistBoost)
+		npc.RemovePerk(pTweakDmgResistBoost)
+	endif
+	if npc.HasPerk(pTweakRangedDmgBoost)
+		npc.RemovePerk(pTweakRangedDmgBoost)
+	endif
+	if npc.HasPerk(pTweakZeroCarryInCombat)
+		npc.RemovePerk(pTweakZeroCarryInCombat)
+	endif	
 	
 	FollowersScript pFollowersScript = (pFollowers As FollowersScript)
 	if pFollowersScript
@@ -1336,6 +1354,7 @@ Function UnManageFollower(Actor npc)
 	int numFollowers = GetAllTweakFollowers().length
 	pTweakFollowerCount.SetValueInt(numFollowers)
 	; ReleaseSpinLock(pTweakMutexCompanions, gotlock, "UnManageFollower")
+
 	
 EndFunction
 
