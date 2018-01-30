@@ -321,9 +321,11 @@ III. > > > >  Installation
         
   A. Requirements
         
-     This mod requires Fallout 4 patch 1.10.40 or newer.  To find out what 
-     version you have, hit ESC within the game and look in the bottom left 
-     corner of the System:Save/Load screen.
+     This mod was compiled against Fallout 4 patch 1.10.40.  To minimize the
+     possibility of bugs, it is advised that users have the same patch or
+     newer. The mod may work with older versions of the game, but may may 
+     be less stable. To see what version you have, hit ESC within the game 
+     and look in the bottom left corner of the System:Save/Load screen.
         
      This Mod does NOT require any DLC. 
         
@@ -333,7 +335,7 @@ III. > > > >  Installation
      you upgrade (or don't upgrade) to the latest version of the mod. Users
      wishing to make use of the Settlement Export capability should be sure
      to get the version with that capability enabled (All versions available
-     at Fallout Nexus, but not versions downloaded from Bethesda).
+     at NexusMods, but not versions downloaded from Bethesda).
          
      1) If you do not already have it, get 7-zip : www.7-zip.org
          
@@ -354,7 +356,7 @@ III. > > > >  Installation
      4) The 7-zip window will show 2 files:
            
           /Data
-          readme_aft_1_13.txt
+          readme_aft_1_15.txt
           
         Make sure BOTH items are hi-lighted. To hi-light both entries quickly, 
         hit CTRL + A
@@ -384,9 +386,8 @@ III. > > > >  Installation
         If you did not have AFT previsouly, skip this step.
          
      7) When you start up Fallout 4, go to Mods (Hit Home to skip the login) 
-        and make sure AmazingFollowerTweaks mod is checked. I also recommend 
-        boosting its priority. This is done by moving the mod to the BOTTOM
-        of the load order.
+        and make sure AmazingFollowerTweaks mod is checked. Move the mod to 
+	the BOTTOM of your load order.
             
      8) For what to expect after starting a new game or loading a save game, 
         see Usage below. 
@@ -417,7 +418,8 @@ III. > > > >  Installation
      AFT until after you:
 
      1) Have a pipboy
-     2) Have Talked to Codsworth in Sanctuary
+     2) Have Completed the Main Quest "Out of Time" (Rescue the minute men in 
+        Concord)
 
      That will allow AFT to initialize immediately and hopefully prevent any 
      initialization bugs an alt-start mod may introduce. 
@@ -484,42 +486,50 @@ III. > > > >  Installation
               
   G. Trouble Shooting
           
-     These are questions I tend to ask all users when problems are reported:
+     First Steps: 
+     
+     1) Ensure AFT is at the Bottom of your Load Order
+     2) Ensure the file <installdir>/Data/Scripts/followersscript.pex 
+        does not exist. install directory for most user is:
+	
+	C:\Program Files\steam\steamapps\common\Fallout 4
+     3) Visit the mods home page and check the forum that tracks 
+        known incompatible mods. Make sure you are not using one of the 
+	mods listed.
+	
+     Second Steps:
+     
+     If the above steps do not fix the issue, then confirm the following:
           
-     1) Does your version of AFT match the required version of Fallout 4: 
+     1) Does your version of Fallout 4 match the verison AFT was 
+        compiled against? 
           
         You can get the version of Fallout 4 from the bottom left corner 
         of the Settings screen (You have to load a save game first)
           
-          AFT Version 1.00 : FO4 Patch 1.7    (minimum) required
-          AFT Version 1.06 : FO4 Patch 1.10   (minimum) required
+          AFT Version 1.05  : FO4 Patch 1.10.26  
+          AFT Version 1.06+ : FO4 Patch 1.10.40
            
-     2) Is AFT at the bottom of your load order?
-           
-        If you play with multiple mods and discover issues that appear to be 
-        related to AFT, try playing with AFT at the bottom of the load order 
-        before reporting any issues to me. This helps eliminate the possibility 
-        that another mod is breaking AFT because it has a higher priority. 
-        
-     3) Did you clean your Cache?
+     2) Did you clean your Cache?
            
         Steam -> Library -> (All Games) Fallout 4 -> Properties 
         -> Local Files -> Verify Integrity of Game Cache
         
-     4) AFT Master Controller not appearing
-           
-        If you load an existing game where you have already emerged from Vault 
-        111, AFT typically takes 8 to 10 seconds to begin initialization (shows 
-        a progress bar). Then another 10 seconds to complete. Items are not 
-        added until initialization is complete. (You will see a thank you 
-        message)
-          
-        If you are started a new game, the AFT items will not appear in your  
+     3) AFT Master Controller not appearing
+                  
+        If you are starting a new game, the AFT items will not appear in your  
         inventory until you emerge from Vault 111 (AFT delays initialization 
-        until the quest Out of Time begins).        
-          
-          
-     5) Were you using another multi-follower mod before AFT?
+        until the quest Out of Time begins). 
+	
+	Some Alt-Start mods do not start the quest Out of Time, which can 
+	cause AFT to not initialize properly. If you use an ALT START mod, you 
+	should leave AFT disabled until you do something within your playthrough
+	to start/finished the quest Out of Time (such as talking to Codsworth and
+	then rescuing the MinuteMen in Concord.)
+	
+        #4 below can also cause the AFT Matser Control to now show up. 
+               
+     4) Were you using another multi-follower mod before AFT?
         
         Follower mods all tend to change the same core game resources. So if 
         you are loading a save game that previously was exposed to a different 
@@ -534,23 +544,18 @@ III. > > > >  Installation
         mod that has no uninstall instructions, your only option may be 
         starting a new game.
 
-     Basic Diagnosis:
-     ----------------
+     Mod Conflict Diagnosis:
+     -----------------------
+     Issue these two console commands to check if AFT owns the mandator Resources
+     needed to function. If either method reports an error, then there is a 
+     mod conflict (possibly baked into your save game).
 
-     Issue these two console commands. If either reports an error, then AFT 
-     does not own the Follower Quest resource required to work:
-
-     cqf Followers RotateCompanion
+     cqf Followers GetStandardLoiterCoolDownTime
      cqf Followers GetNearbyInfatuatedRomanticCompanions
 
-     a) IF one of the commands above returned an error:
-
-     - Move AFT to bottom of load order.
-     - Ensure the file Fallout 4/Data/Scripts/followerscript.pex does not exist. 
-
-     b) IF neither command returned an error
-
-     - Start new game or try to force initialize using console command:
+     Users can attempt to force initialize AFT with the folowing command:
+     Some users have reported this command can correct a rare issue where
+     the prefabs do not properly initialize.
 
      cqf TweakMonitorPlayer InitializeAft
                               
@@ -833,7 +838,7 @@ IV. > > > >  Usage
              Appears on Active Followers and will cause them to stop following
              the player and return to their assigned Home. Since AFT has a
              dedicated home assignment menu, dismissed followers will not 
-             prompt you for a home location unless the NPC doesn’t have one.
+             prompt you for a home location unless the NPC doesnÂ’t have one.
            
      2) Gear
            
@@ -885,10 +890,10 @@ IV. > > > >  Usage
              gear that you only want during combat. Whether it is simply a 
              helmet toggle or a full wardrobe change.
 
-             NOTE: If you assign a WEAPON to the combat outfit, the follower
-                   will be forced to use that weapon for a short period of time
-                   when combat begins before the AI is freed to make another
-                   weapon selection.
+             NOTE: If you setup a combat outfit, AFT will force the follower
+                   to use that weapon assigned to the outfit. If you do not
+		   want this behavior, skip the combat outfit and only create 
+		   a standard outfit.
                  
            City Outfit:
                  
@@ -1039,7 +1044,7 @@ IV. > > > >  Usage
              the player. 
              
         NOTES:
-             
+          
           - If an outfit has a weapon, the ammo that the weapon uses is also 
             considered part of the outfit even if the ammo wasn't equipped 
             when the outfit was created.
@@ -1173,11 +1178,11 @@ IV. > > > >  Usage
            AUTO:
                  
              Sets follower aggression to "Aggressive" however follower 
-			 automatically changes to Defensive when they player begins
-			 sneaking. 
+             automatically changes to Defensive when they player begins
+             sneaking. 
 			 
-			 ** NOTE : Activating Info (reading a book) ends sneak mode, so 
-			           INFO will not show Unaggressive.
+             ** NOTE : Activating Info (reading a book) ends sneak mode, so 
+                INFO will not show Unaggressive.
 			 
         c) Flee Settings
                  
@@ -1207,7 +1212,11 @@ IV. > > > >  Usage
                  Caution automatically changes to Cautious. 
                  
         d) Player Distance
-                  
+           
+           Player Distance does not force distance during combat, but rather
+           affects distance outside combat. This will affect how close the follower
+	   is to the player when combat begins
+
                  ----------------------
                  Player Distance
                  ----------------------
@@ -1261,7 +1270,7 @@ IV. > > > >  Usage
            this happens, you must distance yourself from them and wait 24 
            hours (game time) before approaching them again. 
                  
-     4) Info     
+     4) Info
                   
         Scan followers to learn things about them. You can generate a full 
         report (ALL) or generate a report for a specific area using the menu
@@ -2227,14 +2236,17 @@ IV. > > > >  Usage
         (32) and ask someone new to follow you through conversation. 
         
   B. AFT Settings
-        
-     In the Miscellaneous category of your inventory, you will find a Holotape
-     labeled "AFT Settings". Use this holotape to change global settings or
-     perform more admin-like functions like prepping for uninstall.
-        
-     The holotape can be used on your pipboy or on any other terminal that 
-     supports holotapes.
-           
+
+     Global settings are used for settings that affect all followers. It also 
+     supports admin-like functions like prepping for uninstall.
+
+     You can access Global settings in two ways. First, you can access them 
+     via the Tools menu of the AFT Activator. This is recommended if you are
+     using VR.
+     
+     The second Method is to use the AFT Settings holotape located in your
+     Misc items. 
+     
         ----------------------
         Global AFT Settings
         ----------------------
@@ -2288,6 +2300,7 @@ IV. > > > >  Usage
                ( ) 3 comments
                ( ) 4 comments
            [ ] Limit Loot Comments
+	   [ ] Lock Comment Rotation to ...
            ----------------------
            
         DETAILS:
@@ -2355,7 +2368,21 @@ IV. > > > >  Usage
 
            Some users will combine toggling this setting with decreasing the
            Medium cooldown to 20 or 10 minutes to try and strike a balance.
-                      
+
+        e) [ ] Lock Comment Rotation to ...
+
+           Fallout 4 hard codes the use of "Companion 1" into most of the
+           games cutscenes and commentary. For this reason, AFT rotates 
+           "Companion 1" every 15 seconds so that the commentary is distributed 
+           among all followers. This also causes cutscenes to effectively select
+           a follower at random as the primary camera target.
+	   
+           This method allows users to turn that rotation off and force a 
+           specific NPC into the Companion 1 slot. Selecting the option will 
+           bring up a list of Active Followers and the selected follower will
+           remain locked in the "Companion 1" slot until dismissed or until the 
+           option is disabled.
+	   
      3) Misc Settings
            
         An assortment of unrelated global settings that don't fall into a 
@@ -2621,7 +2648,7 @@ IV. > > > >  Usage
         c) AUTORELAX DELAY
 
            When auto-relax is enabled, this delay controls how long you 
-		   must/can linger before auto-relax kicks in.
+           must/can linger before auto-relax kicks in.
 		   		   
      5) View Readme
            
@@ -3079,7 +3106,7 @@ IV. > > > >  Usage
         B) Go immediately to the Medical facility and talk to Dr. Forsythe.
            Agree to donate some blood. 
        
-        C) Leave the Vault Retrieve Ashes the Cat. Don’t talk to anyone. 
+        C) Leave the Vault Retrieve Ashes the Cat. DonÂ’t talk to anyone. 
            
         D) When you return, Visit medical. You should see Bobby, Dr. Forsythe
            and Dr. Penske talking. Go listen in and accept their request to 
@@ -3635,7 +3662,7 @@ VIII. > > > >  Technical (For developers)
      Developers wishing to make stand-alone mods will often create soft 
      Dependencies on other mods (or DLC). That is: They will check for them, 
      but they wont rely on them, simply disabling certain features if another 
-     mod isn’t present. 
+     mod isnÂ’t present. 
 
      Soft dependencies are implemented using intermod communication methods. 
      For example, to retrieve the global variable TweakFollowerCount, from 
@@ -4235,7 +4262,7 @@ IX. > > > >  Making an AFT addon mod that expands settlement Prefab options
           
   An Addon mod is a mod that requires AFT to be installed, but extends AFT so 
   that your settlement appears when users browse PreFabs available at a 
-  specific location. This way, you don’t have to convince the developer of AFT 
+  specific location. This way, you donÂ’t have to convince the developer of AFT 
   to include your settlement, you just make your own settlement and put it out 
   there.
 
@@ -4471,7 +4498,7 @@ endif
         - Open up the script. This is where you paste the papyrus output 
           That was saved to the LogFile during Save Prefab:
 
-          ** The Creation Kit default editor can’t handle large scripts. 
+          ** The Creation Kit default editor canÂ’t handle large scripts. 
              It will OPEN them and COMPILE them, but wont allow you to 
              Edit them after they exceed a certain size. A paste into the
              CK editor will likely fail and get truncated. 
@@ -4527,7 +4554,7 @@ EndFunction
 --------------------------------------------------------------------------          
 
         - Finally, you need to compile the script. Do this by opening the 
-          script with the CK’s default editor. Go to the File menu of the 
+          script with the CKÂ’s default editor. Go to the File menu of the 
           Editor and Select compile.
 
     10) Update Furniture
@@ -4700,14 +4727,14 @@ EndFunction
        ObjectReference[] PAs = Game.GetPlayer().GetRefsLinkedToMe(LinkedArmor)
           
      And this is the Basis for Addons. AFT looks for any Objects Pointing at a 
-     Workbench that use AFT’s prefab keyword "TweakPrefab":
+     Workbench that use AFTÂ’s prefab keyword "TweakPrefab":
        
        [AronsAwesomePrefab] === (TweakPrefab) ===> [RedRocket Workbench]
        [PattiesPinkPrefab]  === (TweakPrefab) ===> [RedRocket Workbench]
        [NormsNominalPrefab] === (TweakPrefab) ===> [RedRocket Workbench]
      
-     AFT then exposes the objects via AFT’s PipBoy... assuming the objects 
-     properly cast to AFT’s TweakPrefabOption interface.
+     AFT then exposes the objects via AFTÂ’s PipBoy... assuming the objects 
+     properly cast to AFTÂ’s TweakPrefabOption interface.
 
      These objects can be installed/instantiated by anyone. Which means a mod 
      can be installed after AFT that adds a new object/prefab to the game 
@@ -4882,12 +4909,13 @@ X. > > > >  Version History
   - Added Cooldown settings for auto-relax
   - Added Action "Gather Loose Items" See Readme for usage details.
   - Added "Auto" Aggression setting so followers wont attack when in stealth.
-  - Carryweight reduced in combat to stop new weapon pickup. (managed outfits only)
+  - Added Lock Rotation option to Global Chat Settings.
+  - Carryweight reduced in combat to stop weapon pickup. (managed outfits only)
   - Fixed Environmental commentary bug when traveling with only 1 companion. 
   - Fixed (info) home detection so it recognizes changes made outside AFT
   - Fixed Item loss bug when first managing/unmanaging non-unique NPC outfits
   - Fixed bug with Perception Boost (Ranged weapon damage boost)
-  - Follower Idle Comments now allowed outside auto-relax
+  - Follower Idle Comments now allowed in most situations.
   
 -------------------------------------------------------------------------------
 XI. Credits
