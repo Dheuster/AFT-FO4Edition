@@ -1742,6 +1742,7 @@ bool Function ImportFollower(Actor npc, bool silent = false)
 	npc.AddPerk(pTweakHealthBoost)
 	npc.AddPerk(pTweakDmgResistBoost)
 	npc.AddPerk(pTweakRangedDmgBoost)
+	npc.AddPerk(pTweakZeroCarryInCombat)
 	
 	; (a As TweakActions).initialize() ; Old TweakMagic
 	; (a As TweakPose).initialize()
