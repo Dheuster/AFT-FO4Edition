@@ -26,7 +26,7 @@ EndFunction
 ;BEGIN FRAGMENT Fragment_Terminal_03
 Function Fragment_Terminal_03(ObjectReference akTerminalRef)
 ;BEGIN CODE
-pTweakCommentLimit.SetValue(3.0)
+pTweakCommentLimit.SetValue(2.0)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -119,6 +119,28 @@ pTweakLimitLootComments.SetValue(0)
 EndFunction
 ;END FRAGMENT
 
+;BEGIN FRAGMENT Fragment_Terminal_22
+Function Fragment_Terminal_22(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.LockRotationSetup()
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_23
+Function Fragment_Terminal_23(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+if (pTweakFollowerScript)
+    pTweakFollowerScript.LockRotationByNameID(0)
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;BEGIN FRAGMENT Fragment_Terminal_32
 Function Fragment_Terminal_32(ObjectReference akTerminalRef)
 ;BEGIN CODE
@@ -152,3 +174,5 @@ GlobalVariable Property pTweakInterjectCenter Auto Const
 GlobalVariable Property pTweakInterjectSubtitles Auto Const
 
 GlobalVariable Property pTweakLimitLootComments Auto Const
+
+Quest Property pTweakFollower Auto Const

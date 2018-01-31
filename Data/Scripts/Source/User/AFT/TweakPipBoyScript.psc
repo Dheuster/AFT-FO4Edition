@@ -111,7 +111,7 @@ ActorValue Property pTweakAvailable	Auto Const
 Race	Property pPowerArmorRace					Auto Const
 
 Bool     Property PlayerIsFirstPerson      Auto;
-Int      Property ActivateOnNameSelect     Auto Conditional ; 0 = Do nothing, 1 = Assign Name, 2 = Locate, 3 = SwapIn
+Int      Property ActivateOnNameSelect     Auto Conditional ; 0 = Do nothing, 1 = Assign Name, 2 = Locate, 3=UnManage, 4=RLock
 Int      Property DoOnTerminalClose        Auto hidden ; 0 = Nothing 1 = MakeCamp(refresh) 2 = TearDownShelter()
 
 Bool     Property pSculptLeveledHintShown  Auto Hidden
@@ -5350,6 +5350,7 @@ Function SetActivateOnNameSelect(int f)
 	;   1 = Assign Name
 	;   2 = Locate
 	;   3 = UnManage
+	;   4 = Lock Rotation
 	ActivateOnNameSelect = f
 EndFunction
 
@@ -5386,7 +5387,14 @@ Function OnNameSelected(int id)
 				pTweakFollowerScript.CallFunctionNoWait("UnManageByNameID", params)
 				return
 			endIf
-												
+					
+			if (4 == ActivateOnNameSelect)
+				ActivateOnNameSelect = 0
+				Var[] params = new Var[1]
+				params[0] = id
+				pTweakFollowerScript.CallFunctionNoWait("LockRotationByNameID", params)
+				return
+			endIf
 			
 			; 0 == ActivateOnNameSelect : Load the specified follower into the Terminal Target...
 			TerminalTarget = pTweakFollowerScript.GetManagedByNameId(id)
@@ -5405,6 +5413,12 @@ Function OnNameSelected(int id)
 	
 EndFunction
 
+
+Function LockRotationSetup()
+	Trace("LockRotationSetup")
+	CurrentFollowerTogglesOn()
+	ActivateOnNameSelect = 4	
+EndFunction
 
 Function UnManageNPCSetup()
 	Trace("UnManageNPCSetup")

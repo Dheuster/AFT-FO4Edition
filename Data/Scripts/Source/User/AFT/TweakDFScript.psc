@@ -77,6 +77,9 @@ GlobalVariable Property pTweakIdleCooldownActiveMax		  Auto Const
 GlobalVariable Property pTweakIdleCooldownDismissedMin	  Auto Const
 GlobalVariable Property pTweakIdleCooldownDismissedMax	  Auto Const
 
+GlobalVariable Property pTweakRotationLocked			  Auto Const
+Faction		   Property pTweakRotateLockFollowerFaction   Auto Const
+
 FollowersScript Property pFollowers      Auto Const
 Quest           Property pTweakFollower  Auto Const
 
@@ -154,7 +157,8 @@ TweakDLC04Script	Property pTweakDLC04Script	Auto Const
 float CompanionIdleChatterTimeMin = 240.0
 float CompanionIdleChatterTimeMax = 300.0
 bool  LockSendAffinityEvent
-bool  RotationAllowed = true
+bool  RotationAllowed  = true
+bool  RotationLocked   = false
 int   import_processed = 0
 int   import_max_time  = 20
 int   TIMER_ROTATE_COMPANION = 1 const
@@ -311,7 +315,7 @@ Function OnGameLoaded(bool firstTime=false)
 		; RotateCompanion() fixes pCompanion/Follower list sync issues as well as rotating 
 		; the companion pointer...
 		trace("Rotating Companion Pointer")
-		RotateCompanion()
+		TryRotateCompanion()
 	endIf
 
 	; DLC Support : Least expensive solution for DLC is to register for 
@@ -523,41 +527,7 @@ Event OnTimer(int aiTimerID)
 		;                 pCompanion4 |                 pCompanion4
 		;                 pCompanion5 |                 pCompanion5  etc...
 			
-		if (Utility.IsInMenuMode() || !RotationAllowed)
-			trace("Skipping Rotate : Menu is Open or Rotation is not allowed")
-		else
-			Actor PlayerRef = Game.GetPlayer()
-			if (PlayerRef.IsInCombat())
-				trace("Skipping Rotate : Player in Combat")
-			else
-				Actor oCompanion = pCompanion.GetActorReference()
-				if (None == oCompanion)
-					trace("No Assigned pCompanion. Calling RotateCOmpanion")												
-					; If pCompanion is None because someone cleared it and 
-					; there are other companions in the list, this will 
-					; fix it. 
-					RotateCompanion()
-				elseif (oCompanion.IsInCombat())
-					trace("Skipping Rotate : pCompanion [" + oCompanion.GetActorBase() + "] in Combat")
-				elseif (oCompanion.IsInDialogueWithPlayer())
-				
-					; I dont fully understand why. But when testing against your current companon, if talking to an NPC
-					; who was previously a companion, IsInDialogueWithPlayer will return true. IE: If Piper is your companion and you 
-					; start talking to Codsworth, who was previously a companion, and test Piper if she is IsInDialogueWithPlayer(), 
-					; this will return true even though the player is talking to Codsworth. We take advantage of this bug as it 
-					; prevents rotations 95% of the time when talking to someone you are getting ready to ask to follow you again.
-				
-					trace("Skipping Rotate : pCompanion [" + oCompanion.GetActorBase() + "] talking to player")
-				elseif (PlayerRef.IsInScene())
-					trace("Skipping Rotate : Player is in scene [" + PlayerRef.GetCurrentScene() + "] of quest [" + PlayerRef.GetCurrentScene().GetOwningQuest() + "]")
-				else ; if GetSpinLock(pTweakMutexCompanions, 0, "OnTimer (Rotate Companion)")
-					RotateCompanion()
-					; ReleaseSpinLock(pTweakMutexCompanions, true, "OnTimer (Rotate Companion)")
-				;else
-				;	trace("Skipping Rotate : Someone else has SpinLock!")
-				endIf
-			endIf
-		endIf				
+		TryRotateCompanion()			
 		StartTimer(15.0,aiTimerID)
 		return
 	endIf
@@ -2028,10 +1998,12 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 	
 	; Known : ref points to ReferenceAlias holding CompanionToDismiss	
 		
-	Actor npc = CompanionToDismiss
-	RemoveKeywords(npc)
+	if (CompanionToDismiss.IsInFaction(pTweakRotateLockFollowerFaction))
+		UnLockRotation()
+	endIf
+	RemoveKeywords(CompanionToDismiss)
 
-	; TODO : Should this come after pTweakFollowerScript.EventFollowerDismissed(npc). IE: Will that script
+	; TODO : Should this come after pTweakFollowerScript.EventFollowerDismissed(CompanionToDismiss). IE: Will that script
 	;        deal with home assignement and CAS.HomeLocation? If so, the next block could be much smaller.
 	
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower as AFT:TweakFollowerScript)
@@ -2041,17 +2013,17 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 		
 	location HomeLoc = None
 	if pTweakFollowerScript
-		HomeLoc = pTweakFollowerScript.GetHomeLoc(npc) ; May return NONE
+		HomeLoc = pTweakFollowerScript.GetHomeLoc(CompanionToDismiss) ; May return NONE
 	endIf
 		
-	CompanionActorScript CAS = npc as CompanionActorScript
+	CompanionActorScript CAS = CompanionToDismiss as CompanionActorScript
 	if SuppressDismissMessage == false	
 		if HomeLoc == NONE && ShowLocationAssignmentListIfAvailable
 		
 			; The only way this will happen is if AFT is uninstalled/Disabled as pTweakFollowerScript.GetHomeLoc() WILL Return
 			; a LOCATION value...
 			
-			; New Verision (1.7.x) remembers your previous location and auto-hilights...yeah...
+			; Patch (1.7.x) remembers your previous location and auto-hilights...yeah...
 			if (CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
 				Location previousLocation = NONE
 				int previousWorkshopID = (CompanionToDismiss as WorkshopNPCScript).GetWorkshopID()
@@ -2062,17 +2034,17 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 					endIf
 				endIf
 				HomeLoc = CompanionToDismiss.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=previousLocation, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
-			elseif pWorkshopParent.PlayerOwnsAWorkshop && (npc is WorkShopNPCScript)
+			elseif pWorkshopParent.PlayerOwnsAWorkshop && (CompanionToDismiss is WorkShopNPCScript)
 				; Show location choice menu
-				HomeLoc = pWorkshopParent.AddPermanentActorToWorkshopPlayerChoice(npc) ; May return NONE if player hits cancel
+				HomeLoc = pWorkshopParent.AddPermanentActorToWorkshopPlayerChoice(CompanionToDismiss) ; May return NONE if player hits cancel
 			endIf
 		endIf
 				
 		if pTweakFollowerScript && HomeLoc == NONE
-			HomeLoc = pTweakFollowerScript.GetHomeLoc(npc,1)
+			HomeLoc = pTweakFollowerScript.GetHomeLoc(CompanionToDismiss,1)
 		endIf
 				
-		; Scenarios : NPC is member of DanversFaction (Ignored by AFT), or AFT was at 
+		; Scenarios : CompanionToDismiss is member of DanversFaction (Ignored by AFT), or AFT was at 
 		; capacity and follower was imported as an "Unmanaged" follower. 
 		
 		if CAS && HomeLoc == NONE
@@ -2083,7 +2055,7 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 		if HomeLoc
 			AFT:TweakDismissScript pTweakDismissScript = pTweakDismiss as AFT:TweakDismissScript
 			if pTweakDismissScript
-				pTweakDismissScript.ShowDismiss(npc, HomeLoc)
+				pTweakDismissScript.ShowDismiss(CompanionToDismiss, HomeLoc)
 			else
 				pDismissMessageLocation.ForceLocationTo(HomeLoc)
 				pFollowersCompanionDismissMessage.Show()
@@ -2098,7 +2070,7 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 			previousWorkshopID = pWorkshopNPCScript.GetWorkshopID()
 		endIf
 		if (previousWorkshopID < 0)
-			HomeLoc = pTweakFollowerScript.GetHomeLoc(npc,1)
+			HomeLoc = pTweakFollowerScript.GetHomeLoc(CompanionToDismiss,1)
 		endIf
 		
 	endIf
@@ -2109,26 +2081,26 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 	endIf
 	
 	; TODO : If sleeping, stop AI. 
-	; if npc.IsUnconscious()
-	;	npc.SetUnconscious(false)
+	; if CompanionToDismiss.IsUnconscious()
+	;	CompanionToDismiss.SetUnconscious(false)
 	; endIf
 	
-	; npc.RemoveFromFaction(pTweakWaitingFaction)			
-	npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
+	; CompanionToDismiss.RemoveFromFaction(pTweakWaitingFaction)			
+	CompanionToDismiss.SetValue(Game.GetCommonProperties().FollowerState, 0)
 
 	; TODO : Inform TweakFollowerScript of the event
 	;        I would do this with custom events, but I worry about events colliding from other mods.
 	if pTweakFollowerScript
-		pTweakFollowerScript.EventFollowerDismissed(npc)
+		pTweakFollowerScript.EventFollowerDismissed(CompanionToDismiss)
 	endIf
 			
 	CompanionDataToggle(ref, false, false)
-	npc.StopCombatAlarm()
+	CompanionToDismiss.StopCombatAlarm()
 
 	; Do compare before clear to avoid thread/mutex timing issues. 
 	bool was_companion = false
 	if pCompanion && pCompanion.GetActorReference()
-		was_companion = (pCompanion.GetActorReference() == npc)
+		was_companion = (pCompanion.GetActorReference() == CompanionToDismiss)
 	endIf
 			
 	ref.Clear()
@@ -2146,14 +2118,14 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 		endIf
 	endIf	
 	
-	if npc.IsInFaction(pCurrentCompanionFaction)
+	if CompanionToDismiss.IsInFaction(pCurrentCompanionFaction)
 		; UnManaged NPC support
-		npc.RemoveFromFaction(pCurrentCompanionFaction)
+		CompanionToDismiss.RemoveFromFaction(pCurrentCompanionFaction)
 	endIf
 
-	if npc.HasKeyword(pTeammateReadyWeapon_DO)
+	if CompanionToDismiss.HasKeyword(pTeammateReadyWeapon_DO)
 		; UnManaged NPC support
-		npc.RemoveKeyword(pTeammateReadyWeapon_DO)
+		CompanionToDismiss.RemoveKeyword(pTeammateReadyWeapon_DO)
 	endIf
 	
 	if pTweakFollowerScript
@@ -2162,36 +2134,36 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 	
 	
 	; ReleaseSpinLock(pTweakMutexCompanions,bGotLock,"DismissCompanion")
-	pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)						
+	pFollowers.SendCompanionChangeEvent(CompanionToDismiss, IsNowCompanion = False)						
 
 	Utility.WaitMenuMode(2.0)
 	
-	WorkshopNPCScript    WNS = npc as WorkshopNPCScript
+	WorkshopNPCScript    WNS = CompanionToDismiss as WorkshopNPCScript
 	if WNS	
 		Keyword workshopAllowCommand = Game.GetForm(0x0012818F) as Keyword
 		Keyword workshopallowMove    = Game.GetForm(0x00128190) as Keyword
 		Keyword workshopallowCaravan = Game.GetForm(0x0012818E) as Keyword
-		npc.ResetKeyword(workshopAllowCommand)
-		npc.ResetKeyword(workshopallowMove)
-		npc.ResetKeyword(workshopallowCaravan)
+		CompanionToDismiss.ResetKeyword(workshopAllowCommand)
+		CompanionToDismiss.ResetKeyword(workshopallowMove)
+		CompanionToDismiss.ResetKeyword(workshopallowCaravan)
 		WNS.SetWorkshopStatus(false)
 
 		Utility.WaitMenuMode(1.0)
-		if !npc.HasKeyword(workshopAllowCommand)
+		if !CompanionToDismiss.HasKeyword(workshopAllowCommand)
 			trace("Missing workshopAllowCommand. Adding")
-			npc.AddKeyword(workshopAllowCommand)
+			CompanionToDismiss.AddKeyword(workshopAllowCommand)
 		else
 			trace("Already has keyword workshopAllowCommand")
 		endIf
-		if !npc.HasKeyword(workshopallowMove)
+		if !CompanionToDismiss.HasKeyword(workshopallowMove)
 			trace("AMissing workshopallowMove. Adding")
-			npc.AddKeyword(workshopallowMove)
+			CompanionToDismiss.AddKeyword(workshopallowMove)
 		else
 			trace("Already has keyword workshopallowMove")
 		endIf
-		if !npc.HasKeyword(workshopallowCaravan)
+		if !CompanionToDismiss.HasKeyword(workshopallowCaravan)
 			trace("Missing workshopallowCaravan. Adding")
-			npc.AddKeyword(workshopallowCaravan)
+			CompanionToDismiss.AddKeyword(workshopallowCaravan)
 		else
 			trace("Already has keyword workshopallowCaravan")
 		endIf
@@ -2217,8 +2189,8 @@ Function DismissCompanion(Actor CompanionToDismiss, bool ShowLocationAssignmentL
 		; Faction WorkshopNPCFaction   = Game.GetForm(0x000337F3) as Faction
 		; if WorkshopNPCFaction
 			; trace("Adding to WorkshopNPCFaction")
-			; if !npc.IsInFaction(WorkshopNPCFaction)
-				; npc.AddToFaction(WorkshopNPCFaction)
+			; if !CompanionToDismiss.IsInFaction(WorkshopNPCFaction)
+				; CompanionToDismiss.AddToFaction(WorkshopNPCFaction)
 			; endIf
 		; endIf
 		
@@ -2588,6 +2560,43 @@ EndFunction
 ; ************************        ALIAS MANAGEMENT     ***************************
 ; ********************************************************************************
 
+Function TryRotateCompanion()
+
+	Trace("TryRotateCompanion Called RotationLocked [" + RotationLocked + "]")												
+	if (Utility.IsInMenuMode() || !RotationAllowed)
+		trace("Skipping Rotate : Menu is Open or Rotation is not allowed")
+	else
+		Actor PlayerRef = Game.GetPlayer()
+		if (PlayerRef.IsInCombat())
+			trace("Skipping Rotate : Player in Combat")
+		else
+			Actor oCompanion = pCompanion.GetActorReference()
+			if (None == oCompanion)
+				trace("No Assigned pCompanion. Calling RotateCOmpanion")												
+				RotateCompanion()
+			elseif (RotationLocked && oCompanion.IsInFaction(pTweakRotateLockFollowerFaction))
+				trace("Skipping Rotate : Rotation Locked on [" + oCompanion.GetActorBase() + "]")
+			elseif (oCompanion.IsInCombat())
+				trace("Skipping Rotate : pCompanion [" + oCompanion.GetActorBase() + "] in Combat")
+			elseif (oCompanion.IsInDialogueWithPlayer())
+			
+				; I dont fully understand why. But when testing against your current companon, if talking to an NPC
+				; who was previously a companion, IsInDialogueWithPlayer will return true. IE: If Piper is your companion and you 
+				; start talking to Codsworth, who was previously a companion, and test Piper if she is IsInDialogueWithPlayer(), 
+				; this will return true even though the player is talking to Codsworth. We take advantage of this bug as it 
+				; prevents rotations 95% of the time when talking to someone you are getting ready to ask to follow you again.
+			
+				trace("Skipping Rotate : pCompanion [" + oCompanion.GetActorBase() + "] talking to player")
+			elseif (PlayerRef.IsInScene())
+				trace("Skipping Rotate : Player is in scene [" + PlayerRef.GetCurrentScene() + "] of quest [" + PlayerRef.GetCurrentScene().GetOwningQuest() + "]")
+			else ; if GetSpinLock(pTweakMutexCompanions, 0, "OnTimer (Rotate Companion)")
+				RotateCompanion()
+			endIf
+		endIf
+	endIf
+	
+EndFunction	
+
 Function RotateCompanion()
 
 	Trace("RotateCompanion Called")
@@ -2758,6 +2767,77 @@ Function RotateCompanion()
 	
 EndFunction
 
+Function LockRotation(Actor npc)
+
+	Trace("LockRotation")
+	
+	if (!npc)
+		return None
+	endIf
+	
+	ReferenceAlias npcRef = FindAlias(npc)
+	if npcRef
+		UnLockRotation()		
+		Trace("NPC Found Adding to Faction")
+		npc.AddToFaction(pTweakRotateLockFollowerFaction)
+		RotationLocked = true
+		; Exported so state can be seen from AFT Controller
+		pTweakRotationLocked.SetValue(1.0) 
+		
+		; Immediatly update pCompanion if we are in a vanilla map:
+		int currentLocID = Game.GetPlayer().GetCurrentLocation().GetFormID()
+		if (currentLocID < 0x01000000) 
+			trace("Current Location Vanilla. Allowing Rotation Fix")
+			Actor current = pCompanion.GetActorRef()
+			if !current
+				pCompanion.ForceRefTo(npc)
+				AddKeywords(npc)
+			else
+				RemoveKeywords(current)
+				pCompanion.ForceRefTo(npc)
+				AddKeywords(npc)
+			endif
+		endIf		
+	endif
+
+EndFunction
+
+Function UnLockRotation()
+	Trace("UnLockRotation")
+	Actor npc = pCompanion1.GetActorRef()
+	if npc
+		if npc.IsInFaction(pTweakRotateLockFollowerFaction)
+			npc.RemoveFromFaction(pTweakRotateLockFollowerFaction)
+		endIf
+	endIf
+	npc = pCompanion2.GetActorRef()
+	if npc
+		if npc.IsInFaction(pTweakRotateLockFollowerFaction)
+			npc.RemoveFromFaction(pTweakRotateLockFollowerFaction)
+		endIf
+	endIf
+	npc = pCompanion3.GetActorRef()
+	if npc
+		if npc.IsInFaction(pTweakRotateLockFollowerFaction)
+			npc.RemoveFromFaction(pTweakRotateLockFollowerFaction)
+		endIf
+	endIf
+	npc = pCompanion4.GetActorRef()
+	if npc
+		if npc.IsInFaction(pTweakRotateLockFollowerFaction)
+			npc.RemoveFromFaction(pTweakRotateLockFollowerFaction)
+		endIf
+	endIf
+	npc = pCompanion5.GetActorRef()
+	if npc
+		if npc.IsInFaction(pTweakRotateLockFollowerFaction)
+			npc.RemoveFromFaction(pTweakRotateLockFollowerFaction)
+		endIf
+	endIf
+	RotationLocked = false
+	; Exported so state can be seen from AFT Controller
+	pTweakRotationLocked.SetValue(0.0)
+EndFunction
 
 ;Function SwapAlias(int offset1, int offset2)
 ;
@@ -2938,15 +3018,37 @@ ReferenceAlias Function FindFreeAlias()
 endFunction
 
 ReferenceAlias Function FindFilledAlias()
-	if (pCompanion1.GetReference())
+
+	Actor p1 = pCompanion1.GetActorReference()
+	if (p1 && !p1.IsInFaction(pTweakRotateLockFollowerFaction))
 		return pCompanion1
-	elseif (pCompanion2.GetReference())
+	endIf
+	Actor p2 = pCompanion2.GetActorReference()
+	if (p2 && !p2.IsInFaction(pTweakRotateLockFollowerFaction))
 		return pCompanion2
-	elseif (pCompanion3.GetReference())
+	endIf
+	Actor p3 = pCompanion3.GetActorReference()
+	if (p3 && !p3.IsInFaction(pTweakRotateLockFollowerFaction))
 		return pCompanion3
-	elseif (pCompanion4.GetReference())
+	endIf
+	Actor p4 = pCompanion4.GetActorReference()
+	if (p4 && !p4.IsInFaction(pTweakRotateLockFollowerFaction))
 		return pCompanion4
-	elseif (pCompanion5.GetReference())
+	endIf
+	Actor p5 = pCompanion5.GetActorReference()
+	if (p5 && !p5.IsInFaction(pTweakRotateLockFollowerFaction))
+		return pCompanion5
+	endIf
+	
+	if (p1)
+		return pCompanion1
+	elseif (p2)
+		return pCompanion2
+	elseif (p3)
+		return pCompanion3
+	elseif (p4)
+		return pCompanion4
+	elseif (p5)
 		return pCompanion5
 	endIf
 	return None	
