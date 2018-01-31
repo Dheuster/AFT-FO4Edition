@@ -776,6 +776,29 @@ Function AftReset()
 
 EndFunction
 
+Function LockRotationByNameID(int id)
+	Trace("LockRotationByNameID on id [" + id + "] called")
+
+	AFT:TweakDFScript pDFScript = (pFollowers as AFT:TweakDFScript)
+	if !pDFScript
+		Trace("LockRotationByNameID : Cast to AFT:TweakDFScript Failed")
+		return
+	endif
+		
+	if (0 == id)
+		; Unlock Rotation
+		pDFScript.UnLockRotation()
+		return
+	endif
+	
+	ReferenceAlias npcref = NameIdToManagedRef(id)	
+	if (!npcref)
+		Trace("LockRotationByNameID : No id matching [" + id + "] found")
+		return
+	endif
+	
+	pDFScript.LockRotation(npcref.GetActorReference())
+EndFunction
 
 Function EnablePAHelmetCombatByNameID(int id)
 
@@ -1719,6 +1742,7 @@ bool Function ImportFollower(Actor npc, bool silent = false)
 	npc.AddPerk(pTweakHealthBoost)
 	npc.AddPerk(pTweakDmgResistBoost)
 	npc.AddPerk(pTweakRangedDmgBoost)
+	npc.AddPerk(pTweakZeroCarryInCombat)
 	
 	; (a As TweakActions).initialize() ; Old TweakMagic
 	; (a As TweakPose).initialize()

@@ -107,6 +107,7 @@ Group AutoFill
 	GlobalVariable Property pTweakInterjectSubtitles	Auto Const
 	ActorBase Property TweakCompanionNate				Auto Const
 	ActorBase Property TweakCompanionNora				Auto Const
+	SoundCategorySnapShot Property TweakCSInterjection	Auto Const
 endGroup
 
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
@@ -576,7 +577,7 @@ Function HandleCommentary(InterjectionInfo info)
 		endif
 	endif
 		
-	; Which companion is currently being used by the scene?
+	; Which companion is currently being used by the scene? (if any)
 	
 	int i = 0
 	int inscene = -1
@@ -705,6 +706,12 @@ Function HandleCommentary(InterjectionInfo info)
 		return
 	endif
 
+	; The point of no "return"... someone is going to speak....
+	
+	; Activate custom soundscape (try to increase volume of all NPCs during scene)
+	Trace("Activating TweakCSInterjection [" + TweakCSInterjection + "]")
+	TweakCSInterjection.Push()
+	
 	Actor pCenterCameraTarget = None
 	if info.FinalCameraTarget && info.FinalCameraTarget.IsUnique() && (pTweakInterjectCenter.GetValue() == 1.0)
 		pCenterCameraTarget = info.FinalCameraTarget.GetUniqueActor()
@@ -758,6 +765,10 @@ Function HandleCommentary(InterjectionInfo info)
 		endif
 		i += 1
 	endwhile
+	
+	; Deactivate custom soundscape
+	Trace("Deactivating TweakCSInterjection [" + TweakCSInterjection + "]")
+	TweakCSInterjection.Remove()
 	
 	Utility.Wait(0.1)
 
