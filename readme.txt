@@ -7,7 +7,7 @@
                               [Fallout 4 Edition]
                    ___________________________________________
 
-                                 Jan  11, 2017
+                                 Jan  31, 2017
                                  Version: 1.15
 
                         Written by:  Dheu
@@ -3077,6 +3077,11 @@ IV. > > > >  Usage
      later than the start of Chapter 2 and in some cases earlier. For best 
      results, proceed immediately to vault 81 (You can rescue the Minutemen on 
      the way, but I wouldn't do much more than that)
+	 
+	 If you are in a rush and don't mind cheating a bit, AFT also include a batch
+	 script which will complete most of the steps below for you (so that you can
+	 almost instantly gain Curie when you emerge from Vault 111).  See #5 below
+	 for usage instructions.
        
      1) Where is Vault 81?
        
@@ -3156,7 +3161,26 @@ IV. > > > >  Usage
         Sanctuary and Vault 111. Approach your spouses Cryo-Pod with Curie (and
         Codsworth if you wish) to begin the rescue scene.
 
-     5) Maximizing Spouse Interactions
+     5) How to cheat and gain Curie Quickly:
+	 
+	    Open Console and type: bat unlockcurie
+		Unpause console and wait for all the messages to finish displaying
+		Open Console again and type:
+		
+		prid 102249
+		moveto player
+		
+		Curie will appear, ready to join you. 
+		
+		SPECIAL NOTE : If you visit Vault 81 later in the game, the vault
+		door will be closed. To open it, open console and click on the vault
+		door with the mouse while the console is open. Then type the command:
+		
+		SendAnimEvent "Stage2"
+		
+		That will open the door. 
+	 
+     6) Maximizing Spouse Interactions
         
         AFT reuses pre-existing audio to support spouse scenes. When it comes 
         time to play a scene, it checks to see if the required audio is 
