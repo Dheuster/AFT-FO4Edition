@@ -4906,15 +4906,16 @@ X. > > > >  Version History
   - Dogmeat no longer "ready's weapon" by default.
 
   1.15
-  - Added Cooldown settings for auto-relax
   - Added Action "Gather Loose Items" See Readme for usage details.
-  - Added "Auto" Aggression setting so followers wont attack when in stealth.
+  - Added Auto Aggression setting so followers wont attack when in stealth.
+  - Added background noise mute during interjections to help hear NPC comments.
+  - Added Cooldown settings for auto-relax
   - Added Lock Rotation option to Global Chat Settings.
-  - Carryweight reduced in combat to stop weapon pickup. (managed outfits only)
   - Fixed Environmental commentary bug when traveling with only 1 companion. 
   - Fixed (info) home detection so it recognizes changes made outside AFT
   - Fixed Item loss bug when first managing/unmanaging non-unique NPC outfits
   - Fixed bug with Perception Boost (Ranged weapon damage boost)
+  - Follower Carryweight reduced during combat to avoid mid-combat item pickup
   - Follower Idle Comments now allowed in most situations.
   
 -------------------------------------------------------------------------------
