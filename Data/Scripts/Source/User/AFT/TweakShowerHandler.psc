@@ -129,7 +129,7 @@ Event OnExitFurniture(ObjectReference akActionRef)
 	endif
 EndEvent
 
-; Handle Player Activation
+; Handle Player Activation (1.16)
 Event ObjectReference.OnActivate(ObjectReference theShower, ObjectReference akActionRef)
 	Actor player = Game.GetPlayer()
 	if (akActionRef != player)
