@@ -8,6 +8,13 @@ MovableStatic Property PipeWaterLeakGardens Auto Const
 Quest   Property pTweakFollower Auto Const
 Faction Property pTweakNamesFaction Auto Const
 
+bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
+	string logName = "TweakShowerHandler"
+	; string logName = "TweakSettings"
+	debug.OpenUserLog(logName)
+	RETURN debug.TraceUser(logName, asTextToPrint, aiSeverity)
+EndFunction
+
 Event OnLoad()
 	if IsEnabled()
 		ObjectReference wrapper = GetLinkedRef(LinkCustom09)
@@ -145,19 +152,7 @@ Event ObjectReference.OnActivate(ObjectReference theShower, ObjectReference akAc
 				theWater = theShower.PlaceAtMe(PipeWaterLeakGardens)
 				SetLinkedRef(theWater, LinkCustom08)
 			endif
-			if Game.IsPluginInstalled("GetDirty.esp")
-				Quest CS7_GetDirty = Game.GetFormFromFile(0x01000F99,"GetDirty.esp") as Quest
-				if CS7_GetDirty
-					ScriptObject GetDirtyScript = CS7_GetDirty.CastAs("CS7_GetDirtyScript")
-					if GetDirtyScript
-						Var[] params = new Var[1]
-						params[0] = false
-						CS7_GetDirty.CallFunction("EnableModEffectShaders", params)
-						params[0] = true
-						CS7_GetDirty.CallFunction("EnableModEffectShaders", params)
-					endIf
-				endIf
-			endIf
+			CleanPlayer()
 		else
 			; Getting Out of Shower
 			ObjectReference theWater = GetLinkedRef(LinkCustom08)
@@ -170,3 +165,30 @@ Event ObjectReference.OnActivate(ObjectReference theShower, ObjectReference akAc
 		endif		
 	endif
 endEvent
+
+; GETDIRTY / CWSS Support
+Function CleanPlayer()
+	if Game.IsPluginInstalled("GetDirty.esp")
+		Quest CS7_GetDirty = Game.GetFormFromFile(0x01000F99,"GetDirty.esp") as Quest
+		if CS7_GetDirty
+			GlobalVariable CS7_iModState = Game.GetFormFromFile(0x0100A7B9,"GetDirty.esp") as GlobalVariable
+			if CS7_iModState
+				ScriptObject GetDirtyScript = CS7_GetDirty.CastAs("CS7_GetDirtyScript")
+				if GetDirtyScript
+					Var[] no_params = new Var[0]
+					Var[] one_param = new Var[1]
+					if CS7_iModState.GetValue() != 0 ; (equiv of == 1 || == 2)
+						GetDirtyScript.CallFunction("DispelModMagicEffects", no_params)
+						GetDirtyScript.CallFunction("StopModEffectShaders", no_params)
+						if CS7_iModState.GetValue() == 1.0
+							GetDirtyScript.CallFunction("DispelCWSSMagicEffects()", no_params)
+							GetDirtyScript.CallFunction("StartCWSSpellMessage", no_params)
+						endIf
+						one_param[0] = CS7_iModState.GetValue()
+						GetDirtyScript.CallFunction("StartModMagicEffects", one_param)
+					endIf
+				endIf
+			endIf
+		endIf
+	endIf
+EndFunction
