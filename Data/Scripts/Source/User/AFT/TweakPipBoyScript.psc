@@ -175,6 +175,7 @@ Message  Property pTweakVisualFailDistance    Auto Const
 Message  Property pTweakAvailableIn           Auto Const
 Message  Property pTweakStopThat              Auto Const
 Message  Property pTweakLastWarning           Auto Const
+Message	 Property pTweakSearchingMsg		  Auto Const
 
 GlobalVariable Property pTweakCampAvailableTS Auto Const
 GlobalVariable Property pTweakCampUFOBeamUp   Auto Const
@@ -1075,6 +1076,8 @@ int PrefabIndex = 0
 Function StartPrefab()
   Game.RequestSave()
   PrefabIndex = 0
+  pTweakSearchingMsg.Show()
+  Utility.waitmenumode(0.8)
   ShowPrefab()
 EndFunction
 
@@ -1096,7 +1099,7 @@ Function ShowPrefab()
 		self.CallFunctionNoWait("ShowPrefab", params)
 		return
 	endIf
-
+	
     Keyword TweakPrefabs = Game.GetFormFromFile(0x0100EF7B,"AmazingFollowerTweaks.esp") as Keyword
 	if !TweakPrefabs
 		Trace("No TweakPrefabs")
@@ -1112,11 +1115,9 @@ Function ShowPrefab()
 		Trace("No WorkshopRef (For current location) Found")
 		return
 	endIf
-	; if !WorkshopRef.OwnedByPlayer
-		; Trace("Workshop Not Owned")
-		; pWorkshopUnownedMessage.Show()
-		; return None
-	; endIf            
+		
+	; Timing Fix for fast machines...
+	Utility.waitmenumode(1.2)
 	
 	ObjectReference[] local_prefabs = WorkshopRef.GetRefsLinkedToMe(TweakPrefabs)
 	if 0 == local_prefabs.length
