@@ -803,25 +803,38 @@ Function initialize()
 				ActorBaseMask = ActorBaseID % (0x01000000)
 			endif
 			
-			
 			; Now compare MASK
 			if     0x0000FD5A == ActorBaseMask ; Ada
 				corecompanion = true
 				if (CAS)
-					originalHome    = CAS.HomeLocation
-					originalHomeRef = LocationToMarkerRef(originalHome)
+					originalHome    = Game.GetForm(0x00024FAB) as Location ; RedRocketTruckStopLocation
+					originalHomeRef = RedRocketCenterMarker
+					assignedHome    = originalHome
+					assignedHomeRef = originalHomeRef					
 				endIf				
 			elseif 0x00006E5B == ActorBaseMask ; Longfellow
 				corecompanion = true
-				if (CAS)
-					originalHome    = CAS.HomeLocation
-					originalHomeRef = LocationToMarkerRef(originalHome)
+				if pTweakDLC03 && pTweakDLC03.Installed				
+					originalHome    = pTweakDLC03.LongfellowCabinLocation
+					originalHomeRef = pTweakDLC03.DLC03LongfellowCabinRef
+					assignedHome    = originalHome
+					assignedHomeRef = originalHomeRef					
+				else
+					; Set to None so that he picks up dynamic assignment... (Drops an XMarker)
+					originalHome    = None
+					originalHomeRef = None
 				endIf
 			elseif 0x0000881D == ActorBaseMask ; Porter Gage
 				corecompanion = true
-				if (CAS)
-					originalHome    = CAS.HomeLocation
-					originalHomeRef = LocationToMarkerRef(originalHome)
+				if pTweakDLC04 && pTweakDLC04.Installed				
+					originalHome    = pTweakDLC04.NukaTownUSALocation
+					originalHomeRef = pTweakDLC04.DLC04MQ02OverlookGageMarker
+					assignedHome    = originalHome
+					assignedHomeRef = originalHomeRef					
+				else
+					; Set to None so that he picks up dynamic assignment... (Drops an XMarker)
+					originalHome    = None
+					originalHomeRef = None
 				endIf
 			endif
 		endif

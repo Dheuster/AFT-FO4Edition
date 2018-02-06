@@ -5120,7 +5120,16 @@ Function HandleBoSKickOut()
 
 	if Haylen && !Haylen.IsDead()
 		if Haylen.IsInFaction(pTweakFollowerFaction)	
-			if BoS302.GetStageDone(20) != 1
+			if BoS302.GetStageDone(20) == 1
+				Faction BoSFaction = Game.GetForm(0x0005DE41) as Faction	
+				Haylen.RemoveFromFaction(BoSFaction)
+				Faction BoS100FightFaction = Game.GetForm(0x001B513D) as Faction
+				Haylen.RemoveFromFaction(BoS100FightFaction)
+				
+				; Need to put her in a faction that will protect the player
+				Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
+				Haylen.AddToFaction(HasBeenCompanion)
+			else
 				UnManageFollower(Haylen)
 				Haylen.SetEssential(false)
 				Haylen.GetActorBase().SetEssential(false)

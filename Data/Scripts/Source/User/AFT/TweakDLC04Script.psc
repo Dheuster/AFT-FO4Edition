@@ -56,6 +56,8 @@ Location		Property	FizztopMountainLocation				Auto
 Location		Property	TheParlorLocation					Auto
 Location		Property	NukaTownUSALocation					Auto
 
+ObjectReference Property	DLC04MQ02OverlookGageMarker			Auto
+
 LocationAlias	Property	DLC04NukaWorldLocation              Auto Const
 LocationAlias	Property	DLC04NukaWorldAirfieldLocation      Auto Const
 LocationAlias	Property	DLC04KiddieKingdomTunnelsLocation   Auto Const
@@ -122,6 +124,8 @@ Function AllToNone()
 	FizztopMountainLocation = None
 	TheParlorLocation = None
 	NukaTownUSALocation = None
+	
+	DLC04MQ02OverlookGageMarker = None
 
 	DLC04NukaWorldLocation.Clear()
 	DLC04NukaWorldAirfieldLocation.Clear()
@@ -461,6 +465,20 @@ Function OnGameLoaded(bool firstcall)
 			trace("Unable To Load NukaTownUSALocation Location")
 			issue = True			
 		endif
+		
+		if !DLC04MQ02OverlookGageMarker
+			if DLC04MQ02
+				ReferenceAlias DLC04MQ02OverlookGageMarkerREF = DLC04MQ02.GetAlias(5) As ReferenceAlias
+				if DLC04MQ02OverlookGageMarkerREF
+					DLC04MQ02OverlookGageMarker = DLC04MQ02OverlookGageMarkerREF.GetReference()
+				endif
+			endif
+		endif
+		
+		if !DLC04MQ02OverlookGageMarker
+			issue = True
+		endif
+		
 		
 		if (issue)
 			Trace("AFT Message : Some DLC04 (Nuka World) Resources Failed to Import. Compatibility issues likely.")
