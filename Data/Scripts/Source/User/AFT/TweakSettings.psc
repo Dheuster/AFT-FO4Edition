@@ -33,6 +33,7 @@ Group Injected
 	ObjectReference Property CodsworthKitchenMarker			Auto Const ; 0x00023CBC
 	ObjectReference Property COMCurieIntroMarker			Auto Const ; 0x00239ED3
 	ObjectReference Property BoS101PlayerStartMarker		Auto Const ; 0x00193F92
+	ObjectReference Property BoS201DanseMessHallMarker		Auto Const ; 0x000AA1B9	
 	ObjectReference Property DeaconHomeMarker				Auto Const ; 0x00050987
 	ObjectReference Property RedRocketCenterMarker			Auto Const ; 0x0004BE79
 	ObjectReference Property MS04HancockEndMarker			Auto Const ; 0x0012937E
@@ -474,8 +475,19 @@ Function initialize()
 	
 		Trace("Danse Detected.")
 		corecompanion = true
-		originalHome = Game.GetForm(0x0001FA4A) as Location ; CambridgePDLocation
-		originalHomeRef = BoS101PlayerStartMarker
+
+		
+		Quest BoS201 = Game.GetForm(0x0002BF21) as Quest
+		if BoS201 && BoS201.GetStageDone(90)
+			originalHome = Game.GetForm(0x00076A38) as Location ; PrydwenLocation
+			originalHomeRef = BoS201DanseMessHallMarker
+		else
+			originalHome = Game.GetForm(0x0001FA4A) as Location ; CambridgePDLocation
+			originalHomeRef = BoS101PlayerStartMarker
+		endif
+		
+		assignedHome = originalHome
+		assignedHomeRef = originalHomeRef
 
 		f = Game.GetForm(0x001B513D) as Faction ; Bos100FightFaction
 		if (f)
