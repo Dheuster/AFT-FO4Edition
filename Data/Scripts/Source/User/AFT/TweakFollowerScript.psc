@@ -5076,52 +5076,97 @@ EndFunction
 Function HandleInstKickOut()
 
 	Actor X688 = CompanionX688.GetUniqueActor()
-	
-	if X688.IsDead()
-		return
+	if !X688.IsDead()
+		if X688.IsInFaction(pTweakFollowerFaction)
+
+			; Prevent X6-88 from turning on Player/Programming
+			Faction InstituteFaction = Game.GetForm(0x0005E558) as Faction
+			Faction SynthFaction     = Game.GetForm(0x00083B31) as Faction
+			Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
+			
+			X688.RemoveFromFaction(InstituteFaction)
+			X688.RemoveFromFaction(SynthFaction)
+			
+			; Need to put him in a faction that will protect the player
+			X688.AddToFaction(HasBeenCompanion)
+		endif	
 	endIf
 	
-	if X688.IsInFaction(pTweakFollowerFaction)
-	
-		; Prevent X6-88 from turning on Player/Programming
-		Faction InstituteFaction = Game.GetForm(0x0005E558) as Faction
-		Faction SynthFaction     = Game.GetForm(0x00083B31) as Faction
-		Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
+	; Purge is complicates. And besides, between synths and scientists, who
+	; is to say where the members loyalty truly lies. 
 		
-		X688.RemoveFromFaction(InstituteFaction)
-		X688.RemoveFromFaction(SynthFaction)
-		
-		; Need to put him in a faction that will protect the player
-		X688.AddToFaction(HasBeenCompanion)
-	endif
-	
 EndFunction
 
 Function HandleBoSKickOut()
+
 	Actor Danse = BoSPaladinDanse.GetUniqueActor()
-	if Danse.IsDead()
-		return
+	Actor Haylen = None
+	ActorBase BoSScribeHaylen = Game.GetForm(0x0005DE3F) as ActorBase
+	if BoSScribeHaylen
+		Haylen = BoSScribeHaylen.GetUniqueActor()
+	endif
+	
+	if !Danse.IsDead()
+		if Danse.IsInFaction(pTweakFollowerFaction)	
+			if BoS302.GetStageDone(20) != 1
+				UnManageFollower(Danse)
+				Danse.SetEssential(false)
+				Danse.GetActorBase().SetEssential(false)
+				Danse.GetActorBase().SetProtected(false)
+				Danse.SetGhost(false)
+			endif
+		endif	
 	endIf
-	if Danse.IsInFaction(pTweakFollowerFaction)	
-		if BoS302.GetStageDone(20) == 1
-			return
-		endif
-		UnManageFollower(Danse)
-		; Unmanage will often restore their original values. So we need to make them mortal
-		Danse.SetEssential(false)
-	endif	
+
+	if Haylen && !Haylen.IsDead()
+		if Haylen.IsInFaction(pTweakFollowerFaction)	
+			if BoS302.GetStageDone(20) != 1
+				UnManageFollower(Haylen)
+				Haylen.SetEssential(false)
+				Haylen.GetActorBase().SetEssential(false)
+				Haylen.GetActorBase().SetProtected(false)
+				Haylen.SetGhost(false)
+			endif
+		endif	
+	endIf
+		
+	; Faction BoSFaction = Game.GetForm(0x0005DE41) as Faction	
+	; if BoSFaction
+		; int plength = pManagedMap.Length
+		; int p = 1
+		; while (p < plength)
+			; ReferenceAlias pfix = pManagedMap[p]
+			; if pfix
+				; Actor pa = pfix.GetActorReference()
+				; if (pa && pa != Danse && pa != Haylen)
+					; if ((pfix as AFT:TweakSettings).originalFactions.Find(BoSFaction) > -1)		
+						; UnManageFollower(pa)
+						;; Unmanage will often restore their original values. So we need to make them mortal
+						; pa.SetEssential(false)
+						; pa.GetActorBase().SetEssential(false)
+						; pa.GetActorBase().SetProtected(false)
+						; pa.SetGhost(false)
+					; endif
+				; endif
+			; endIf
+			; p += 1
+		; endWhile
+	; endif
+	
 EndFunction
 
 Function HandleRRKickOut()
 	Actor Deacon = CompanionDeacon.GetUniqueActor()
-	if Deacon.IsDead()
-		return
+	if !Deacon.IsDead()
+		if Deacon.IsInFaction(pTweakFollowerFaction)
+			UnManageFollower(Deacon)
+			; Unmanage will often restore their original values. So we need to make them mortal
+			Deacon.SetEssential(false)
+			Deacon.GetActorBase().SetEssential(false)
+			Deacon.GetActorBase().SetProtected(false)
+			Deacon.SetGhost(false)
+		endif
 	endIf
-	if Deacon.IsInFaction(pTweakFollowerFaction)
-		UnManageFollower(Deacon)
-		; Unmanage will often restore their original values. So we need to make them mortal
-		Deacon.SetEssential(false)
-	endif
 	
 	; Scan Managed Map and look for RailRoad Faction members.
 	; When kicked out it is normally because you took the 
@@ -5140,6 +5185,9 @@ Function HandleRRKickOut()
 					UnManageFollower(pa)
 					; Unmanage will often restore their original values. So we need to make them mortal
 					pa.SetEssential(false)
+					pa.GetActorBase().SetEssential(false)
+					pa.GetActorBase().SetProtected(false)
+					pa.SetGhost(false)
 				endif
 			endIf
 			p += 1
