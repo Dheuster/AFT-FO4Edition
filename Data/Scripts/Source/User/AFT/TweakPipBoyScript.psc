@@ -315,6 +315,8 @@ FormList Property pTweakNewBodyData Auto Const
 Topic Property WorkshopVendorSharedTopicB Auto Const
 Perk Property pTweakRangedDmgBoost Auto Const
 
+; 227 Properties....
+
 ActorBase[] pHasBody
 
 Topic[] ComeAlongTopics
@@ -360,6 +362,7 @@ Function OnGameLoaded(bool firstTime = false)
 	pHasBody.Clear()
 	ResetVariables()
 	TestTogggle = 0
+	
 	Trace("OnGameLoad() Finished")
 EndFunction
 
@@ -400,10 +403,11 @@ Function ResetVariables()
 	
 	; Scan TweakNewBodyData for fast lookup of NPCs with Body Data:
 	int i = 0
-	int TweakNewBodyDataSize = pTweakNewBodyData.GetSize()
 	Formlist fl  = None
+	GlobalVariable gv  = None
 	ActorBase ab = None
 	
+	int TweakNewBodyDataSize = pTweakNewBodyData.GetSize()
 	Trace("Populating HasBody Lookup from [" + TweakNewBodyDataSize + "] BodyData entries")
 	while (i < TweakNewBodyDataSize)
 		fl = pTweakNewBodyData.GetAt(i) As FormList
@@ -415,7 +419,9 @@ Function ResetVariables()
 		endIf
 		i += 1
 	endwhile
-	
+
+	Trace("Done")
+		
 EndFunction
 
 Function AftReset()
@@ -5417,33 +5423,53 @@ EndFunction
 
 Function LockRotationSetup()
 	Trace("LockRotationSetup")
-	CurrentFollowerTogglesOn()
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
+	if (!pTweakFollowerScript)
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")
+	else	
+		pTweakFollowerScript.CurrentFollowerTogglesOn()
+	endIf	
 	ActivateOnNameSelect = 4	
 EndFunction
 
 Function UnManageNPCSetup()
 	Trace("UnManageNPCSetup")
-	CurrentManagedTogglesOn()
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
+	if (!pTweakFollowerScript)
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")
+	else	
+		pTweakFollowerScript.CurrentManagedTogglesOn()
+	endIf
 	ActivateOnNameSelect = 3	
 EndFunction
 
 
 Function LocateNPCSetup()
 	Trace("LocateNPCSetup")
-	CurrentManagedTogglesOn()
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
+	if (!pTweakFollowerScript)
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")
+	else	
+		pTweakFollowerScript.CurrentManagedTogglesOn()
+	endIf
 	ActivateOnNameSelect = 2	
 EndFunction
 
 Function AssignNameSetup()
 	Trace("AssignNameSetup Called")
-	if (!TerminalTarget)
-		Trace("No Terminal Target Detected")
-		AllTogglesOff()
-		return
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
+	if (!pTweakFollowerScript)
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")
+	else	
+		if (!TerminalTarget)
+			Trace("No Terminal Target Detected")
+			pTweakFollowerScript.AllTogglesOff()
+			return
+		endIf
+		pTweakFollowerScript.AvailableCustomNameTogglesOn()
 	endIf
-	AvailableCustomNameTogglesOn()
 	ActivateOnNameSelect = 1
-	return
+	return	
 EndFunction
 
 ; =====  SelectNameTerminal Managment ======
@@ -5454,142 +5480,142 @@ EndFunction
 
 Function AllTogglesOn()
 	Trace("AllTogglesOn() Called")
-	int size = pTweakToggles.GetSize()
-	if (size > 0)
-		int i = 0
-		Trace("Updating [" + size + "] toggles")
-		while (i != size)
-			GlobalVariable toggle = (pTweakToggles.GetAt(i) As GlobalVariable)
-			toggle.SetValue(1.0)
-			i += 1
-		endWhile
-	endIf
+	; Deprecated
+
+	; int size = pToggles.Length	
+	; if (size > 0)
+		; int i = 0
+		; Trace("Updating [" + size + "] toggles")
+		; while (i < size)
+			; pToggles[i].SetValue(1.0)
+			; i += 1
+		; endWhile
+	; endIf
 EndFunction
 
 Function AllTogglesOff()
 	Trace("AllTogglesOff() Called")
-	int size = pTweakToggles.GetSize()
-	if (size > 0)
-		int i = 0
-		Trace("Updating [" + size + "] toggles")
-		while (i != size)
-			GlobalVariable toggle = (pTweakToggles.GetAt(i) As GlobalVariable)
-			toggle.SetValue(0.0)
-			i += 1
-		endWhile
-	endIf
+	; Deprecated : See TweakFollowerScript
+	
+	; int size = pToggles.Length	
+	; if (size > 0)
+		; int i = 0
+		; Trace("Updating [" + size + "] toggles")
+		; while (i < size)
+			; pToggles[i].SetValue(0.0)
+			; i += 1
+		; endWhile
+	; endIf
 EndFunction
 
 Function CurrentManagedTogglesOn()
-	bool[] mask
-	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
-	if (!pTweakFollowerScript)
-		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")
-		AllTogglesOn()
-		return
-	else	
-		mask = pTweakFollowerScript.GetManagedNameSlots()
-	endIf
+	Trace("CurrentManagedTogglesOn() Called")
+	; Deprecated : See TweakFollowerScript 
+		
+	; bool[] mask
+	; AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
+	; if (!pTweakFollowerScript)
+		; Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")
+		; AllTogglesOn()
+		; return
+	; else	
+		; mask = pTweakFollowerScript.GetManagedNameSlots(pToggles.Length)
+	; endIf
 	
-	int masklen = mask.Length
-	if (masklen > pTweakToggles.GetSize())
-		Trace("GetManagedNameSlots() returned more slots than supported. Truncating")
-		masklen = pTweakToggles.GetSize()
-	endIf
+	; int masklen = mask.Length
+	; if (masklen > pToggles.Length)
+		; Trace("GetManagedNameSlots() returned more slots than supported. Truncating")
+		; masklen = pToggles.Length
+	; endIf
 	
-    int i = 0
-	while (i < masklen)
-		GlobalVariable toggle = (pTweakToggles.GetAt(i) As GlobalVariable)	
-		if (mask[i])
-			toggle.SetValue(1.0)
-		else
-			toggle.SetValue(0.0)
-		endIf
-		i += 1
-	endWhile
+    ; int i = 0
+	; while (i < masklen)
+		; if (mask[i])
+			; pToggles[i].SetValue(1.0)
+		; else
+			; pToggles[i].SetValue(0.0)
+		; endIf
+		; i += 1
+	; endWhile
+	
 endFunction
 
 Function CurrentFollowerTogglesOn()
 	Trace("CurrentFollowerTogglesOn()")
-	AllTogglesOff()
-	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
-	if (!pTweakFollowerScript)
-		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
-		return
-	endIf	
-	int[] followerNameIds = pTweakFollowerScript.GetCurrentFollowerNameSlots()
-	int followerNameIdslen = followerNameIds.Length
-	Trace("GetCurrentFollowerNameSlots() returned [" + followerNameIdslen + "] Name Ids")			
-	int i  = 0
-	int id = 0
-	while (i < followerNameIdslen)
-		id = followerNameIds[i]
-		GlobalVariable toggle = (pTweakToggles.GetAt(id) As GlobalVariable)
-		toggle.SetValue(1.0)
-		i += 1
-	endwhile
+	; Deprecated. Call pTweakFollowerScript.CurrentFollowerTogglesOn() directly
+	
+	; AllTogglesOff()
+	; AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	; if (!pTweakFollowerScript)
+	
+		; Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
+		; return
+	; endIf	
+	; int[] followerNameIds = pTweakFollowerScript.GetCurrentFollowerNameSlots()
+	; int followerNameIdslen = followerNameIds.Length
+	; Trace("GetCurrentFollowerNameSlots() returned [" + followerNameIdslen + "] Name Ids")			
+	; int i  = 0
+	; int id = 0
+	; while (i < followerNameIdslen)
+		; pToggles[followerNameIds[i]].SetValue(1.0)
+		; i += 1
+	; endwhile
+	
 endFunction
 
 Function AvailableCustomNameTogglesOn()
-
-    ; First entry is Unknown (index 0)
-	; Next 18 (index 1 - 18) are common + reserved names.  
-	; Next 32 (index 19 -> 50) are generics (follower 1, follower 2, etc...)
-	; Beyond that (index 51 and up) are custom names.
-	
 	Trace("AvailableCustomNameTogglesOn()")
+	; Deprecated : See TweakFollowerScript
 	
-	int size = pTweakToggles.GetSize()
-	int FirstCustom = 51
-	int i = 0
-	Trace("Flipping [" + FirstCustom + "] toggles off")
-	while (i != FirstCustom)
-		GlobalVariable toggle = (pTweakToggles.GetAt(i) As GlobalVariable)
-		toggle.SetValue(0.0)
-		i += 1
-	endWhile
+	; int size = pToggles.Length
+	; int FirstCustom = 51
+	; int i = 0
+	; Trace("Flipping [" + FirstCustom + "] toggles off")
+	; while (i < FirstCustom)
+		; pToggles[i].SetValue(0.0)
+		; i += 1
+	; endWhile
 
-	if (size < 52)
-		Trace("TweakToggles size < 52. Aborting...")
-		return
-	endIf
+	; if (size < 52)
+		; Trace("TweakToggles size < 52. Aborting...")
+		; return
+	; endIf
 	
-	int maxnumcustom = (size - 51) ; should be 60...
+	; int maxnumcustom = (size - 51) ; should be 60...
 	
-	bool[] mask
-	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	; bool[] mask
+	; AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	
-	if (!pTweakFollowerScript)
-		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")
-		mask = new bool[60]
-		i = 0
-		while (i < 60)
-			mask[i] = true
-			i += 1
-		endwhile
-	else
-		mask = pTweakFollowerScript.GetAvailableCustomNameSlots()
-	endIf
+	; if (!pTweakFollowerScript)
+		; Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")
+		; mask = new bool[maxnumcustom]
+		; i = 0
+		; while (i < maxnumcustom)
+			; mask[i] = true
+			; i += 1
+		; endwhile
+	; else
+		; mask = pTweakFollowerScript.GetAvailableCustomNameSlots(maxnumcustom)
+	; endIf
 	
-	int masklen = mask.Length
-	if (masklen > maxnumcustom)
-		Trace("GetUsedCustomNameSlots() returned more slots than supported. Truncating")
-		masklen = maxnumcustom
-	endIf
+	; int masklen = mask.Length
+	; if (masklen > maxnumcustom)
+		; Trace("GetUsedCustomNameSlots() returned more slots than supported. Truncating")
+		; masklen = maxnumcustom
+	; endIf
 	
-	int valueplus51 = 51
+	; int valueplus51 = 51
 
-    i = 0
-	while (i < masklen)
-		GlobalVariable toggle = (pTweakToggles.GetAt(valueplus51) As GlobalVariable)	
-		if (mask[i])
-			toggle.SetValue(1.0)
-		else
-			toggle.SetValue(0.0)
-		endIf
-		i += 1
-		valueplus51 += 1
-	endWhile
+    ; i = 0
+	; while (i < masklen)
+		; if (mask[i])
+			; pToggles[valueplus51].SetValue(1.0)
+		; else
+			; pToggles[valueplus51].SetValue(0.0)
+		; endIf
+		; i += 1
+		; valueplus51 += 1
+	; endWhile
 			
 EndFunction
 

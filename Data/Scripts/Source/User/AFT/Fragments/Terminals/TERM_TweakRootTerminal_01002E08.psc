@@ -26,9 +26,9 @@ EndFunction
 ;BEGIN FRAGMENT Fragment_Terminal_08
 Function Fragment_Terminal_08(ObjectReference akTerminalRef)
 ;BEGIN CODE
-AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
-if (pTweakPipBoyScript)
-    pTweakPipBoyScript.CurrentFollowerTogglesOn()
+AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+if pTweakFollowerScript
+    pTweakFollowerScript.CurrentFollowerTogglesOn()
 EndIf
 ;END CODE
 EndFunction

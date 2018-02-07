@@ -275,6 +275,111 @@ Perk	  Property pTweakPlayerSynergyChrPerk	Auto Const ; Perk increases Ranged Da
 Perk	  Property pTweakPlayerSynergyLckPerk	Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakZeroCarryInCombat		Auto Const ; Perk prevent weapon pickup during combat
 
+; 194 ....
+GlobalVariable[] Property pToggles Auto Const
+
+; GlobalVariable Property pTweakToggle0 Auto Const
+; GlobalVariable Property pTweakToggle1 Auto Const
+; GlobalVariable Property pTweakToggle2 Auto Const
+; GlobalVariable Property pTweakToggle3 Auto Const
+; GlobalVariable Property pTweakToggle4 Auto Const
+; GlobalVariable Property pTweakToggle5 Auto Const
+; GlobalVariable Property pTweakToggle6 Auto Const
+; GlobalVariable Property pTweakToggle7 Auto Const
+; GlobalVariable Property pTweakToggle8 Auto Const
+; GlobalVariable Property pTweakToggle9 Auto Const
+
+; GlobalVariable Property pTweakToggle10 Auto Const
+; GlobalVariable Property pTweakToggle11 Auto Const
+; GlobalVariable Property pTweakToggle12 Auto Const
+; GlobalVariable Property pTweakToggle13 Auto Const
+; GlobalVariable Property pTweakToggle14 Auto Const
+; GlobalVariable Property pTweakToggle15 Auto Const
+; GlobalVariable Property pTweakToggle16 Auto Const
+; GlobalVariable Property pTweakToggle17 Auto Const
+; GlobalVariable Property pTweakToggle18 Auto Const
+; GlobalVariable Property pTweakToggle19 Auto Const
+
+; GlobalVariable Property pTweakToggle20 Auto Const
+; GlobalVariable Property pTweakToggle21 Auto Const
+; GlobalVariable Property pTweakToggle22 Auto Const
+; GlobalVariable Property pTweakToggle23 Auto Const
+; GlobalVariable Property pTweakToggle24 Auto Const
+; GlobalVariable Property pTweakToggle25 Auto Const
+; GlobalVariable Property pTweakToggle26 Auto Const
+; GlobalVariable Property pTweakToggle27 Auto Const
+; GlobalVariable Property pTweakToggle28 Auto Const
+; GlobalVariable Property pTweakToggle29 Auto Const
+
+; GlobalVariable Property pTweakToggle30 Auto Const
+; GlobalVariable Property pTweakToggle31 Auto Const
+; GlobalVariable Property pTweakToggle32 Auto Const
+; GlobalVariable Property pTweakToggle33 Auto Const
+; GlobalVariable Property pTweakToggle34 Auto Const
+; GlobalVariable Property pTweakToggle35 Auto Const
+; GlobalVariable Property pTweakToggle36 Auto Const
+; GlobalVariable Property pTweakToggle37 Auto Const
+; GlobalVariable Property pTweakToggle38 Auto Const
+; GlobalVariable Property pTweakToggle39 Auto Const
+
+; GlobalVariable Property pTweakToggle40 Auto Const
+; GlobalVariable Property pTweakToggle41 Auto Const
+; GlobalVariable Property pTweakToggle42 Auto Const
+; GlobalVariable Property pTweakToggle43 Auto Const
+; GlobalVariable Property pTweakToggle44 Auto Const
+; GlobalVariable Property pTweakToggle45 Auto Const
+; GlobalVariable Property pTweakToggle46 Auto Const
+; GlobalVariable Property pTweakToggle47 Auto Const
+; GlobalVariable Property pTweakToggle48 Auto Const
+; GlobalVariable Property pTweakToggle49 Auto Const
+
+; GlobalVariable Property pTweakToggle50 Auto Const
+; GlobalVariable Property pTweakToggle51 Auto Const
+; GlobalVariable Property pTweakToggle52 Auto Const
+; GlobalVariable Property pTweakToggle53 Auto Const
+; GlobalVariable Property pTweakToggle54 Auto Const
+; GlobalVariable Property pTweakToggle55 Auto Const
+; GlobalVariable Property pTweakToggle56 Auto Const
+; GlobalVariable Property pTweakToggle57 Auto Const
+; GlobalVariable Property pTweakToggle58 Auto Const
+; GlobalVariable Property pTweakToggle59 Auto Const
+
+; GlobalVariable Property pTweakToggle60 Auto Const
+; GlobalVariable Property pTweakToggle61 Auto Const
+; GlobalVariable Property pTweakToggle62 Auto Const
+; GlobalVariable Property pTweakToggle63 Auto Const
+; GlobalVariable Property pTweakToggle64 Auto Const
+; GlobalVariable Property pTweakToggle65 Auto Const
+; GlobalVariable Property pTweakToggle66 Auto Const
+; GlobalVariable Property pTweakToggle67 Auto Const
+; GlobalVariable Property pTweakToggle68 Auto Const
+; GlobalVariable Property pTweakToggle69 Auto Const
+
+; GlobalVariable Property pTweakToggle70 Auto Const
+; GlobalVariable Property pTweakToggle71 Auto Const
+; GlobalVariable Property pTweakToggle72 Auto Const
+; GlobalVariable Property pTweakToggle73 Auto Const
+; GlobalVariable Property pTweakToggle74 Auto Const
+; GlobalVariable Property pTweakToggle75 Auto Const
+; GlobalVariable Property pTweakToggle76 Auto Const
+; GlobalVariable Property pTweakToggle77 Auto Const
+; GlobalVariable Property pTweakToggle78 Auto Const
+; GlobalVariable Property pTweakToggle79 Auto Const
+
+; GlobalVariable Property pTweakToggle80 Auto Const
+; GlobalVariable Property pTweakToggle81 Auto Const
+; GlobalVariable Property pTweakToggle82 Auto Const
+; GlobalVariable Property pTweakToggle83 Auto Const
+; GlobalVariable Property pTweakToggle84 Auto Const
+; GlobalVariable Property pTweakToggle85 Auto Const
+; GlobalVariable Property pTweakToggle86 Auto Const
+; GlobalVariable Property pTweakToggle87 Auto Const
+; GlobalVariable Property pTweakToggle88 Auto Const
+; GlobalVariable Property pTweakToggle89 Auto Const
+
+
+
+
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 	string logName = "TweakFollowerScript"
 	debug.OpenUserLog(logName)
@@ -3761,6 +3866,7 @@ Function SettlementSnapshot(int stype = 0)
 	endif
 EndFunction
 
+; Called from TweakNamesScript
 bool[] Function GetUsedGenericNameSlots()
 	Trace("GetUsedGenericNameSlots() Called")
 	bool[] ret = new bool[MAX_MANAGED]
@@ -3789,107 +3895,210 @@ bool[] Function GetUsedGenericNameSlots()
 	return ret
 EndFunction
 
-bool[] Function GetManagedNameSlots()
-	Trace("GetManagedSlots() Called")
-
-	bool[] ret	
-	AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
-	if pTweakPipBoyScript
-		ret = new bool[pTweakPipBoyScript.pTweakToggles.GetSize()]
-	else
-		ret = new bool[111]
-	endif
-
-	int retlen = ret.Length
-	if (retlen < 1)
-		Trace("TweakToggles is empty. Aborting...")
-		return ret
-	endif
+Function CurrentFollowerTogglesOn()	
+	Trace("CurrentFollowerTogglesOn")
+	AllTogglesOff()
 	
-	int i = 0
-	while (i < retlen)
-		ret[i] = false
-		i += 1
-	endwhile
-	
-	Actor npc             = None
-	int pManagedMapLength = pManagedMap.Length
-	i                      = 1
-    int id                = 0
-	int maxretindex       = retlen - 10
-	
-	Trace("Building boolean array from [" + pManagedMapLength + "] aliases")
-	while (i < pManagedMapLength)
-		npc = pManagedMap[i].GetActorRef()
-		if (npc)
-			id = npc.GetFactionRank(pTweakNamesFaction)
-			if (id > 0)
-				if (id > maxretindex)
-					Trace("ID [" + id + "] larger than TweakToggles formlist. Ignoring...")
-				else
-					ret[id] = true
-				endif
-			endif
-		endif
-		i += 1
-	EndWhile
-	return ret
-
-EndFunction
-
-bool[] Function GetAvailableCustomNameSlots()
-	Trace("GetUsedCustomNameSlots() Called")
-
-	bool[] ret = new bool[60]
-	int r = 0
-	while (r < 60)
-		ret[r] = true
-		r += 1
-	endwhile
-	
-	Actor npc             = None
-	int pManagedMapLength = pManagedMap.Length
-	int i                 = 1
-    int id                = 0
-	
-	Trace("Building boolean array from [" + pManagedMapLength + "] aliases")
-	while (i < pManagedMapLength)
-		npc = pManagedMap[i].GetActorRef()
-		if (npc)
-			id = npc.GetFactionRank(pTweakNamesFaction)
-			if (id > 50)
-				ret[(id - 51)] = false
-			endif
-		endif
-		i += 1
-	EndWhile
-	return ret
-
-EndFunction
-
-int[] Function GetCurrentFollowerNameSlots()	
-	Trace("GetCurrentFollowerNameSlots")
-	int[] ret = new int[0]
-
 	Actor npc
 	int pFollowerMapLength = pFollowerMap.length
 	int i  = 0
 	int id = 0
 		
-	Trace("Searching [" + pFollowerMapLength + "] aliases for follower IDs")
+	Trace("Processing [" + pFollowerMapLength + "] aliases")
 	while (i < pFollowerMapLength)
 		npc = pFollowerMap[i].GetActorRef()
 		if (npc)
 			id = npc.GetFactionRank(pTweakNamesFaction)
 			if (id > 0)
-				ret.Add(id)
+				pToggles[id].SetValue(1.0)
 			else
 				Trace("Detected NPC with ID 0. Ignoring")
 			endif			
 		endif
 		i += 1
 	endWhile
+EndFunction
+
+Function CurrentManagedTogglesOn()	
+	Trace("CurrentManagedTogglesOn() Called")	
+	AllTogglesOff()
+	
+	Actor npc             = None
+	int pManagedMapLength = pManagedMap.Length
+	int i                 = 1
+    int id                = 0
+	
+	Trace("Processing [" + pManagedMapLength + "] aliases")
+	while (i < pManagedMapLength)
+		npc = pManagedMap[i].GetActorRef()
+		if (npc)
+			id = npc.GetFactionRank(pTweakNamesFaction)
+			if (id > 0)
+				pToggles[id].SetValue(1.0)
+			else
+				Trace("Detected NPC with ID 0. Ignoring")
+			endif
+		endif
+		i += 1
+	EndWhile	
+endFunction
+
+Function AvailableCustomNameTogglesOn()
+
+    ; First entry is Unknown (index 0)
+	; Next 18 (index 1 - 18) are common + reserved names.  
+	; Next 32 (index 19 -> 50) are generics (follower 1, follower 2, etc...)
+	; Beyond that (index 51 and up) are custom names.
+	
+	Trace("AvailableCustomNameTogglesOn()")	
+	int FirstCustom = 51 ; 50 = Follower32, 51 = Addison
+	
+	int size = pToggles.Length
+	int i = 0
+	Trace("Flipping [" + FirstCustom + "] toggles off")
+	while (i < FirstCustom)
+		pToggles[i].SetValue(0.0)
+		i += 1
+	endWhile
+	
+	if (size <= FirstCustom)
+		Trace("TweakToggles size <= [" +  FirstCustom + "] Aborting...")
+		return
+	endIf
+
+	i = FirstCustom
+	while i < size
+		pToggles[i].SetValue(1.0)
+		i += 1
+	endWhile
+
+	int maxnumcustom = (size - FirstCustom) ; should be 60...
+	
+	Actor npc             = None
+	int pManagedMapLength = pManagedMap.Length ; 32
+	i                     = 1
+    int id                = 0
+	
+	Trace("Processing [" + pManagedMapLength + "] aliases")
+	while (i < pManagedMapLength)
+		npc = pManagedMap[i].GetActorRef()
+		if (npc)
+			id = npc.GetFactionRank(pTweakNamesFaction)
+			if (id >= FirstCustom)
+				pToggles[id].SetValue(0.0)
+			endif
+		endif
+		i += 1
+	EndWhile
+
+EndFunction
+
+Function AllTogglesOn()
+	Trace("AllTogglesOn() Called")
+	int size = pToggles.Length	
+	if (size > 0)
+		int i = 0
+		Trace("Updating [" + size + "] toggles")
+		while (i < size)
+			pToggles[i].SetValue(1.0)
+			i += 1
+		endWhile
+	endIf
+EndFunction
+
+Function AllTogglesOff()
+	Trace("AllTogglesOff() Called")
+	int size = pToggles.Length	
+	if (size > 0)
+		int i = 0
+		Trace("Updating [" + size + "] toggles")
+		while (i < size)
+			pToggles[i].SetValue(0.0)
+			i += 1
+		endWhile
+	endIf
+EndFunction
+
+; DEPRECATED:
+
+int[] Function GetCurrentFollowerNameSlots()	
+	Trace("GetCurrentFollowerNameSlots")
+	; Deprecated
+	int [] ret = new int[0]
 	return ret
+endFunction
+
+bool[] Function GetAvailableCustomNameSlots(int maxnumcustom)
+	Trace("GetAvailableCustomNameSlots() Called")
+	; Deprecated
+
+	; bool[] ret = new bool[maxnumcustom]
+	; int r = 0
+	; while (r < maxnumcustom)
+		; ret[r] = true
+		; r += 1
+	; endwhile
+	
+	; Actor npc             = None
+	; int pManagedMapLength = pManagedMap.Length
+	; int i                 = 1
+    ; int id                = 0
+	
+	; Trace("Building boolean array from [" + pManagedMapLength + "] aliases")
+	; while (i < pManagedMapLength)
+		; npc = pManagedMap[i].GetActorRef()
+		; if (npc)
+			; id = npc.GetFactionRank(pTweakNamesFaction)
+			; if (id > 50)
+				; ret[(id - 51)] = false
+			; endif
+		; endif
+		; i += 1
+	; EndWhile
+	; return ret
+
+EndFunction
+
+bool[] Function GetManagedNameSlots(int retlen=111)
+	Trace("GetManagedSlots() Called")
+	
+	; Deprecated
+
+	; bool[] ret = new bool[retlen]	
+	; if (retlen < 1)
+		; Trace("TweakToggles is empty. Aborting...")
+		; return ret
+	; endif
+	
+	; int i = 0
+	; while (i < retlen)
+		; ret[i] = false
+		; i += 1
+	; endwhile
+	
+	; Actor npc             = None
+	; int pManagedMapLength = pManagedMap.Length
+	; i                      = 1
+    ; int id                = 0
+	; int maxretindex       = retlen - 10
+	
+	; Trace("Building boolean array from [" + pManagedMapLength + "] aliases")
+	; while (i < pManagedMapLength)
+		; npc = pManagedMap[i].GetActorRef()
+		; if (npc)
+			; id = npc.GetFactionRank(pTweakNamesFaction)
+			; if (id > 0)
+				; if (id > maxretindex)
+					; Trace("ID [" + id + "] larger than TweakToggles formlist. Ignoring...")
+				; else
+					; ret[id] = true
+				; endif
+			; endif
+		; endif
+		; i += 1
+	; EndWhile
+	; return ret
+
 EndFunction
 
 ; Function FlipCurrentFollowerToggles(bool value)
