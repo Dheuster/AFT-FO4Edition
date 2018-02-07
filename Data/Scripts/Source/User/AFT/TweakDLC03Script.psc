@@ -29,7 +29,7 @@ Quest			Property	DLC03MQ04			Auto
 Quest			Property	DLC03MQ05			Auto
 Quest			Property	DLC03MQ06			Auto
 Quest			Property	DLC03MQPostQuest	Auto
-
+Quest			Property	DLC03VisitLongFellowsCabin Auto
 Faction			Property	DLC03AcadiaGenericNPCFaction	Auto
 
 RefCollectionAlias Property	DLC03AcadiaSynthRefugees Auto
@@ -43,14 +43,20 @@ int				Property	DLC03_COMOldLongfellowTalk_DismissMasked = 0x0001537B	Auto Const
 
 ; Outfits and clothes
 Outfit			Property	DLC03OldLongfellowOutfit	Auto
-; locations
-Location		Property	FarHarborWorldLocation Auto
-Location		Property	RedDeathIslandLocation Auto
-Location		Property	VRLocation             Auto
 
-LocationAlias	Property	DLC03FarHarborWorldLocation Auto Const
-LocationAlias	Property	DLC03RedDeathIslandLocation Auto Const
-LocationAlias	Property	DLC03VRLocation             Auto Const
+; locations
+Location		Property	FarHarborWorldLocation  Auto
+Location		Property	RedDeathIslandLocation  Auto
+Location		Property	VRLocation              Auto
+Location		Property	LongfellowCabinLocation Auto
+
+ObjectReference Property	DLC03LongfellowCabinRef Auto 
+
+LocationAlias	Property	DLC03FarHarborWorldLocation   Auto Const
+LocationAlias	Property	DLC03RedDeathIslandLocation   Auto Const
+LocationAlias	Property	DLC03VRLocation               Auto Const
+LocationAlias	Property	DLC03LongfellowsCabinLocation Auto Const
+
 
 String PluginName = "DLCCoast.esm" const
 
@@ -89,7 +95,8 @@ Function AllToNone()
 	DLC03MQ05 = None
 	DLC03MQ06 = None
 	DLC03MQPostQuest = None
-
+	DLC03MQPostQuest = None
+	DLC03VisitLongFellowsCabin = None	
 	DLC03AcadiaGenericNPCFaction = None
 	
 	DLC03_COMOldLongfellowTalk_Greeting	= None
@@ -102,10 +109,14 @@ Function AllToNone()
 	FarHarborWorldLocation = None
 	RedDeathIslandLocation = None
 	VRLocation = None
+	LongfellowCabinLocation = None
 
+	DLC03LongfellowCabinRef = None
+	
 	DLC03FarHarborWorldLocation.Clear()
 	DLC03RedDeathIslandLocation.Clear()
 	DLC03VRLocation.Clear()
+	DLC03LongfellowsCabinLocation.Clear()
 	
 endFunction
 
@@ -127,6 +138,7 @@ Function OnGameLoaded(bool firstcall)
 		DLC03MQ05 = Game.GetFormFromFile(0x01001B43,PluginName) As Quest
 		DLC03MQ06 = Game.GetFormFromFile(0x01001B44,PluginName) As Quest
 		DLC03MQPostQuest = Game.GetFormFromFile(0x01004F2C,PluginName) As Quest
+		DLC03VisitLongFellowsCabin = Game.GetFormFromFile(0x0104DF30,PluginName) As Quest
 		
 		if DLC03MQ00
 			resourceID = GetPluginID(DLC03MQ00.GetFormID())
@@ -149,6 +161,9 @@ Function OnGameLoaded(bool firstcall)
 			issue = True
 		elseif (!DLC03MQ04 || !DLC03MQ05 || !DLC03MQ06 || !DLC03MQPostQuest)
 			trace("Unable To Load DLC03MQ04 or DLC03MQ05 or DLC03MQ06 or DLC03MQPostQuest")
+			issue = True
+		elseif (!DLC03VisitLongFellowsCabin)
+			trace("Unable To Load DLC03VisitLongFellowsCabin")
 			issue = True
 		else
 			trace("Loaded DLC03 Quests")
@@ -292,9 +307,10 @@ Function OnGameLoaded(bool firstcall)
 			issue = True			
 		endif
 
-		FarHarborWorldLocation = Game.GetFormFromFile(0x01020168,PluginName) As Location
-		RedDeathIslandLocation = Game.GetFormFromFile(0x01048AC1,PluginName) As Location
-		VRLocation             = Game.GetFormFromFile(0x0100750E,PluginName) As Location
+		FarHarborWorldLocation  = Game.GetFormFromFile(0x01020168,PluginName) As Location
+		RedDeathIslandLocation  = Game.GetFormFromFile(0x01048AC1,PluginName) As Location
+		VRLocation              = Game.GetFormFromFile(0x0100750E,PluginName) As Location
+		LongfellowCabinLocation = Game.GetFormFromFile(0x01020649,PluginName) As Location
 		
 		if FarHarborWorldLocation
 			trace("Loaded DLC03FarHarborWorldLocation")
@@ -317,7 +333,26 @@ Function OnGameLoaded(bool firstcall)
 			trace("Unable To Load VRLocation Location")
 			issue = True			
 		endif
-								
+		if LongfellowCabinLocation
+			trace("Loaded DLC03LongfellowsCabinLocation")
+			DLC03LongfellowsCabinLocation.ForceLocationTo(LongfellowCabinLocation)
+		else
+			trace("Unable To Load LongfellowCabinLocation Location")
+			issue = True			
+		endif
+		
+		if !DLC03LongfellowCabinRef
+			if DLC03VisitLongFellowsCabin
+				ReferenceAlias CabinMarker = DLC03VisitLongFellowsCabin.GetAlias(1) As ReferenceAlias
+				if CabinMarker
+					DLC03LongfellowCabinRef = CabinMarker.GetReference()
+				endif
+			endif
+		endif
+		if !DLC03LongfellowCabinRef
+			issue = true
+		endif
+
 		if (issue)
 			Trace("AFT Message : Some DLC03 (Far Harbor) Resources Failed to Import. Compatibility issues likely.")
 		endif

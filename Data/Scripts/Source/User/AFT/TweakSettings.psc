@@ -33,6 +33,7 @@ Group Injected
 	ObjectReference Property CodsworthKitchenMarker			Auto Const ; 0x00023CBC
 	ObjectReference Property COMCurieIntroMarker			Auto Const ; 0x00239ED3
 	ObjectReference Property BoS101PlayerStartMarker		Auto Const ; 0x00193F92
+	ObjectReference Property BoS201DanseMessHallMarker		Auto Const ; 0x000AA1B9	
 	ObjectReference Property DeaconHomeMarker				Auto Const ; 0x00050987
 	ObjectReference Property RedRocketCenterMarker			Auto Const ; 0x0004BE79
 	ObjectReference Property MS04HancockEndMarker			Auto Const ; 0x0012937E
@@ -474,8 +475,19 @@ Function initialize()
 	
 		Trace("Danse Detected.")
 		corecompanion = true
-		originalHome = Game.GetForm(0x0001FA4A) as Location ; CambridgePDLocation
-		originalHomeRef = BoS101PlayerStartMarker
+
+		
+		Quest BoS201 = Game.GetForm(0x0002BF21) as Quest
+		if BoS201 && BoS201.GetStageDone(90)
+			originalHome = Game.GetForm(0x00076A38) as Location ; PrydwenLocation
+			originalHomeRef = BoS201DanseMessHallMarker
+		else
+			originalHome = Game.GetForm(0x0001FA4A) as Location ; CambridgePDLocation
+			originalHomeRef = BoS101PlayerStartMarker
+		endif
+		
+		assignedHome = originalHome
+		assignedHomeRef = originalHomeRef
 
 		f = Game.GetForm(0x001B513D) as Faction ; Bos100FightFaction
 		if (f)
@@ -791,25 +803,38 @@ Function initialize()
 				ActorBaseMask = ActorBaseID % (0x01000000)
 			endif
 			
-			
 			; Now compare MASK
 			if     0x0000FD5A == ActorBaseMask ; Ada
 				corecompanion = true
 				if (CAS)
-					originalHome    = CAS.HomeLocation
-					originalHomeRef = LocationToMarkerRef(originalHome)
+					originalHome    = Game.GetForm(0x00024FAB) as Location ; RedRocketTruckStopLocation
+					originalHomeRef = RedRocketCenterMarker
+					assignedHome    = originalHome
+					assignedHomeRef = originalHomeRef					
 				endIf				
 			elseif 0x00006E5B == ActorBaseMask ; Longfellow
 				corecompanion = true
-				if (CAS)
-					originalHome    = CAS.HomeLocation
-					originalHomeRef = LocationToMarkerRef(originalHome)
+				if pTweakDLC03 && pTweakDLC03.Installed				
+					originalHome    = pTweakDLC03.LongfellowCabinLocation
+					originalHomeRef = pTweakDLC03.DLC03LongfellowCabinRef
+					assignedHome    = originalHome
+					assignedHomeRef = originalHomeRef					
+				else
+					; Set to None so that he picks up dynamic assignment... (Drops an XMarker)
+					originalHome    = None
+					originalHomeRef = None
 				endIf
 			elseif 0x0000881D == ActorBaseMask ; Porter Gage
 				corecompanion = true
-				if (CAS)
-					originalHome    = CAS.HomeLocation
-					originalHomeRef = LocationToMarkerRef(originalHome)
+				if pTweakDLC04 && pTweakDLC04.Installed				
+					originalHome    = pTweakDLC04.NukaTownUSALocation
+					originalHomeRef = pTweakDLC04.DLC04MQ02OverlookGageMarker
+					assignedHome    = originalHome
+					assignedHomeRef = originalHomeRef					
+				else
+					; Set to None so that he picks up dynamic assignment... (Drops an XMarker)
+					originalHome    = None
+					originalHomeRef = None
 				endIf
 			endif
 		endif
