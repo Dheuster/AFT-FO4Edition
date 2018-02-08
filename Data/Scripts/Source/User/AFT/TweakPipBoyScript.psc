@@ -2697,9 +2697,10 @@ Function handleCommand(float theCommand)
 				; Actions
 				; -------
 				if 1.0 == theCommand
-					SummonRelay()
-				elseif 125.0 == theCommand
-					GatherLooseItems()
+					SummonRelay()				
+				; elseif 125.0 == theCommand
+				; 	GatherLooseItems()
+				;   See Below ...
 				elseif 2.0 == theCommand
 					pTweakFollowerScript.SetFollowerStayByNameId(0)
 				elseif 3.0 == theCommand ; AllHangout
@@ -2809,6 +2810,11 @@ Function handleCommand(float theCommand)
 				
 				if 27.0 == theCommand ; Trade 
 					TradeRelay()
+				elseif 35.0 == theCommand ; Dedupe
+					TakePlayerDuplicatesRelay()
+
+
+					
 				elseif 28.0 == theCommand ; Set/Unset Standard Outfit 
 					if TerminalTargetPAState != 1
 						if 0 == TerminalTargetHasStandardOutfit
@@ -2856,10 +2862,7 @@ Function handleCommand(float theCommand)
 				elseif 34.0 == theCommand ; UnManage Outfits
 					if TerminalTargetPAState != 1
 						UnManageOutfits()
-					endIf
-					
-				elseif 35.0 == theCommand ; Dedupe
-					TakePlayerDuplicatesRelay()
+					endIf					
 				elseif 36.0 == theCommand ; Dejunk
 					TakePlayerJunkRelay()
 				elseif 37.0 == theCommand ; Sell Non-Outfit Gear
@@ -2877,8 +2880,13 @@ Function handleCommand(float theCommand)
 		
 				; Combat AI:
 				; ----------
-
-				if 39.0 == theCommand ; Default
+				if 49.0 == theCommand ; Set Coward
+					SetConfidenceRelay(0,false)
+				elseif 53.0 == theCommand ; Set Foolhardy
+					SetConfidenceRelay(4,false)
+				
+				
+				elseif 39.0 == theCommand ; Default
 					SetCombatStyle(0, false)
 				elseif 40.0 == theCommand ; Gunslinger
 					SetCombatStyle(1, false)
@@ -2898,18 +2906,15 @@ Function handleCommand(float theCommand)
 					StyleAggRelay()
 				elseif 48.0 == theCommand ; Set Defensive
 					StyleDefRelay()
-				elseif 126.0 == theCommand ; Set Auto Aggression
-					StyleAutoRelay()
-				elseif 49.0 == theCommand ; Set Coward
-					SetConfidenceRelay(0,false)
+				; elseif 126.0 == theCommand ; Set Auto Aggression
+				; 	StyleAutoRelay()
+				;   See Below
 				elseif 50.0 == theCommand ; Set Cautious
 					SetConfidenceRelay(1,false)
 				elseif 51.0 == theCommand ; Set Average
 					SetConfidenceRelay(2,false)
 				elseif 52.0 == theCommand ; Set Brave
 					SetConfidenceRelay(3,false)
-				elseif 53.0 == theCommand ; Set Foolhardy
-					SetConfidenceRelay(4,false)
 				elseif 54.0 == theCommand ; Set Distance Near
 					DistNearRelay()
 				elseif 55.0 == theCommand ; Set Distance Med
@@ -2932,12 +2937,13 @@ Function handleCommand(float theCommand)
 			
 				; Info:
 				; -----
-				if 59 == theCommand ; All Info
+				if 61 == theCommand ; Info Relationship
+					Info(2)
+					
+				elseif 59 == theCommand ; All Info
 					Info(0)
 				elseif 60 == theCommand ; Info Stats
 					Info(1)
-				elseif 61 == theCommand ; Info Relationship
-					Info(2)
 				elseif 62 == theCommand ; Info AI
 					Info(3)
 				elseif 63 == theCommand ; Info Traits
@@ -2955,6 +2961,7 @@ Function handleCommand(float theCommand)
 				endIf
 			endIf			
 		endIf
+		
 	else ; theCommand >= 69
 	
 		if theCommand < 104
@@ -3056,7 +3063,16 @@ Function handleCommand(float theCommand)
 			; Settings:
 			; -----------
 			
-			if 104 == theCommand ; Assign Home
+			if 125.0 == theCommand
+				GatherLooseItems()
+			elseif 122 == theCommand ; Toggle Mortality
+				ToggleEssential(false)
+			elseif 123 == theCommand ; Edit Special Attributes
+				PrepSPECIAL()
+				pTweakSpecial.ShowOnPipBoy()
+				
+				
+			elseif 104 == theCommand ; Assign Home
 				AssignHomeRelay()
 			elseif 105 == theCommand ; Toggle Ignore Dislike/Hate Reactions
 				ToggleNoDisapprove(false)
@@ -3092,17 +3108,11 @@ Function handleCommand(float theCommand)
 				ToggleUseAmmo(false)
 			elseif 121 == theCommand ; Toggle No PA Damage
 				ToggleNoPADamage(false)
-			elseif 122 == theCommand ; Toggle Mortality
-				ToggleEssential(false)
-			endIf
-			
-			; Extra/Additional
-			if 123 == theCommand ; Edit Special Attributes
-				PrepSPECIAL()
-				pTweakSpecial.ShowOnPipBoy()	
 			elseif 124 == theCommand ; Assign Name
 				AssignNameSetup()
 				pTweakSelectNameTerminal.ShowOnPipBoy()	
+			elseif 126.0 == theCommand ; Set Auto Aggression
+				StyleAutoRelay()
 			endIf
 			
 		endIf		
