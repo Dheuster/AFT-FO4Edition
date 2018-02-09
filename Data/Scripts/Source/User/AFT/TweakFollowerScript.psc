@@ -274,7 +274,7 @@ Perk	  Property pTweakRangedDmgBoost			Auto Const ; Perk increases Ranged Damage
 Perk	  Property pTweakPlayerSynergyChrPerk	Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakPlayerSynergyLckPerk	Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakZeroCarryInCombat		Auto Const ; Perk prevent weapon pickup during combat
-
+Perk	  Property pTweakPlayerSwimMonitorPerk	Auto Const ; Sends OnEnterWater/OnExitWater to TweakMonitorPlayer
 ; 194 ....
 GlobalVariable[] Property pToggles Auto Const
 
@@ -455,7 +455,7 @@ Function OnGameLoaded(bool firstTime=false)
 	
 	RegisterForKickOut()
 	
-	if (1.15 != version)
+	if (1.16 != version)
 		; In case this is new game, wait for pInstalled to be true....
 		StartTimer(0, CONFIRM_VERSION)
 	else
@@ -485,7 +485,7 @@ Event OnTimer(int aiTimerID)
 		; if it appears we beat the script initializer...
 
 		if (pInstalled)
-			if (version  < 1.15)
+			if (version  < 1.16)
 				StartTimer(0,UPDATE_VERSION)
 			else
 				CheckForErrors()
@@ -519,157 +519,174 @@ Event OnTimer(int aiTimerID)
 		Actor player	= Game.GetPlayer()
 		float ov        = version
 		float ov_102fix = version
-		version  = 1.15
+		version  = 1.16
 
-		if ov < 1.13 ; 1.13 : Added Home Outfit and Outfit Management Reset
-			if ov < 1.12 ; 1.11 : Health/Endurance boosts. 1.12 : Fixed Ghosting artifacts 
-				if ov < 1.09 ; Added DLC support in 1.09. 
-					if ov < 1.04 ; Affinity Fixes + No Fall Damage
-						if (ov < 1.03) ; Fix 1.02 non-init and Settlement assignement compatibiliy		
-						
-							if (ov == 1.02)
-								; Potential Bug in 1.02 upgrade process.
-								if (0 == pManagedMap.Length)
-									ov_102fix = 0.0
+		if ov < 1.15 ; 1.16 : Added Swim Outfit 
+			if ov < 1.13 ; 1.13 : Added Home Outfit and Outfit Management Reset
+				if ov < 1.12 ; 1.11 : Health/Endurance boosts. 1.12 : Fixed Ghosting artifacts 
+					if ov < 1.09 ; Added DLC support in 1.09. 
+						if ov < 1.04 ; Affinity Fixes + No Fall Damage
+							if (ov < 1.03) ; Fix 1.02 non-init and Settlement assignement compatibiliy		
+							
+								if (ov == 1.02)
+									; Potential Bug in 1.02 upgrade process.
+									if (0 == pManagedMap.Length)
+										ov_102fix = 0.0
+									endif
 								endif
-							endif
-								
-							if (ov_102fix < 1.0)	; First time init		
-				
-				
-								if (20 < pTimeScale.GetValue())
-									Trace("Timescale is too high. Alerting user")
-									pTweakTimescale.Show()
-								endif
-								
-								; " [ Initializing AFT :          : ]"
-								pTweakUpdateMsg.Show()
-											
-								pFollowerNoMorals        = true
-								pFollowerCatchup         = true
-								pFollowerPackMule        = true
-								pFollowerSynergy         = true
-								PlayerHome               = None
+									
+								if (ov_102fix < 1.0)	; First time init		
+					
+					
+									if (20 < pTimeScale.GetValue())
+										Trace("Timescale is too high. Alerting user")
+										pTweakTimescale.Show()
+									endif
+									
+									; " [ Initializing AFT :          : ]"
+									pTweakUpdateMsg.Show()
+												
+									pFollowerNoMorals        = true
+									pFollowerCatchup         = true
+									pFollowerPackMule        = true
+									pFollowerSynergy         = true
+									PlayerHome               = None
 
-								if (0 == pManagedMap.Length)
-									initializeManagedMap()
-									initializeFollowerMap()
-								endif
-								
-								int import_count = pDFScript.v10Update()
+									if (0 == pManagedMap.Length)
+										initializeManagedMap()
+										initializeFollowerMap()
+									endif
+									
+									int import_count = pDFScript.v10Update()
 
-								; bool gotlock = GetSpinLock(pTweakMutexCompanions,1, "OnTimer (UpdateVersion)") ; low priority since it is read-only	
-								int numFollowers = GetAllTweakFollowers().length
-								pTweakFollowerCount.SetValueInt(numFollowers)
-								; ReleaseSpinLock(pTweakMutexCompanions, gotlock, "OnTimer (UpdateVersion)")
+									; bool gotlock = GetSpinLock(pTweakMutexCompanions,1, "OnTimer (UpdateVersion)") ; low priority since it is read-only	
+									int numFollowers = GetAllTweakFollowers().length
+									pTweakFollowerCount.SetValueInt(numFollowers)
+									; ReleaseSpinLock(pTweakMutexCompanions, gotlock, "OnTimer (UpdateVersion)")
 
-								; As AFT lets you import NPCs, protect a few important ones with
-								; pDisallowedCompanionFaction
-								
-								Actor Kellog = (Game.GetForm(0x0009BC6C) as ActorBase).GetUniqueActor()
-								Actor Amari  = (Game.GetForm(0x0009A680) as ActorBase).GetUniqueActor()
-								Actor Father = (Game.GetForm(0x0002A19A) as ActorBase).GetUniqueActor()
-								Actor Virgil = (Game.GetForm(0x0006B503) as ActorBase).GetUniqueActor()
-								Actor Maxon  = (Game.GetForm(0x000642B8) as ActorBase).GetUniqueActor()
-								Actor Des    = (Game.GetForm(0x00045AD1) as ActorBase).GetUniqueActor()
-								Actor MS16SonyaBot = (Game.GetForm(0x000C895F) as ActorBase).GetUniqueActor()
-								
-								if Kellog
-									Kellog.AddToFaction(pDisallowedCompanionFaction)
+									; As AFT lets you import NPCs, protect a few important ones with
+									; pDisallowedCompanionFaction
+									
+									Actor Kellog = (Game.GetForm(0x0009BC6C) as ActorBase).GetUniqueActor()
+									Actor Amari  = (Game.GetForm(0x0009A680) as ActorBase).GetUniqueActor()
+									Actor Father = (Game.GetForm(0x0002A19A) as ActorBase).GetUniqueActor()
+									Actor Virgil = (Game.GetForm(0x0006B503) as ActorBase).GetUniqueActor()
+									Actor Maxon  = (Game.GetForm(0x000642B8) as ActorBase).GetUniqueActor()
+									Actor Des    = (Game.GetForm(0x00045AD1) as ActorBase).GetUniqueActor()
+									Actor MS16SonyaBot = (Game.GetForm(0x000C895F) as ActorBase).GetUniqueActor()
+									
+									if Kellog
+										Kellog.AddToFaction(pDisallowedCompanionFaction)
+									endif
+									if Amari
+										Amari.AddToFaction(pDisallowedCompanionFaction)
+									endIf
+									if Father
+										Father.AddToFaction(pDisallowedCompanionFaction)
+									endIf
+									if Virgil
+										Virgil.AddToFaction(pDisallowedCompanionFaction)
+									endIf
+									if Maxon
+										Maxon.AddToFaction(pDisallowedCompanionFaction)
+									endif
+									if Des
+										Des.AddToFaction(pDisallowedCompanionFaction)
+									endif
+									if MS16SonyaBot
+										MS16SonyaBot.AddToFaction(pDisallowedCompanionFaction)
+									endif
+									
+									; "Thanks for installing AFT v%.2f by Dheuster<BR>See Aft Readme in your inventory for usage"
+									; Old - Aft Version %.2f update complete. [%.0f] Followers Imported.  See Aft Readme in 
+									; inventory for usage.									
+									pTweakUpdateDoneMsg.Show(version)
+									
+									GiveAFTToPlayer()
+									
+									player.AddPerk(pTweakPlayerSynergyChrPerk)
+									player.AddPerk(pTweakPlayerSynergyLckPerk)
+									player.AddPerk(pTweakPlayerSwimMonitorPerk)
+									EvaluateSynergy()
+									
+									Trace("[" + import_count + "] followers imported")
+								endif ; ov < 1.0
+														
+							endif ; ov < 1.03
+							
+							if (ov != 0.0)
+							
+								AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
+								if TweakCOMSpouseScript
+									TweakCOMSpouseScript.ResetAffinityScene()
 								endif
-								if Amari
-									Amari.AddToFaction(pDisallowedCompanionFaction)
-								endIf
-								if Father
-									Father.AddToFaction(pDisallowedCompanionFaction)
-								endIf
-								if Virgil
-									Virgil.AddToFaction(pDisallowedCompanionFaction)
-								endIf
-								if Maxon
-									Maxon.AddToFaction(pDisallowedCompanionFaction)
-								endif
-								if Des
-									Des.AddToFaction(pDisallowedCompanionFaction)
-								endif
-								if MS16SonyaBot
-									MS16SonyaBot.AddToFaction(pDisallowedCompanionFaction)
-								endif
 								
-								; "Thanks for installing AFT v%.2f by Dheuster<BR>See Aft Readme in your inventory for usage"
-								; Old - Aft Version %.2f update complete. [%.0f] Followers Imported.  See Aft Readme in 
-								; inventory for usage.									
-								pTweakUpdateDoneMsg.Show(version)
-								
-								GiveAFTToPlayer()
-								
-								player.AddPerk(pTweakPlayerSynergyChrPerk)
-								player.AddPerk(pTweakPlayerSynergyLckPerk)
-								EvaluateSynergy()
-								
-								Trace("[" + import_count + "] followers imported")
-							endif ; ov < 1.0
-													
-						endif ; ov < 1.03
-						
-						if (ov != 0.0)
-						
-							AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
-							if TweakCOMSpouseScript
-								TweakCOMSpouseScript.ResetAffinityScene()
 							endif
 							
+						endif ; ov < 1.04
+						
+						if (ov != 0.0)
+							((self as Quest) as TweakShelterScript).v109Upgrade()
+							
+							; DLC01 Support
+							if pTweakDLC01Script.Installed
+								if pTweakDLC01Script.Ada && pTweakDLC01Script.Ada.IsInFaction(pTweakFollowerFaction)
+									ImportTopicsForCompanion(pTweakDLC01Script.Ada)
+								endif
+							endif
+
+							; DLC03 Support
+							if pTweakDLC03Script.Installed
+								if pTweakDLC03Script.OldLongfellow && pTweakDLC03Script.OldLongfellow.IsInFaction(pTweakFollowerFaction)
+									ImportTopicsForCompanion(pTweakDLC03Script.OldLongfellow)
+								endif
+							endif
+
+							; DLC04 Support
+							if pTweakDLC04Script.Installed
+								if pTweakDLC04Script.PorterGage && pTweakDLC04Script.PorterGage.IsInFaction(pTweakFollowerFaction)
+									ImportTopicsForCompanion(pTweakDLC04Script.PorterGage)
+								endif
+							endif
+							
+							; Reset IdleCooldowns to defaults (since 1.09 disables controls)
+							pTweakIdleCooldownActiveMin.SetValue(240)
+							pTweakIdleCooldownActiveMax.SetValue(300)
+							pTweakIdleCooldownDismissedMin.SetValue(240)
+							pTweakIdleCooldownDismissedMax.SetValue(480)
 						endif
 						
-					endif ; ov < 1.04
-					
+					endif ; ov < 1.09
+
 					if (ov != 0.0)
-						((self as Quest) as TweakShelterScript).v109Upgrade()
-						
-						; DLC01 Support
-						if pTweakDLC01Script.Installed
-							if pTweakDLC01Script.Ada && pTweakDLC01Script.Ada.IsInFaction(pTweakFollowerFaction)
-								ImportTopicsForCompanion(pTweakDLC01Script.Ada)
-							endif
-						endif
-
-						; DLC03 Support
-						if pTweakDLC03Script.Installed
-							if pTweakDLC03Script.OldLongfellow && pTweakDLC03Script.OldLongfellow.IsInFaction(pTweakFollowerFaction)
-								ImportTopicsForCompanion(pTweakDLC03Script.OldLongfellow)
-							endif
-						endif
-
-						; DLC04 Support
-						if pTweakDLC04Script.Installed
-							if pTweakDLC04Script.PorterGage && pTweakDLC04Script.PorterGage.IsInFaction(pTweakFollowerFaction)
-								ImportTopicsForCompanion(pTweakDLC04Script.PorterGage)
-							endif
-						endif
-						
-						; Reset IdleCooldowns to defaults (since 1.09 disables controls)
-						pTweakIdleCooldownActiveMin.SetValue(240)
-						pTweakIdleCooldownActiveMax.SetValue(300)
-						pTweakIdleCooldownDismissedMin.SetValue(240)
-						pTweakIdleCooldownDismissedMax.SetValue(480)
+						((self as Quest) as TweakShelterScript).v112Upgrade()
 					endif
 					
-				endif ; ov < 1.09
-
+				endif ; ov < 1.12
+				
+				; 1.13						
 				if (ov != 0.0)
-					((self as Quest) as TweakShelterScript).v112Upgrade()
+					int pmlength = pManagedMap.Length
+					int pm = 1
+					while (pm < pmlength)
+						ReferenceAlias pmfix = pManagedMap[pm]
+						if pmfix && pmfix.GetActorReference()
+							(pmfix as TweakInventoryControl).v13upGrade()
+						endif
+						pm += 1
+					endwhile
 				endif
 				
-			endif ; ov < 1.12
-			
-			; 1.13						
+			endif
+
+			; 1.16						
 			if (ov != 0.0)
 				int pmlength = pManagedMap.Length
 				int pm = 1
 				while (pm < pmlength)
 					ReferenceAlias pmfix = pManagedMap[pm]
 					if pmfix && pmfix.GetActorReference()
-						(pmfix as TweakInventoryControl).v13upGrade()
+						(pmfix as TweakInventoryControl).v16upGrade()
 					endif
 					pm += 1
 				endwhile
@@ -728,6 +745,10 @@ Event OnTimer(int aiTimerID)
 				player.AddPerk(pTweakPlayerSynergyLckPerk)
 			endif
 			
+			; 1.16
+			if !player.HasPerk(pTweakPlayerSwimMonitorPerk)
+				player.AddPerk(pTweakPlayerSwimMonitorPerk)
+			endif			
 			pTweakUpgradeMsg.Show(ov, version)
 			
 		endif
@@ -764,6 +785,8 @@ Function AftReset()
 	CancelTimer(UPDATE_VERSION)
 	CancelTimer(COMBAT_MONITOR)
 
+	Actor player = Game.GetPlayer()
+	
 	if pTweakLocator.IsRunning()
 		pTweakLocator.Stop()
 		UnRegisterForRemoteEvent(pTweakLocator,"OnStageSet")
@@ -780,7 +803,7 @@ Function AftReset()
 	if TweakCompanionNateBase
 		Actor Nate = TweakCompanionNateBase.GetUniqueActor()
 		if Nate && Nate.IsEnabled()
-			Nate.RemoveAllItems(Game.GetPlayer(),true)
+			Nate.RemoveAllItems(player,true)
 			Nate.Disable()
 			; Long shot, but give it a try....
 			AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
@@ -794,7 +817,7 @@ Function AftReset()
 	if TweakCompanionNoraBase
 		Actor Nora = TweakCompanionNoraBase.GetUniqueActor()
 		if Nora && Nora.IsEnabled()
-			Nora.RemoveAllItems(Game.GetPlayer(),true)
+			Nora.RemoveAllItems(player,true)
 			Nora.Disable()
 			; Long shot, but give it a try....
 			AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
@@ -878,6 +901,16 @@ Function AftReset()
 	
 	pTweakFollowerCount.SetValue(0.0)	
 	pTweakFollowerCatchup.SetValue(1.0)
+	
+	if player.HasPerk(pTweakPlayerSynergyChrPerk)
+		player.RemovePerk(pTweakPlayerSynergyChrPerk)
+	endif
+	if player.HasPerk(pTweakPlayerSynergyLckPerk)
+		player.RemovePerk(pTweakPlayerSynergyLckPerk)
+	endif
+	if player.HasPerk(pTweakPlayerSwimMonitorPerk)
+		player.RemovePerk(pTweakPlayerSwimMonitorPerk)
+	endif
 
 EndFunction
 
@@ -1376,6 +1409,49 @@ Function EventPlayerSneakExit()
 		i += 1
 	endWhile
 EndFunction
+
+; Relayed by TweakMonitorPlayer
+Function OnPlayerStartSwim()
+	Trace("OnPlayerStartSwim")
+
+	int i = 0
+	int pFollowerMapLength = pFollowerMap.length	
+	Actor npc
+	while (i < pFollowerMapLength)
+		npc = pFollowerMap[i].GetActorRef()
+		if (npc && npc.Is3DLoaded())
+		
+			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+			if (followerId > 0)
+				ReferenceAlias a = pManagedMap[followerId]
+				(a as TweakInventoryControl).EventPlayerSwimStart()
+			endIf
+		endif
+		i += 1
+	endWhile
+EndFunction
+
+; Relayed by TweakMonitorPlayer
+Function OnPlayerStopSwim()
+	Trace("OnPlayerStopSwim")
+	int i = 0
+	int pFollowerMapLength = pFollowerMap.length	
+	Actor npc
+	while (i < pFollowerMapLength)
+		npc = pFollowerMap[i].GetActorRef()
+		if (npc && npc.Is3DLoaded())
+		
+			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+			if (followerId > 0)
+				ReferenceAlias a = pManagedMap[followerId]
+				(a as TweakInventoryControl).EventPlayerSwimStop()
+			endIf
+		endif
+		i += 1
+	endWhile
+EndFunction
+
+
 
 Function UnManageByNameID(int id = 0)
 	Trace("UnManageByNameID called for  [" + id + "]")

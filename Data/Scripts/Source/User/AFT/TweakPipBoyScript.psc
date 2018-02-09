@@ -188,6 +188,7 @@ GLobalVariable Property pTweakLoiterCooldown Auto Const
 GlobalVariable Property pTweakCombatStyle Auto Const ; 0 = Default, 1 = Gunslinger, 2 = Bruiser, 3 = Commando, 4 = Boomstick, 5 = Ninja, 6 = Sniper, 7 = Enhanced
 GlobalVariable Property pTweakOutfitManaged Auto Const
 GlobalVariable Property pTweakTargetHasHomeOutfit Auto Const
+GlobalVariable Property pTweakTargetHasSwimOutfit Auto Const
 
 GlobalVariable Property pTweakSpecialStr	Auto Const
 GlobalVariable Property pTweakSpecialPer	Auto Const
@@ -227,6 +228,7 @@ ActorValue Property pTweakInPowerArmor			Auto Const
 
 Faction		Property pTweakCombatOutFitFaction			Auto Const
 Faction		Property pTweakHomeOutFitFaction			Auto Const
+Faction		Property pTweakSwimOutFitFaction			Auto Const
 Faction		Property pTweakCampOutFitFaction			Auto Const
 Faction		Property pTweakCityOutFaction				Auto Const
 Faction		Property pTweakStandardOutFitFaction		Auto Const
@@ -388,6 +390,7 @@ Function ResetVariables()
 	TerminalTargetUnique				= false
 	TerminalTargetHasCombatOutfit		= false
 	pTweakTargetHasHomeOutfit.SetValue(0)
+	pTweakTargetHasSwimOutfit.SetValue(0)
 	TerminalTargetHasCityOutfit			= false
 	TerminalTargetHasCampOutfit			= false
 	TerminalTargetHasStandardOutfit		= false
@@ -768,6 +771,7 @@ Function UnManageOutfits()
 		pTweakFollowerScript.UnManageOutfits(TerminalTarget)
 		TerminalTargetHasCombatOutfit   = false
 		pTweakTargetHasHomeOutfit.SetValue(0)
+		pTweakTargetHasSwimOutfit.SetValue(0)
 		TerminalTargetHasCityOutfit     = false
 		TerminalTargetHasCampOutfit     = false
 		TerminalTargetHasStandardOutfit = false
@@ -866,6 +870,21 @@ Function StandardOutfitSnapshotRelay()
 	
 endFunction
 
+Function SwimOutfitSnapshotRelay()
+
+	Trace("SwimOutfitSnapshotRelay()")
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("SwimOutfitSnapshotRelay", params)
+		return
+	endIf
+
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+		pTweakFollowerScript.SetTweakOutfit(TerminalTarget, 8)
+	endIf
+	
+endFunction
 
 ; Target Outfits (From TweakInventoryControl):
 ;
@@ -892,6 +911,23 @@ Function CombatOutfitReset()
 		TerminalTargetHasCombatOutfit = false
 	endIf
 
+endFunction
+
+Function SwimOutfitReset()
+
+	Trace("SwimOutfitReset()")
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("SwimOutfitReset", params)
+		return
+	endIf
+
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+		pTweakFollowerScript.ClearTweakOutfit(TerminalTarget, 8)
+		pTweakTargetHasSwimOutfit.SetValue(0)
+	endIf
+	
 endFunction
 	
 Function HomeOutfitReset()
@@ -975,6 +1011,7 @@ Function ClearAllOutfitsRelay()
 		pTweakFollowerScript.ClearAllOutfits(TerminalTarget)
 		TerminalTargetHasCombatOutfit   = false
 		pTweakTargetHasHomeOutfit.SetValue(0)
+		pTweakTargetHasSwimOutfit.SetValue(0)
 		TerminalTargetHasCityOutfit     = false
 		TerminalTargetHasCampOutfit     = false
 		TerminalTargetHasStandardOutfit = false
@@ -1836,6 +1873,11 @@ Function EvaluateTerminalTarget()
 			pTweakTargetHasHomeOutfit.SetValue(1)
 		else
 			pTweakTargetHasHomeOutfit.SetValue(0)
+		endIf
+		if (TerminalTarget.IsInFaction(pTweakSwimOutFitFaction))
+			pTweakTargetHasSwimOutfit.SetValue(1)
+		else
+			pTweakTargetHasSwimOutfit.SetValue(0)
 		endIf
 		
 		if (TerminalTarget.IsInFaction(pTweakCityOutFaction))
@@ -3113,6 +3155,14 @@ Function handleCommand(float theCommand)
 				pTweakSelectNameTerminal.ShowOnPipBoy()	
 			elseif 126.0 == theCommand ; Set Auto Aggression
 				StyleAutoRelay()
+			elseif 127.0 == theCommand ; Set/Unset Swim Outfit 
+				if TerminalTargetPAState != 1
+					if 0.0 == pTweakTargetHasSwimOutfit.GetValue()
+						SwimOutfitSnapshotRelay()
+					elseif 1.0 == pTweakTargetHasSwimOutfit.GetValue()
+						SwimOutfitReset()
+					endIf
+				endIf
 			endIf
 			
 		endIf		
