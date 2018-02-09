@@ -12,6 +12,7 @@ Group Injected
 	Faction  Property pTweakCityOutFaction				Auto Const
 	Faction  Property pTweakStandardOutfitFaction		Auto Const
 	Faction  Property pTweakHomeOutFitFaction			Auto Const
+	Faction  Property pTweakSwimOutFitFaction			Auto Const
 	
 	Faction  Property pTweakPAHelmetCombatToggleFaction	Auto Const
 
@@ -95,6 +96,7 @@ Form[] Property CityOutfit				Auto hidden
 Form[] Property CampOutfit				Auto hidden
 Form[] Property StandardOutfit			Auto hidden
 Form[] Property HomeOutfit				Auto hidden
+Form[] Property SwimOutfit				Auto hidden
 
 Form[] Property myHead					Auto hidden
 Form[] Property PAOutfit				Auto hidden
@@ -103,11 +105,13 @@ Bool   Property CityOutfitEnabled		Auto hidden
 Bool   Property CampOutfitEnabled		Auto hidden
 Bool   Property StandardOutfitEnabled	Auto hidden
 Bool   Property HomeOutfitEnabled		Auto hidden
+Bool   Property SwimOutfitEnabled		Auto hidden
 Armor  Property pTrackedPAHelmet		Auto hidden
 Weapon Property pTrackedWeapon			Auto hidden
 
 Bool   Property ignorePAEvents			Auto hidden
 Bool   Property combatInProgress		Auto hidden
+Bool   Property playerIsSwimming		Auto hidden
 int	   Property invRec					Auto hidden
 
 Bool   Property originalNoAmmo			Auto hidden
@@ -123,6 +127,7 @@ Bool   Property originalPADamage		Auto hidden
 ; 3 = City 
 ; 4 = Camp 
 ; 5 = Standard
+; 8 = Swim
 Int   Property CurrentOutfitDesired Auto hidden
 
 ; Constants
@@ -134,6 +139,7 @@ int OUTFIT_CAMP      = 4 const
 int OUTFIT_STANDARD  = 5 const
 int OUTFIT_SNAPSHOT  = 6 const ; Used externally by things like the bathroom.
 int OUTFIT_LASTKNOWN = 7 const
+int OUTFIT_SWIM      = 8 const
 
 int	COMBATEND_DELAYED		  = 995 const
 int SELL_UNUSED_DONE          = 996 const
@@ -199,6 +205,7 @@ Function initialize()
 	CampOutfitEnabled     = false
 	StandardOutfitEnabled = false	
 	HomeOutfitEnabled     = false	
+	SwimOutfitEnabled     = false	
 	invRec                = 0
 
 	; managed gets set to true if SetTweakOutfit or UnequipAllGear
@@ -214,6 +221,7 @@ Function initialize()
 	CampOutfit       = new Form[0]
 	StandardOutfit   = new Form[0]
 	HomeOutfit       = new Form[0]
+	SwimOutfit       = new Form[0]
 	PAOutfit         = new Form[0]
 	myHead           = new Form[0]
 	pTrackedPAHelmet = None
@@ -230,8 +238,15 @@ Function initialize()
 		originalPADamage = false
 	endif
 	
+	combatInProgress = false
+	playerIsSwimming = false
 	; EventFollowingPlayer()
 	
+EndFunction
+
+Function v16upGrade()
+	SwimOutfitEnabled = false	
+	SwimOutfit        = new Form[0]
 EndFunction
 
 Function v13upGrade()
@@ -324,6 +339,17 @@ EndFunction
 Function EventPlayerWeaponSheath()
 	Trace("EventPlayerWeaponSheath()")
 EndFunction
+
+Function EventPlayerSwimStart()
+	playerIsSwimming = true
+	RestoreTweakOutfit()
+EndFunction
+
+Function EventPlayerSwimStop()
+	playerIsSwimming = false
+	RestoreTweakOutfit()
+EndFunction
+
 
 Function UnManage()
 
@@ -1009,6 +1035,11 @@ Function SetTweakOutfit(int targetOutfit = 0, bool silent = false)
 		npc.AddToFaction(pTweakCombatOutFitFaction)
 		CombatOutfitEnabled = true
 		gear = CombatOutfit
+	elseif (OUTFIT_SWIM == targetOutfit)
+		Trace("Setting Gear to SwimOutfit [" + SwimOutfit + "]")
+		npc.AddToFaction(pTweakSwimOutFitFaction)
+		SwimOutfitEnabled = true
+		gear = SwimOutfit
 	elseif (OUTFIT_HOME == targetOutfit)
 		Trace("Setting Gear to HomeOutfit [" + HomeOutfit + "]")
 		npc.AddToFaction(pTweakHomeOutFitFaction)
@@ -1087,7 +1118,12 @@ Function ClearTweakOutfit(int targetOutfit)
 		Trace("Clearing CombatOutfit [" + CombatOutfit + "]")
 		npc.RemoveFromFaction(pTweakCombatOutFitFaction)		
 		CombatOutfitEnabled = false		
-		gear = CombatOutfit
+		gear = CombatOutfit		
+	elseif (OUTFIT_SWIM == targetOutfit)
+		Trace("Clearing SwimOutfit [" + SwimOutfit + "]")
+		npc.RemoveFromFaction(pTweakSwimOutFitFaction)
+		SwimOutfitEnabled = false
+		gear = SwimOutfit
 	elseif (OUTFIT_HOME == targetOutfit)
 		Trace("Clearing HomeOutfit [" + HomeOutfit + "]")
 		npc.RemoveFromFaction(pTweakHomeOutFitFaction)
@@ -1135,6 +1171,12 @@ Function ClearAllOutfits()
 	; methods OnLoad handler if the player gets within 1000
 	; of camp center. 
 	
+	if SwimOutfitEnabled
+		Trace("Clearing SwimOutfit")
+		npc.RemoveFromFaction(pTweakSwimOutFitFaction)
+		SwimOutfitEnabled = false
+		SwimOutfit.clear()
+	endif
 	if HomeOutfitEnabled
 		Trace("Clearing HomeOutfit")
 		npc.RemoveFromFaction(pTweakHomeOutFitFaction)
@@ -1176,7 +1218,7 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 		Trace("NPC is not managed. Ignoring Call")
 		return
 	endif
-	if (targetOutfit < 0 || targetOutfit > 7)
+	if (targetOutfit < 0 || targetOutfit > 8)
 		Trace("Invalid TargetOutfit")
 		return
 	endif
@@ -1215,6 +1257,8 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 	if 0 == targetOutfit
 		if (CombatOutfitEnabled && combatInProgress)
 			targetOutfit = OUTFIT_COMBAT
+		elseif (SwimOutfitEnabled && playerIsSwimming)
+			targetOutfit = OUTFIT_SWIM			
 		elseif (HomeOutfitEnabled && ShouldUseHomeOutfit())
 			targetOutfit = OUTFIT_HOME
 		elseif (CampOutfitEnabled && npc.GetDistance(pShelterMapMarker.GetReference()) < 1000)
@@ -1236,6 +1280,9 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 	elseif (OUTFIT_COMBAT == targetOutfit)
 		CurrentOutfitDesired = OUTFIT_COMBAT
 		gear = CombatOutfit
+	elseif (OUTFIT_SWIM == targetOutfit)
+		CurrentOutfitDesired = OUTFIT_SWIM
+		gear = SwimOutfit	
 	elseif (OUTFIT_HOME == targetOutfit)
 		CurrentOutfitDesired = OUTFIT_HOME
 		gear = HomeOutfit
@@ -1255,6 +1302,7 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 		CurrentOutfitDesired = OUTFIT_NONE
 		return
 	endif
+	
 		
 	; NOTE : !empty_array evaluates as true. Even (None == empty_array) evaluates as true. 
 	; So, you need to track it independently. 
@@ -1338,10 +1386,10 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 			endif
 			
 		else
-			if pTrackedWeapon && npc.IsEquipped(pTrackedWeapon)
-				npc.UnequipItem(pTrackedWeapon)
-				pTrackedWeapon = None
-			endif
+			; if pTrackedWeapon && npc.IsEquipped(pTrackedWeapon)
+				; npc.UnequipItem(pTrackedWeapon)
+				; pTrackedWeapon = None
+			; endif
 			while (i < numitems)
 				item = gear[i]
 				if (item)
@@ -1703,6 +1751,19 @@ Function SellUnused()
 			i += 1
 		endwhile
 	endIf
+	if (SwimOutfitEnabled)
+		i = 0
+		numitems = SwimOutfit.length
+		while (i < numitems)
+			item = SwimOutfit[i]
+			w_item = item as Weapon
+			if (w_item)
+				myAmmo.Add(w_item.GetAmmo())
+			endif
+			sellContainer.RemoveItem(item,1,true,npc)
+			i += 1
+		endwhile
+	endIf	
 	if (HomeOutfitEnabled)
 		i = 0
 		numitems = HomeOutfit.length
@@ -1833,6 +1894,19 @@ Function TransferUnusedGearToPlayer()
 			i += 1
 		endwhile
 	endIf
+	if (SwimOutfitEnabled)
+		i = 0
+		numitems = SwimOutfit.length
+		while (i < numitems)
+			item = SwimOutfit[i]
+			w_item = item as Weapon
+			if (w_item)
+				myAmmo.Add(w_item.GetAmmo())
+			endif
+			tempContainer.RemoveItem(item,1,true,npc)
+			i += 1
+		endwhile
+	endIf	
 	if (HomeOutfitEnabled)
 		i = 0
 		numitems = HomeOutfit.length
@@ -2078,6 +2152,9 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 			elseif (OUTFIT_COMBAT == invRec)
 				Trace("invRec is CombatOutfit")
 				gear = CombatOutfit
+			elseif (OUTFIT_SWIM == invRec)
+				Trace("invRec is SwimOutfit")
+				gear = SwimOutfit				
 			elseif (OUTFIT_HOME == invRec)
 				Trace("invRec is HomeOutfit")
 				gear = HomeOutfit
@@ -2120,6 +2197,7 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 	
 			Trace("  CombatOutfit   Size [" + CombatOutfit.length   + "]")
 			Trace("  HomeOutfit     Size [" + HomeOutfit.length     + "]")
+			Trace("  SwimOutfit     Size [" + SwimOutfit.length     + "]")
 			Trace("  CityOutfit     Size [" + CityOutfit.length     + "]")
 			Trace("  CampOutfit     Size [" + CampOutfit.length     + "]")
 			Trace("  StandardOutfit Size [" + StandardOutfit.length + "]")
@@ -2304,6 +2382,7 @@ Function OnLoadHelper()
 	endif
 	
 	; Combat trumps everything 
+	; Swimming trumps everything but combat
 	; City trumps Camp
 	; Camp is at the bottom
 	
@@ -2311,7 +2390,10 @@ Function OnLoadHelper()
 	if (OUTFIT_NONE == current || OUTFIT_STANDARD == current)
 		if (CombatOutfitEnabled && combatInProgress)
 			Trace("Combat Detected")
-			CurrentOutfitDesired = OUTFIT_COMBAT		
+			CurrentOutfitDesired = OUTFIT_COMBAT
+		elseif (SwimOutfitEnabled && playerIsSwimming)
+			Trace("Swim Detected")
+			CurrentOutfitDesired = OUTFIT_SWIM			
 		elseif (HomeOutfitEnabled && ShouldUseHomeOutfit())
 			Trace("Home Detected")
 			CurrentOutfitDesired = OUTFIT_HOME			
@@ -2329,7 +2411,10 @@ Function OnLoadHelper()
 		endIf
 	elseif (OUTFIT_COMBAT == current)
 		if (!combatInProgress)
-			if (HomeOutfitEnabled && ShouldUseHomeOutfit())
+			if (SwimOutfitEnabled && playerIsSwimming)
+				Trace("Swim Detected")
+				CurrentOutfitDesired = OUTFIT_SWIM
+			elseif (HomeOutfitEnabled && ShouldUseHomeOutfit())
 				CurrentOutfitDesired = OUTFIT_HOME
 			elseif (CampOutfitEnabled && npc.GetDistance(pShelterMapMarker.GetReference()) < 1000)
 				CurrentOutfitDesired = OUTFIT_CAMP
@@ -2341,11 +2426,34 @@ Function OnLoadHelper()
 				CurrentOutfitDesired = OUTFIT_NONE
 			endif
 		endIf
+	elseif (OUTFIT_SWIM == current)
+		if (CombatOutfitEnabled && combatInProgress)
+			Trace("Combat Detected")
+			CurrentOutfitDesired = OUTFIT_COMBAT
+		elseif (!playerIsSwimming)
+			if (HomeOutfitEnabled && ShouldUseHomeOutfit())
+				CurrentOutfitDesired = OUTFIT_HOME
+			elseif (CampOutfitEnabled && npc.GetDistance(pShelterMapMarker.GetReference()) < 1000)
+				Trace("Camp Detected")
+				CurrentOutfitDesired = OUTFIT_CAMP
+			elseif (CityOutfitEnabled && IsInCity())
+				Trace("City Location Detected")
+				CurrentOutfitDesired = OUTFIT_CITY
+			elseif (StandardOutfitEnabled)
+				Trace("Standard Detected")
+				CurrentOutfitDesired = OUTFIT_STANDARD
+			else
+				CurrentOutfitDesired = OUTFIT_NONE
+			endIf
+		endif		
 	elseif (OUTFIT_HOME == current)
 		if (npc.IsInFaction(pCurrentCompanionFaction))
 			if (CombatOutfitEnabled && combatInProgress)
 				Trace("Combat Detected")
 				CurrentOutfitDesired = OUTFIT_COMBAT
+			elseif (SwimOutfitEnabled && playerIsSwimming)
+				Trace("Swim Detected")
+				CurrentOutfitDesired = OUTFIT_SWIM			
 			elseif (CampOutfitEnabled && npc.GetDistance(pShelterMapMarker.GetReference()) < 1000)
 				Trace("Camp Detected")
 				CurrentOutfitDesired = OUTFIT_CAMP
@@ -2362,6 +2470,8 @@ Function OnLoadHelper()
 	elseif (OUTFIT_CITY == current)
 		if (CombatOutfitEnabled && combatInProgress)
 			CurrentOutfitDesired = OUTFIT_COMBAT
+		elseif (SwimOutfitEnabled && playerIsSwimming)
+			CurrentOutfitDesired = OUTFIT_SWIM			
 		elseif (HomeOutfitEnabled && ShouldUseHomeOutfit())
 			CurrentOutfitDesired = OUTFIT_HOME
 		elseif (CampOutfitEnabled && npc.GetDistance(pShelterMapMarker.GetReference()) < 1000)
@@ -2376,6 +2486,8 @@ Function OnLoadHelper()
 	elseif (OUTFIT_CAMP == current)
 		if (CombatOutfitEnabled && combatInProgress)
 			CurrentOutfitDesired = OUTFIT_COMBAT
+		elseif (SwimOutfitEnabled && playerIsSwimming)
+			CurrentOutfitDesired = OUTFIT_SWIM						
 		elseif (npc.GetDistance(pShelterMapMarker.GetReference()) > 999)
 			if (HomeOutfitEnabled && ShouldUseHomeOutfit())
 				CurrentOutfitDesired = OUTFIT_HOME

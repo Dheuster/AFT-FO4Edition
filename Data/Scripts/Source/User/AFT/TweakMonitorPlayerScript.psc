@@ -39,6 +39,8 @@ int  maxwait    = 30
 bool allowdraw  = true
 bool allowsneak = true
 bool ridingvertibird = false
+bool currentSwimmingState = false
+bool desiredSwimmingState = false
 
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 	string logName = "TweakMonitorPlayerScript"
@@ -59,6 +61,8 @@ Event OnInit()
 	RelayEvent               = true ; Set this to false if Uninstalled
 	allowdraw				 = true
 	allowsneak               = true
+	currentSwimmingState     = false
+	desiredSwimmingState     = false
 endEvent
 
 ; BUGS: I'm not sure why, but we get 2 weapondraw events everytime the
@@ -239,6 +243,7 @@ int NO_LG_FLOOD_CONT		 = 994 const
 int ALLOW_DRAW_TIMER         = 993 const
 int ALLOW_SNEAK_TIMER        = 991 const
 int MONITOR_FLIGHT           = 990 const
+int EVALUATE_SWIMMING        = 989 const
 
 Event OnTimer(int aiTimerID)
 
@@ -253,6 +258,27 @@ Event OnTimer(int aiTimerID)
 		allowsneak = true
 		return
 	endif
+	
+	if (EVALUATE_SWIMMING == aiTimerID)
+		Trace("EVALUATE_SWIMMING: desiredSwimmingState[" + desiredSwimmingState + "] currentSwimmingState [" + currentSwimmingState + "]")
+		if desiredSwimmingState != currentSwimmingState
+			; Change occured
+			currentSwimmingState = desiredSwimmingState
+			AFT:TweakFollowerScript pTweakFollowerScript = pTweakFollower As AFT:TweakFollowerScript
+			if (pTweakFollowerScript)
+				if currentSwimmingState
+					Trace("Calling OnPlayerStartSwim")
+					pTweakFollowerScript.CallFunctionNoWait("OnPlayerStartSwim", new Var[0])
+				else
+					Trace("Calling OnPlayerStopSwim")
+					pTweakFollowerScript.CallFunctionNoWait("OnPlayerStopSwim", new Var[0])
+				endIf
+			else
+				Trace("Unable to Call TweakFollowerScript.OnGameLoaded()")
+			endIf
+		endIf
+		return
+	endIf
 	
 	; aiTimerID == 1 set by OnPlayerLoadGame()
 	if (NO_LG_FLOOD_INIT == aiTimerID || NO_LG_FLOOD_CONT == aiTimerID)
@@ -590,6 +616,26 @@ Function AftReset()
 	
 	pTweakFullReset.show()
 endFunction
+
+; Relayed by Perk TweakPlayerSwimMonitorPerk
+Function OnPlayerStartSwim()
+	; Give it 3 seconds leniency in case it was an accident.
+	CancelTimer(EVALUATE_SWIMMING)
+	if (!currentSwimmingState)
+		desiredSwimmingState = true
+		StartTimer(3.0,EVALUATE_SWIMMING)
+	endif
+EndFunction
+
+; Relayed by Perk TweakPlayerSwimMonitorPerk
+Function OnPlayerStopSwim()
+	; Give it 5 seconds leniency to account for change time.
+	CancelTimer(EVALUATE_SWIMMING)
+	if (currentSwimmingState)
+		desiredSwimmingState = false
+		StartTimer(5.0,EVALUATE_SWIMMING)
+	endif
+EndFunction
 
 
 ; ====================================
