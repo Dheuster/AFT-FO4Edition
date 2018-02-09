@@ -108,6 +108,7 @@ Group AutoFill
 	ActorBase Property TweakCompanionNate				Auto Const
 	ActorBase Property TweakCompanionNora				Auto Const
 	SoundCategorySnapShot Property TweakCSInterjection	Auto Const
+	GlobalVariable Property pTweakIgnoreAffinity		Auto Const	
 endGroup
 
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
@@ -707,6 +708,7 @@ Function HandleCommentary(InterjectionInfo info)
 	endif
 
 	; The point of no "return"... someone is going to speak....
+	pTweakIgnoreAffinity.SetValue(1.0)
 	
 	; Activate custom soundscape (try to increase volume of all NPCs during scene)
 	Trace("Activating TweakCSInterjection [" + TweakCSInterjection + "]")
@@ -780,7 +782,9 @@ Function HandleCommentary(InterjectionInfo info)
 			Trace("  UnPausing Scene")
 		endif		
 		Game.StartDialogueCameraOrCenterOnTarget(pCenterCameraTarget)
-	endif			
+	endif
+	
+	pTweakIgnoreAffinity.SetValue(0.0)
 		
 EndFunction
 

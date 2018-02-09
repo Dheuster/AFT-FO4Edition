@@ -30,6 +30,8 @@ GlobalVariable Property pTweakFollowerCatchup Auto Const
 GlobalVariable Property iFollower_Com_Wait  Auto Const
 GlobalVariable Property iFollower_Stance_Aggressive Auto Const
 GlobalVariable Property iFollower_Stance_Defensive  Auto Const
+GlobalVariable Property pTweakIgnoreAffinity		Auto Const
+
 EndGroup
 
 FormList Property pTweakHelloTopicCait       Auto Const
@@ -121,6 +123,7 @@ Keyword    Property p_AttachPassenger       Auto Const
 Keyword    Property p_AttachSlot2           Auto Const
 Keyword    Property pPlayerCanStimpak       Auto Const
 FormList   Property pTweakHumanoidKeywords  Auto Const
+Keyword	   Property pAnimFlavorSmoking		Auto Const
 
 ReferenceAlias	Property pLostNPC			Auto Const
 Quest			Property pTweakLocator		Auto Const
@@ -761,6 +764,8 @@ EndEvent
 
 Function CheckForErrors()
 	Trace("Check for Errors")
+	pTweakIgnoreAffinity.SetValue(0.0)
+	
 	int plength = pManagedMap.Length
 	int p = 1
 	while (p < plength)
@@ -1924,6 +1929,15 @@ bool Function ImportFollower(Actor npc, bool silent = false)
 	npc.AddPerk(pTweakDmgResistBoost)
 	npc.AddPerk(pTweakRangedDmgBoost)
 	npc.AddPerk(pTweakZeroCarryInCombat)
+	
+	if npc.HasKeyword(pAnimFlavorSmoking)
+		Trace("AnimFlavorSmoking detected. Removing")
+		npc.ChangeAnimFlavor() ; Reset
+		if npc.HasKeyword(pAnimFlavorSmoking)
+			Trace("AnimFlavorSmoking STILL detected. Removing Again")
+			npc.RemoveKeyword(pAnimFlavorSmoking)
+		endif
+	endif
 	
 	; (a As TweakActions).initialize() ; Old TweakMagic
 	; (a As TweakPose).initialize()

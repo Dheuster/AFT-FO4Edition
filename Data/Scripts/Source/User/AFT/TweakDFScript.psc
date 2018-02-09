@@ -62,7 +62,7 @@ GlobalVariable Property pPlayerKnowsDogmeatName           Auto Const
 GlobalVariable Property pTweakMutexCompanions             Auto Const
 GlobalVariable Property pTweakFollowerLimit               Auto Const
 GlobalVariable Property pTweakIgnoreMurder                Auto Const
-
+GlobalVariable Property pTweakIgnoreAffinity			  Auto Const
 GlobalVariable Property CA_CoolDownDays_Immediate         Auto Const
 GlobalVariable Property CA_CoolDownDays_Long              Auto Const
 GlobalVariable Property CA_CoolDownDays_Medium            Auto Const
@@ -156,11 +156,11 @@ TweakDLC04Script	Property pTweakDLC04Script	Auto Const
 
 float CompanionIdleChatterTimeMin = 240.0
 float CompanionIdleChatterTimeMax = 300.0
-bool  LockSendAffinityEvent
-bool  RotationAllowed  = true
-bool  RotationLocked   = false
-int   import_processed = 0
-int   import_max_time  = 20
+bool  LockSendAffinityEvent  = false
+bool  RotationAllowed        = true
+bool  RotationLocked         = false
+int   import_processed       = 0
+int   import_max_time        = 20
 int   TIMER_ROTATE_COMPANION = 1 const
 int   TIMER_MONITOR_IMPORT   = 2 const
 int   TIMER_PLAYER_WAKEUP    = 3 const
@@ -250,41 +250,38 @@ Function OnGameLoaded(bool firstTime=false)
 		companions[4] = pCompanion5	
 		RegisterForPlayerSleep()
 	endIf
+	int clen = 5
 	
 	LockSendAffinityEvent = false
 	FollowersScript pFollowersScript = (self as Quest) as FollowersScript
 	if pFollowersScript
-	
+			
+		; If a papyrus crash leaves CompanionActorScript in a funky
+		; state, it can lead to affinity stalling. So Release
+		; on game load.
+		
+		int c = 0
+		while (c < clen)
+			Actor npc = companions[c].GetActorReference()
+			if npc	
+				CompanionActorScript CAS = npc as CompanionActorScript
+				if CAS
+					; In case the timer got cancelled, fire the allowaffinitytimer event
+					CAS.OnTimer(10)
+				endIf
+			endIf
+			c += 1
+		endwhile
+		
 		; Fix potential Affinity Stall issues with the vanilla game...
 
 		; If a papyrus crash leaves FollowersScript in a funky
 		; state, it can lead to affinity stalling. So Release
 		; on game load.
-		pFollowersScript.ReleaseLockSendAffinityEvent()
-		
-
-		; If a papyrus crash leaves CompanionActorScript in a funky
-		; state, it can lead to affinity stalling. So Release
-		; on game load.
-		
-		int clen = companions.length
-		int c = 0
-		while (c < clen)
-			Actor npc = companions[c].GetActorReference()
-			if npc	
-				CompanionActorScript CAS = npc as CompanionActorScript
-				if CAS
-					; In case the timer got cancelled, fire the allowaffinitytimer event
-					CAS.OnTimer(10)
-				endIf
-			endIf
-			c += 1
-		endwhile
+		pFollowersScript.ReleaseLockSendAffinityEvent()		
 		
 	elseif (pFollowers)
 	
-		pFollowers.ReleaseLockSendAffinityEvent()		
-		int clen = companions.length
 		int c = 0
 		while (c < clen)
 			Actor npc = companions[c].GetActorReference()
@@ -297,6 +294,8 @@ Function OnGameLoaded(bool firstTime=false)
 			endIf
 			c += 1
 		endwhile
+		
+		pFollowers.ReleaseLockSendAffinityEvent()		
 	else
 		Trace("Unable to Get/Set State for FollowersScript")
 	endIf	
@@ -516,6 +515,7 @@ Event OnTimer(int aiTimerID)
 		OnPlayerSleepEnd()
 		return
 	endIf
+	
 	if (TIMER_ROTATE_COMPANION == aiTimerID)
 		; Rotate Companon:
 
@@ -943,7 +943,12 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 	; affinity event to be spoken in sequence. If you get 3 affinity events at once, you need 50 seconds to let 5
 	; followers speak 2 lines each (approx). 3 Simultaneous affinity events is all I handle (Common when 
 	; taking everything from a WorkshopBench) 
-	
+
+	if (1.0 == pTweakIgnoreAffinity.GetValue())
+		Trace("NOT sending affinity event. IgnoreAffinity is true") 
+		return false
+	endif
+
 	if ResponseDelay < 0
 		ResponseDelay = 0
 	elseif ResponseDelay > 30
@@ -952,7 +957,7 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 
 	int maxwait = 125 + ((5.0 * ResponseDelay) as Int)
 	while LockSendAffinityEvent	&& maxwait > 0
-		utility.wait(0.2)
+		utility.waitmenumode(0.2)
 		maxwait -= 1
 	endwhile	
 	LockSendAffinityEvent = true
@@ -986,6 +991,7 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 		CoolDown = pTweak_CoolDownDays_Immediate
 	else
 		Trace("Warning: Cooldown is unrecognized (Modded value?) Bugs are possible.")
+		CoolDown = pTweak_CoolDownDays_Short
 	endIf
 	
 	if (EventKeyword == CA_Event_LootCorpse || EventKeyword == CA_Event_LootJunk || EventKeyword == CA_Event_LootPrewarItem || EventKeyword == CA_Event_LootEpicItem)
@@ -1612,9 +1618,9 @@ Function TryToShowMessageInverse(CompanionActorScript:EventData EventDataToUse)
 			InverseMessage.show()
 				
 			;If Companion Affinity Tutorial hasn't shown yet, show it
-			if !Tutorial.GetStageDone(640)
-				Tutorial.SetStage(640)
-			endIf				
+			; if !Tutorial.GetStageDone(640)
+			; 	Tutorial.SetStage(640)
+			; endIf				
 		else
 			Trace("Related message unsupported. No Inverse Found:" + EventDataToUse)
 		endIf			
