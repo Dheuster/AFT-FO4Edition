@@ -320,9 +320,9 @@ III. > > > >  Installation
         
   A. Requirements
         
-     This mod was compiled against Fallout 4 patch 1.10.40.  To minimize the
+     This mod was compiled against Fallout 4 patch 1.10.64.  To minimize the
      possibility of bugs, it is advised that users have the same patch or
-     newer. The mod may work with older versions of the game, but may may 
+     newer. The mod may work with older versions of the game, but may be 
      be less stable. To see what version you have, hit ESC within the game 
      and look in the bottom left corner of the System:Save/Load screen.
         
@@ -491,23 +491,24 @@ III. > > > >  Installation
      2) Ensure the file <installdir>/Data/Scripts/followersscript.pex 
         does not exist. install directory for most user is:
 	
-	C:\Program Files\steam\steamapps\common\Fallout 4
+        C:\Program Files\steam\steamapps\common\Fallout 4
      3) Visit the mods home page and check the forum that tracks 
-        known incompatible mods. Make sure you are not using one of the 
-	mods listed.
+        known incompatible mods. Make sure you are not using one 
+        of the mods listed.
 	
      Second Steps:
      
      If the above steps do not fix the issue, then confirm the following:
           
-     1) Does your version of Fallout 4 match the verison AFT was 
+     1) Does your version of Fallout 4 match the version AFT was 
         compiled against? 
           
         You can get the version of Fallout 4 from the bottom left corner 
         of the Settings screen (You have to load a save game first)
           
-          AFT Version 1.05  : FO4 Patch 1.10.26  
-          AFT Version 1.06+ : FO4 Patch 1.10.40
+          AFT Version 1.05      : FO4 Patch 1.10.26  
+          AFT Version 1.06-1.14 : FO4 Patch 1.10.40
+          AFT Version 1.15+     : FO4 Patch 1.10.64
            
      2) Did you clean your Cache?
            
