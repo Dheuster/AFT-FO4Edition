@@ -7,12 +7,12 @@
                               [Fallout 4 Edition]
                    ___________________________________________
 
-                                 Feb  09, 2018
-                                 Version: 1.16
+                                 June 10, 2018
+                                 Version: 1.17
 
                         Written by:  Dheu
                              Email:  Dheuster@gmail.com
-                       Use subject:  AFT FO4 Version 1.16
+                       Use subject:  AFT FO4 Version 1.17
 
 
                                  QUICK SUMMARY
@@ -52,7 +52,9 @@ PC ONLY: Save Settlement snapshots to sharable batch file or papyrus code
     G.   Trouble Shooting
      
  IV.   Usage
-    A.   AFT Activator
+    A.   AFT Activator Overview
+	
+    B.   AFT Activator : Follower Mode	
       1.  Actions
       2.  Gear
       3.  Combat AI
@@ -60,9 +62,22 @@ PC ONLY: Save Settlement snapshots to sharable batch file or papyrus code
       5.  Appearance
       6.  Settings
       7.  Tools
-      8.  Follower Selection
-          
-    B.   AFT Settings HoloTape
+      8.  Select All Followers
+	  
+    C.   AFT Activator : All Follower Mode	
+      1.  Actions
+      2.  Gear
+      3.  Tools
+      4.  Select Follower
+	  
+    D.   AFT Activator : Import/Recruitment Mode
+      1.  Scan
+      2.  Import NPC (Full/Normal)
+      3.  Import NPC (Leave Original AI intact)
+      4.  Import NPC (Only make Follow. DO NOT MANAGE)
+      5.  Mark NPC as Ignored
+		  
+    E.   Global Settings
       1.  Follower Limit
       2.  Chat Settings
       3.  Misc Settings
@@ -71,7 +86,7 @@ PC ONLY: Save Settlement snapshots to sharable batch file or papyrus code
       6.  Restore Aft Activator
       7.  Prepare for Uninstall
           
-    C.   AFT Camp
+    F.   AFT Camp
       1.  AFT Camp Expansion
       2.  Camp Terminal
       3.  Camp Terminal : Buildings
@@ -80,14 +95,14 @@ PC ONLY: Save Settlement snapshots to sharable batch file or papyrus code
       6.  Camp Terminal : UFO
       7.  Camp Terminal : Settings
           
-    D.   Saving your Spouse
+    G.   Saving your Spouse
       1.  Where is Vault 81?
       2.  How do I get in?
       3.  I'm in, now what?
       4.  Completing "Hole In the Wall"
       5.  Maximizing Spouse Interactions
           
-    E.   Creating Your Own Settlement Snapshots
+    H.   Creating Your Own Settlement Snapshots (Batch)
       1.  Make sure you have the PC Version of AFT
       2.  Enable Debug Logging
       3.  Take Snapshot using Settlement Menu
@@ -114,7 +129,7 @@ PC ONLY: Save Settlement snapshots to sharable batch file or papyrus code
     I.   Recognized Perks
     J.   Recognized Keywords
        
- IX.   Making an AFT addon mod that expands settlement Prefab options
+ IX.   Creating Your Own AFT Prefab option (Papyrus) 
     A.   How do Addons Work Anyway? (For Developers)
     B.   Prefab Components
     C.   Step By Step
@@ -198,7 +213,8 @@ I. > > > > Feature List:
      And it doesn't end there. Toggling Power Armor helmets on and off
      for combat, ignore traps, set preferred follower distance and 
      caution levels. Maybe you want your followers to stay out of the
-     fight so you can do all the fighting. 
+     fight so you can do all the fighting. Or have Danse scout ahead
+     of the player like dogmeat to draw enemy fire.
          
   11) NPC Info
          
@@ -281,16 +297,14 @@ I. > > > > Feature List:
 
       You can also export a settlement snapshot to papyrus in order to quickly 
       build an AFT Prefab ADDON. (See section X below). The later route is more 
-      work,  but offers a way to get your settlement onto consoles like PS4 and 
-      XBOX.
+      work,  but offers a way to get your settlement onto XBOX.
       
 
 -------------------------------------------------------------------------------
 II. > > > >  DLC Compatibility
 -------------------------------------------------------------------------------
 
-  AFT Includes DLC companion support. It DOES NOT include DLC prefabs or 
-  support for clearing new DLC constructible items. (possibly future version)
+  AFT Includes DLC companion support.
 
   A. Automatron : 
 
@@ -320,7 +334,7 @@ III. > > > >  Installation
         
   A. Requirements
         
-     This mod was compiled against Fallout 4 patch 1.10.64.  To minimize the
+     This mod was compiled against Fallout 4 patch 1.10.89.  To minimize the
      possibility of bugs, it is advised that users have the same patch or
      newer. The mod may work with older versions of the game, but may be 
      be less stable. To see what version you have, hit ESC within the game 
@@ -343,7 +357,7 @@ III. > > > >  Installation
      2) Once 7-zip is installed, open the .7z file downloaded from NexusMods 
         Typically you need only double click the file:
          
-          AmazingFollowerTweaksFO4_v1_16.7z
+          AmazingFollowerTweaksFO4_v1_17.7z
          
      3) Within the 7-zip window, select the menu options: 
          
@@ -355,7 +369,7 @@ III. > > > >  Installation
      4) The 7-zip window will show 2 files:
            
           /Data
-          readme_aft_1_16.txt
+          readme_aft_1_17.txt
           
         Make sure BOTH items are hi-lighted. To hi-light both entries quickly, 
         hit CTRL + A
@@ -508,8 +522,9 @@ III. > > > >  Installation
           
           AFT Version 1.05      : FO4 Patch 1.10.26  
           AFT Version 1.06-1.14 : FO4 Patch 1.10.40
-          AFT Version 1.15+     : FO4 Patch 1.10.64
-           
+          AFT Version 1.15-1.16 : FO4 Patch 1.10.64
+          AFT Version 1.17+     : FO4 Patch 1.10.89
+		  
      2) Did you clean your Cache?
            
         Steam -> Library -> (All Games) Fallout 4 -> Properties 
@@ -585,7 +600,17 @@ IV. > > > >  Usage
     find 2 new items in your inventory:  The AFT Activator and the AFT Settings
     holotape. You will also find that the AFT Activator has already been 
     assigned to Quick Slot 3.
-                                  
+
+  Managing Followers with AFT:
+
+    You don't have to do anything special to manage one of the games original
+    companions with AFT. Just talk to them and ask them to follow you when the
+    time comes.
+	
+    AFT also allows you to import NPCs who were not originally companion
+	options. To do this, you use a special item called the AFT Activator
+    on an NPC and select how you wish to import them. More on that below.
+    
   Terminology : 
            
     Managed Follower : Any NPC that is being managed by AFT. AFT can manage up 
@@ -596,7 +621,8 @@ IV. > > > >  Usage
                        game. AFT supports up to 5 active followers. 6 if you
                        include Dogmeat. 
            
-  A. AFT Activator
+
+  A. AFT Activator : Overview
            
      The AFT Activator is a small device that appears in your inventory in the
      AID category. It is a usable inventory item, so it can be assigned to a 
@@ -608,7 +634,7 @@ IV. > > > >  Usage
      three menus appear depending on what was under the cross-hair when the
      activator was activated.
            
-     If the cross-hair was on a Managed NPC, you will see all AFT commands and 
+     If the cross-hair is on a Managed NPC, you will see all AFT commands and 
      options with the followers name at the top of the screen. 
            
         ----------------------
@@ -626,18 +652,20 @@ IV. > > > >  Usage
         > Cancel
         ----------------------
            
-     If the cross-hair was on an unmanaged but eligible NPC, you will see import
+     If the cross-hair is on an unmanaged but eligible NPC, you will see import
      options and an option to scan the NPC for more information.
            
         ----------------------
         IMPORT:
         ----------------------
         > Scan NPC
-        > Force Recruit NPC
-        > AFT should ignore this follower
+        > Import NPC (Full/Normal)
+        > Import NPC (Leave Original AI intact)
+        > Import NPC (Only make Follow. DO NOT MANAGE)
+        > Mark NPC as Ignored
         > Cancel
         ----------------------
-           
+     		   
      If the cross-hair had no target, you will see a list of commands that 
      affect ALL Active Followers (Equivalent to selecting everyone). Not all 
      menu options will appear in this mode of operation. 
@@ -666,62 +694,66 @@ IV. > > > >  Usage
            
        - Should you lose the activator, you can use the Aft Settings Holotape
          to spawn another one. 
-              
-           
+     
+  B. AFT Activator : Follower Mode
+	 
+     We start follower mod by placing the cross hair on someone who is already
+     following us (or managed and told to stay put somewhere) and activate
+     the AFT Activator. The following Menu will appear:
+	 
+         ----------------------
+         [FOLLOWER NAME]:
+         ----------------------
+         > Actions
+         > Gear
+         > Combat AI
+         > Info
+         > Appearance
+         > Settings
+         > Tools                             
+         ----------------------
+         > Select ALL Followers
+         > Cancel
+         ----------------------
+	 
      1) Actions
            
         A list of commands you can issue to the Follower(s). Many of these 
         commands mirror the options you see when you talk to Companions.
            
-              -------------------------------------------------------
-              Actions                   | Alternatives
-              -------------------------------------------------------
-              Get Behind Me             | \Summon All
-              Gather Loose Items        |
-              Wait Here                 | \Follow Me
-              Fetch my Power Armor      |
-              Enter Power Armor         | \Exit Power Armor
-              Setup Camp                | \Teardown Camp
-              Dismiss                   | \Come with me 
-              -------------------------------------------------------
+              --------------------------
+              Actions                   
+              --------------------------
+              Get Behind Me             
+              Gather Loose Items        
+              Wait Here                 
+              Hangout Here              
+              Come with Me      
+              Follow Me			  
+              Enter Power Armor
+              Exit Power Armor          			  
+              Fetch my Power Armor      
+              Setup Camp                
+              Teardown Camp
+              Dismiss                    
+              --------------------------
              
         DETAILS:
              
         a) Get Behind Me
              
            Causes the follower you are speaking with to teleport behind you.
-           When No Follower is selected, you will see an option to summon all,
-           which teleports all active followers in front of you.
               
            Note: 
            
            - If you are bumping into an active follower and you draw your 
              weapon, this Method is executed automatically. 
-           
-           - There are some areas of the game where Summon All is disabled
-             for immersion reasons.
-
+		   
         b) Gather Loose Items
              
-           Followers search around the player (Radius = 1.5X the size of 
-           AFT CAMP) and gather up any items they see. If the crosshair
-           is on a specific follower, they will receive the items. If the
-           cross hair is not on any follower, then the preference will
-           be:
-
-           1) Dogmeat : If dogmeat is a companion, he is preferred as the
-              holder of gear because he will not attempt to use any of it
-              and for most users, they can scrap or sell everything in 
-              dogmeats inventory without having to worry about messing up
-              an outfit.
-
-           2) Random Companion : If you do not have dogmeat but at least 1
-              AFT managed companion, then one of your companions will be
-              randomly chosen to hold the gear. 
-
-           3) The player : If you are playing solo and have no companions, 
-              the items will be funneled to your own inventory. This may 
-              be dangerous if you are playing in survival mode.
+           The Follower searches around the player (Radius = 1.5X the size of 
+           AFT CAMP) and gather up any items they see. In Follower Mode, the
+           Follower you order to Gather Items receives the items. 
 
            Progress messages will be shown (normally less than 5 seconds)
            with a summary of discovered items as well as items ignored because
@@ -731,52 +763,40 @@ IV. > > > >  Usage
                   and ignores followers carry weight limits. If you are
                   opposed to followers carrying more than their limit 
                   allows, then don't use this method. 
+        
+        c) Wait Here 
               
-        c) Wait Here \ Follow Me : 
-                      
-           "Follow Me": 
-             
-             Appears if the follower is an Active Follower in wait mode 
-             Selecting will end wait mode.
-             
-           "Wait Here": 
-             
              Appears if the follower is an Active Follower currently in Follow
              mode. Selecting will cause follower to enter Wait mode. 
+
+        d) Hangout Here 
+              
+             Appears if the follower is an Active Follower currently in Follow
+             mode. Selecting will cause follower to enter Wait mode and Sandbox.
+
+        e) Come with Me
+              
+             Appears on followers you dismissed. THat is, they are managed, but 
+			 not active. Causes the previously dismissed Follower to begin
+             following you once again.
+			 
+             If you are at the maximum active follower limit, another follower
+             will automatically be dismissed. 
+
+             For any imported Followers, this may be the only way to tell them 
+             to follow you again after being dismissed.
+			 
+        f) Follow Me
+			 
+             Appears if an Active follower is in WAIT or HANGOUT Mode. Causes 
+             them to begin following you again.
            
-        d) Fetch My PowerArmor
+        g) Enter Power Armor
            
-           Causes the players PowerArmor to teleport to the follower, as if the
-           follower fetched it.
-           
-        e) Enter\Exit Power Armor
-           
-           "Enter Power Armor":
-               
-             - SELECTED MODE:
-               
-               Appears if Follower is not wearing Power Armor but has one 
-               assigned. On selection, the NPC will enter their PA. Running up 
-               to it if it is nearby or the PA will be teleported to them if it 
-               is not.
-               
-             - ALL FOLLOWER MODE:
-               
-               All NPCs with assigned PowerArmors who are not wearing them will
-               enter their PowerArmors. May cause PowerArmors to teleport to
-               followers.
-               
-               
-           "Exit Power Armor": 
-               
-             - SELECTED MODE:
-               
-               Appears if NPC is wearing PowerArmor. Causes them to exit.
-               
-             - ALL FOLLOWER MODE:
-               
-               All NPCs who are wearing PowerArmor will exit their PowerArmor.
-                      
+            Appears if Follower is not wearing Power Armor but has one assigned.
+            Causes the NPC ti enter their PA. They will run up to it if it is 
+            nearby or the PA will be teleported to them if it is not.
+            
            POWER ARMOR ASSIGNEMENT:
            
                To assign a PowerArmor to a follower simply have them enter a
@@ -793,52 +813,49 @@ IV. > > > >  Usage
              
                The easiest way to un-assign PowerArmor is to have the player
                enter a followers PA.
-             
-        f) Setup\Teardown Camp
+			
+        h) Exit Power Armor
+               
+            Appears if NPC is wearing PowerArmor. Causes them to exit.
+			   
+        i) Fetch My PowerArmor
            
-           "Setup": 
-             
-             Appears if Camp is not already setup. The command scans the 
-             terrain around you and builds camp based on characteristics.
-             Construction can take up to a minute depending on what you have 
-             enabled and purchased.
+            Causes the players PowerArmor to teleport to the follower, as if the
+            follower fetched it.
+                                   
+        j) Setup Camp
+
+            Appears if Camp is not already setup. The command scans the 
+            terrain around you and builds camp based on characteristics.
+            Construction can take up to a minute depending on what you have 
+            enabled and purchased.
            
-           "Teardown": 
+        k) Teardown Camp 
            
-             Appears if Camp is currently setup. If you issue the command in 
-             the vicinity of camp, camp will immediately begin to fade. 
-             Teardown can take up to two minutes depending on the complexity of 
-             Your camp and what you have purchased/enabled.
+            Appears if Camp is currently setup. If you issue the command in 
+            the vicinity of camp, camp will immediately begin to fade. Teardown
+            can take up to two minutes depending on the complexity of your camp
+            and what you have purchased/enabled.
            
-             If you issue Teardown when you are away from camp, a 24 hour delay
-             penalty is added. (1 game day). This is to simulate the amount of 
-             time it would take your followers to return to camp, tear it down
-             and return to you.  Activating Teardown a second time while the 
-             penalty window is active will tell you how much time is left 
-             before camp is available. You can cancel the penalty by returning
-             to camp and issuing the command from camp itself. 
+            If you issue Teardown when you are away from camp, a 24 hour delay
+            penalty is added. (1 game day). This is to simulate the amount of 
+            time it would take your follower to return to camp, tear it down
+            and return to you.  Activating Teardown a second time while the 
+            penalty window is active will tell you how much time is left 
+            before camp is available. You can cancel the penalty by returning
+            to camp and issuing the command from camp itself. 
            
            NOTES : 
            
              Special things happen the first time you setup camp. See the Aft 
              Camp section below for more details. 
                       
-        g) Dismiss\Come with Me
+        l) Dismiss
            
-           "Come with Me": 
-             
-             Appears on Managed Followers who are not actively following the 
-             Player. It causes the follower to begin following the player. If
-             you are at maximum capacity, another follower will be dismissed 
-             automatically. For any imported Followers, this may be the only 
-             way to tell them to follow you again after being dismissed.
-           
-           "Dismiss": 
-              
-             Appears on Active Followers and will cause them to stop following
-             the player and return to their assigned Home. Since AFT has a
-             dedicated home assignment menu, dismissed followers will not 
-             prompt you for a home location unless the NPC doesn't have one.
+            Appears on Active Followers and will cause them to stop following
+            the player and return to their assigned Home. Since AFT has a
+            dedicated home assignment menu, dismissed followers will not 
+            prompt you for a home location.
            
      2) Gear
            
@@ -1043,9 +1060,7 @@ IV. > > > >  Usage
              
              Transfers only raw scrap to the player. Does NOT transfer 
              non-scrapped Junk.
-             
-             If used in ALL FOLLOWERS MODE, it will appear as Give me ALL Scrap
-             
+                          
            GIVE ME UNUSED GEAR
              
              Transfers any items that are not assigned to a follower outfit to 
@@ -1190,7 +1205,7 @@ IV. > > > >  Usage
              sneaking. 
 			 
              ** NOTE : Activating Info (reading a book) ends sneak mode, so 
-                INFO will not show Unaggressive.
+                INFO will not show Unaggressive when sneaking.
 			 
         c) Flee Settings
                  
@@ -1228,34 +1243,40 @@ IV. > > > >  Usage
                  ----------------------
                  Player Distance
                  ----------------------
-                 [ ] Near
-                 [*] Medium
-                 [ ] Far
+				 [X] Scout Ahead
+                 ( ) Near
+                 (*) Medium
+                 ( ) Far
                  ----------------------
-                 
+           
+		   SCOUT Ahead
+		   
+             Should the follower attempt to stay in front of the player? In this
+             mode, Near/Med/Far determine how far ahead of the player. Dogmeat
+             uses scout ahead by default. However AFT allows you to enable or 
+             disable this behavior on any companions you want.
+             
            NEAR: ( about 8 feet away)
-                 
-             Sets the follower AI to remain close to the player during combat.
-             Typically assigned to followers when the player is specializing 
-             in sniper style combat. (keeps followers from running off and 
-             getting in the way of your distant targets). 
-                 
+             
+             Sets the follower AI to remain close to the player when exploring.
+             This setting affects proximity of NPC to Player when combat begins. 
+             Distance during combat is actually determined by the Combat AI Style. 
+             
            MEDIUM: ( about 16 feet away)
                  
              Sets the follower AI to remain moderately close to the player 
-             during combat. This allows both melee and ranged followers to 
-             engage enemies while remaining close enough to the player to also 
-             offer some diversion and protection. 
+             when exploring. This setting affects proximity of NPC to Player 
+             when combat begins. Distance during combat is actually determined 
+             by the Combat AI Style.
                  
-             This is the games default distance and makes the most sense if the
-             player is not specialized as a melee fighter or sniper.
+             This is the games default distance.
                  
            FAR: ( about 32 feet away).
                  
-             Sets the follower AI to keep their distance from the player during
-             combat. Typically assigned to followers when the player character
-             specializes in melee combat. (keeps your followers away so they 
-             don't get caught up in your sweeping area attacks)
+             Sets the follower AI to keep their distance from the player when 
+             exploring. This setting affects proximity of NPC to Player when 
+             combat begins. Distance during combat is actually determined 
+             by the Combat AI Style.
              
         d) [ ] PA Helmet Toggle
                  
@@ -2038,7 +2059,272 @@ IV. > > > >  Usage
              complete.)
                         
      7) Tools    
+	 
+        The Tools Menu is actually a Global menu available under both Follower
+		Mode and All FOllower Mode. Access is included from Follower Mode primarily
+        as a convenience. See See section C.3 below for more details. 
+		                          
+     8) Follower Selection
+             
+        Allows you to switch to ALL FOLLOWERS mode. In ALL FOLLOWERS mode,  only 
+        commands are shown that can be applied to all active followers.
+             
+             
+     9) Force Recruit NPC
+
+        Forces the NPC to become a follower, fully managed by AFT. 
+
+     10) AFT should ignore this follower
+
+        This option will mark the NPC so that AFT will ignore them. Selecting 
+        this will cause the "Force Recruit NPC" option to disappear. If you 
+        can talk to the NPC and ask them to follow you, AFT will not fully 
+        import them and treat them as an "Unmanaged" follower. This is the 
+        same behavior that occurs if you reach the managed follower limit 
+        (32) and ask someone new to follow you through conversation. 
+
+  C. AFT Activator : All Follower Mode	
+
+     We start all follower mod by Activating the AFT Activator when the 
+     crosshair is NOT located on any NPC. The following Menu will appear:
+	 
+         ----------------------
+         [ALL FOLLOWER MODE]:
+         ----------------------
+         > Actions
+         > Gear
+         > Tools                             
+         ----------------------
+         > Select Follower
+         > Cancel
+         ----------------------
+	 
+     1) Actions
+           
+        A list of group commands you can issue to all followers.
+           
+              --------------------------
+              Actions                   
+              --------------------------
+              Summon All
+			  Gather Loose Items
+              All Retreat               
+              All Attack                
+              All Wait
+              All Hangout
+              All Follow
+              All Dismiss
+              All Enter Power Armor
+              All Exit Power Armor
+              Fetch my Power Armor      |
+              Setup Camp \ Teardown Camp
+              --------------------------
+             
+        DETAILS:
+             
+        a) Summon All
+             
+           Teleports all active followers in front of you and causes
+           them to begin following you again if they were told to 
+           wait/hangout or individually stay somewhere.
+              
+           Note: 
+           
+           - There are some areas of the game where Summon All is disabled
+             for immersion reasons.
+			 
+        b) Gather Loose Items
+             
+           Followers search around the player (Radius = 1.5X the size of 
+           AFT CAMP) and gather up any items they see. If the crosshair
+           is on a specific follower, they will receive the items. If the
+           cross hair is not on any follower, then the preference will
+           be:
+
+           1) Dogmeat : If dogmeat is a companion, he is preferred as the
+              holder of gear because he will not attempt to use any of it
+              and for most users, they can scrap or sell everything in 
+              dogmeats inventory without having to worry about messing up
+              an outfit.
+
+           2) Random Companion : If you do not have dogmeat but at least 1
+              AFT managed companion, then one of your companions will be
+              randomly chosen to hold the gear. 
+
+           3) The player : If you are playing solo and have no companions, 
+              the items will be funneled to your own inventory. This may 
+              be dangerous if you are playing in survival mode.
+
+           Progress messages will be shown (normally less than 5 seconds)
+           with a summary of discovered items as well as items ignored because
+           they were owned or containers that were locked. 
+
+           NOTE : Gather Loose Items is a time saving convenience method
+                  and ignores followers carry weight limits. If you are
+                  opposed to followers carrying more than their limit 
+                  allows, then don't use this method. 
+
+        c) All Retreat
+           
+           Causes all followers to stop fighting and retreat for 20 
+           seconds.
+		   
+           After 20 seconds, they will continue to fight and defend
+           themselves unless you renew the command with another call.
+
+        d) All Attack
+		
+           Typically used when sneaking to have your followers attack 
+           nearby enemies that have not yet spotted you. (You want everyone
+           else to attack so the attention is not on you). It can also be
+           used to cancel a retreat that is in progress.
+		   
+           All Attack will direct your followers to attack any non-allies.
+           This can include neutral NPCs such as merchants, so use with 
+           caution.
+		   
+        e) All Wait
+		
+           All followers enter WAIT Mode. (As if you walked up to them
+           and told them to STAY)
+           
+        f) All Hangout
+
+           All followers begin to Wait and Sandbox. Command overrides
+           followers individual Auto Relax settings.
+
+        g) All Follow
+
+           All followers begin to Follow the player. This command will
+           cancel individual states like STAY HERE.
+
+        h) All Dismiss
+		
+           Dismisses all followers after presenting you with a 
+           confirmation prompt. 
+
+        i) All Enter Power Armor
+
+           Any follower with an assigned Power Armor who is not already 
+           wearing it will immediately enter their power armor. Followers
+           will run up to it if it is nearby or the PA will teleport to 
+           them if it is not.
+
+           POWER ARMOR ASSIGNEMENT:
+           
+               To assign a PowerArmor to a follower simply have them enter a
+               power armor. Assignment occurs when they enter. 
+
+               For those unfamiliar with the process, Start Command-Mode by 
+               "grabbing" the follower from a distance. On PC, you use the [e]
+               key by default. This will cause the target hair to show context
+               sensitive information based on what the target hair is hovering 
+               over. Hover over a PowerArmor and tell the Follower to Enter. 
+             
+               This assigns the PowerArmor to the Follower. It will remain  
+               assigned until another NPC or the player enters the PowerArmor. 
+             
+               The easiest way to un-assign PowerArmor is to have the player
+               enter a followers PA.
+
+        j) All Exit Power Armor
+
+           Any follower wearing Power Armor will immediately exit.
+		   
+
+		k) Fetch My PowerArmor
+           
+           Causes the players PowerArmor to teleport to the Player, as if a
+           follower fetched it.
+
+        l) Setup\Teardown Camp
+           
+           "Setup": 
+             
+             Appears if Camp is not already setup. The command scans the 
+             terrain around you and builds camp based on characteristics.
+             Construction can take up to a minute depending on what you have 
+             enabled and purchased.
+           
+           "Teardown": 
+           
+             Appears if Camp is currently setup. If you issue the command in 
+             the vicinity of camp, camp will immediately begin to fade. 
+             Teardown can take up to two minutes depending on the complexity of 
+             Your camp and what you have purchased/enabled.
+           
+             If you issue Teardown when you are away from camp, a 24 hour delay
+             penalty is added. (1 game day). This is to simulate the amount of 
+             time it would take your followers to return to camp, tear it down
+             and return to you.  Activating Teardown a second time while the 
+             penalty window is active will tell you how much time is left 
+             before camp is available. You can cancel the penalty by returning
+             to camp and issuing the command from camp itself. 
+           
+           NOTES : 
+           
+             Special things happen the first time you setup camp. See the Aft 
+             Camp section below for more details. 
+           
+     2) Gear
+           
+        Use this menu to configure outfits or issue commands for bulk inventory
+        management. 
+           
+              ----------------------
+              Gear
+              ----------------------
+              Unequip All
+              Give me ALL Junk
+              Give me ALL Scrap
+              Give me ALL Unused Gear
+              Give me ALL Gear
+              ----------------------
                  
+        DETAILS:   
+
+        a) Unequip All
+                 
+           The command is pretty self explanatory. A few notes: 
+                 
+           - If a follower is in PowerArmor, they will exit the PowerArmor, 
+             unequip all and then Re-enter the PowerArmor to avoid PowerArmor
+             related glitches.
+                 
+           - Following the command, only PLAYABLE items will be visible in 
+             the followers inventory. If the follower was wearing unplayable
+             items, you may not be able to re-equip them. AFT includes fixes
+             for some NPCs such as Nick Valentine. Other NPCs such as Deacon
+             may need new clothes (and a wig). Saving is recommended before 
+             using the command.
+                 
+        b) Give me ALL Junk
+             
+             Transfers all the JUNK to the player (this includes scrap). 
+             
+        c) Give me ALL Scrap
+             
+             Transfers only raw scrap to the player. Does NOT transfer 
+             non-scrapped Junk.
+			 
+        d) Give me ALL Unused Gear
+             
+             Transfers any items that are not assigned to a follower outfit to 
+             the player. 
+			 
+        e) Give me ALL Gear
+
+             Transfers all follower items to the player, even those belonging
+             to an outfit.
+		
+        NOTES:
+          
+          - If an outfit has a weapon, the ammo that the weapon uses is also 
+            considered part of the outfit even if the ammo wasn't equipped 
+            when the outfit was created.
+                       
+     3) Tools
+	 
               ----------------------
               Tools
               ----------------------
@@ -2116,13 +2402,13 @@ IV. > > > >  Usage
              Wall Only Prefabs do not include housing, defenses, electricity, 
              food or water. They also generally do not clear the settlement.
 
-             Full build Prefabs always include the Wall. If the Wall is 
+             Full build Prefabs always include a Wall. If the Wall is 
              purchased first, the cost of the wall is subtracted from the 
              Prefab. 
              
              By default, AFT Does not include Prefabs for Bunker Hill, Covenant 
-             Or the Boston AirPort. However AFT Addon-Mods will likely soon be 
-             available that expand the selection for those areas.
+             Or the Boston AirPort. However AFT Addon-Mods may become available
+             that expand the selection for those areas.
                     
            SAVE PREFAB     
                     
@@ -2145,9 +2431,12 @@ IV. > > > >  Usage
                a progress bar to indicate time until completion. Typically 
                takes about a minute. When finished, it will tell you the name 
                of the log file  (Basically the name of the settlement). 
+			   
+			   For an example see the link:
+			   
+			   https://www.youtube.com/watch?v=uCYX_mUH4bY&t=11s
                
-               See III.E Below for instructions what what to do After a Save
-               To load the settlement elsewhere. 
+               See III.E Below for more details.
                                    
              - TO PAPYRUS:
                      
@@ -2157,30 +2446,36 @@ IV. > > > >  Usage
                of the log file with the code in it (Basically the name of the 
                settlement). 
                      
-               Unlike Batch files which can be executed as-is, Papyrus code
-               Needs to be pasted into a Mod Template (Requires Creation kit)
+               Papyrus is used when you wish to export your settlement as another
+			   option visible within AFT. You must use the code in a series of 
+			   additional steps to create an addon mod (Requires Creation kit)
                The steps are outlined below in:
 
-               "Section VIII. Making an AFT addon mod"
+               "Section IX: Making an AFT addon mod"
 
                When the steps are followed, the settlement will become a new 
                Option within AFT and can even be distributed to Consoles such 
-               as XBOX and PS4. 
+               as XBOX. 
                      
              NOTES:  
                      
-               The item scan used by SAVE is not comprehensive. It includes all
-               the constructible items that came with the vanilla game as well 
-               as a limited number of non-constructible items.(About 1200 items
-               in total). It is the same list of items used when Scrapping a 
-               settlement.
-                     
-               Use of items provided by other mods or DLC will not be 
-               recognized. A simple way to see what will be included in 
-               the snapshot is to use ClearSettlement, as the two commands
-               use the same list of items. Anything not cleared by Clear
-               Settlement will not be saved to the Snapshot. 
-                     
+               AFT prefabs only support a limited set of items. (About 1200 items in 
+			   total). By default, the list includes all constructable and scrapable 
+			   vanilla game items as well as a handful of non-constructable/scrap-able
+			   items. A simple way to see what will be included in the snapshot is to 
+               use Tools -> Settlement -> ClearSettlement. Any items remaining 
+               after Clear Settlement will not be included in the Save.  
+               
+               Starting with version 1.17, Automatron, Far Harbor and Nuka World 
+               DLC items are supported in their corresponding DLC areas. However
+               DLC items will not work outside areas that belong to the DLC. For 
+               example, the Barn Kit that comes with Far Harbor will only be 
+               recorded if the prefab is for a Far Harbor settlement.
+			   
+               Starting with version 1.17, AFT Prefab Addon Mods (Papyrus only) 
+               can include their own custom resources (furnitures, walls, etc..)
+               and use them within the settlement(s) provided by the addon mod. 
+			   
         c) Unmanage NPC
                     
            If the target hair was on an NPC before issuing the command, that
@@ -2201,7 +2496,7 @@ IV. > > > >  Usage
            accessed via the AFT Setting holotape. Access to Global Settings
            through the Tools menu was added mostly to support VR. 
            
-           See "B. AFT Settings" below for more details on Global Settings.
+           See "E. Global Settings" below for more details on Global Settings.
 
         e) QUEST: Camp Expansion
                        
@@ -2210,40 +2505,87 @@ IV. > > > >  Usage
            offer a buy-out option if you have the caps. Once AFT Camp Expansion
            is complete, this menu option goes away. (Camp can be further 
            expanded with purchases from the Camp Terminal)
-                          
-     8) Follower Selection
+					 
+     4) Select Follower
              
-        a) Selecting All Followers
-             
-           Shown when the AFT Master Controller is used on a managed follower. 
-           It allows you to switch to ALL FOLLOWERS mode. In ALL FOLLOWERS 
-           mode,  only commands are shown that can be applied to all active 
-           followers.
-             
-        b) Select Follower
-             
-           This command appears when the AFT Master Controller is activated in 
-           ALL FOLLOWERS mode. For example, if activated with no NPC under the
-           target hair. 
-             
-           Selecting "Select follower" will open a menu that lists all active
-           followers. (even followers who are waiting somewhere far away). This
-           allows you to remotely issue commands even when you can't reach them
-             
-     9) Force Recruit NPC
+        Opens a menu that lists all active followers. (even followers who are 
+        waiting somewhere far away). This allows you to remotely issue commands
+        even when you can't reach them
+					 
+  D. AFT Activator : Import/Recruitment Mode
+  
+     The Import/Recruitment Menu will appear if you use the AFT Activator on
+	 an NPC who is not managed by AFT. 
+	 
+         ----------------------
+         [Recruit NPC]:
+         ----------------------
+         Scan NPC
+		 Import NPC (Full/Normal)
+         Import NPC (Leave Original AI intact)
+         Import NPC (Only make Follow. DO NOT MANAGE)
+		 Mark NPC as Ignored
+         Cancel
+         ----------------------	 
+	 
+	 NOTES:
+	 
+	 - Import will work on any NPC who is not actively hostile towards the 
+	   Player. 
+	   
+	 - DO NOT use Import on core companions such as Ada, Cait, Curie, 
+	   Codsworth, Danse, Deacon, Dogmeat, Gage, Hancock, Long Fellow, MacCready, 
+	   Nick Valentine, Piper, Preston, Strong, X6-88. You should recruit
+	   core companions normally through regular dialog. 
+	   
+     1) Scan NPC
+	 
+        Examines the NPC and brings up an INFO SCAN report. Used to evaluate
+        if an NPC is worth making a follower or not. 
+	 
+     2) Import NPC (Full/Normal)
 
-        Forces the NPC to become a follower, fully managed by AFT. 
+        If you force recruit a BOS soldier and an Institute Synth, under normal
+        conditions they would open fire on each other. FULL import ensures no 
+        internal fighting between followers by stripping away the NPCs original 
+        AI and replacing it with AFT's custom AI.
+	 
+     3) Import NPC (Leave Original AI intact)
+	 
+        Fully imports the follower into AFT EXCEPT it leaves their AI intact. 
+		(which includes loyalty and disdain towards certain groups). 
+		
+        This option is best used on Custom Followers provided and installed
+        by other mods. Specifically mods such as Heather Casdin, where the
+        follower comes with their own AI.
+		
+		I do NOT recommend using this on BOS, Insititute or Railroad members
+        as it can cause them to open fire on the NPCs around you when you 
+        visit opposing group headquarters. (Unless you dont mind since you
+        are siding heavily with a specific group anyway).
+	 	 
+     4) Import NPC (Only make Follow. DO NOT MANAGE)
+	 
+        This option places the NPC in one of your 5 follower slots, so that
+        they will follow you around. You gain access to their inventory and
+        a few basic commands like get behind me. But that is about the extent
+        of it. This is the safest option for users that are paranoid that Aft
+		might break one of their Custom Followers. I don't really recommend
+        using this on non-custom followers.
+	 
+     5) Mark NPC as Ignored
 
-     10) AFT should ignore this follower
-
-        This option will mark the NPC so that AFT will ignore them. Selecting 
-        this will cause the "Force Recruit NPC" option to disappear. If you 
-        can talk to the NPC and ask them to follow you, AFT will not fully 
-        import them and treat them as an "Unmanaged" follower. This is the 
-        same behavior that occurs if you reach the managed follower limit 
-        (32) and ask someone new to follow you through conversation. 
-        
-  B. AFT Settings
+        This option makes AFT ignore the NPC completely. Using the AFT 
+        Activator on them will go strait to all follower mode, as if they
+        aren't even there. Should a conversation cause the game to make them 
+        a companions, AFT will treat them like you imported them with the
+		"DO NOT MANAGE" option above. 
+		
+		NOTE: Because AFT completely ignores the NPC, there is no way to
+        undo this flag without using console commands or installing
+        and reinstalling AFT.
+	        
+  E. Global Settings
 
      Global settings are used for settings that affect all followers. It also 
      supports admin-like functions like prepping for uninstall.
@@ -2270,8 +2612,8 @@ IV. > > > >  Usage
      1) Follower Limit
         
         The Follower limit indicates how many followers you may have in 
-        addition to the dog. So for example, at the default value of 3, your
-        party size could be 5: The Player, The Dog and 3 additional followers. 
+        addition to the dog. The default value is also the maximum. 3
+        is recommended for slower hardware and game consoles.	
            
            ----------------------
            Global Follower Limit
@@ -2282,15 +2624,12 @@ IV. > > > >  Usage
            > Limit : 4
            > Limit : 5
            ----------------------
-           
-        The maximum Follower Limit is 5, which could allow a total party size
-        of 7: The player, the dog and 5 additional NPCs.
-          
+                     
         NOTES: 
           
-          This does not affect the maximum number of MANAGED NPCs, which 
-          remains hard coded at 32. A Managed NPC is any NPC that you are 
-          enhancing with AFT.
+          Follower Limit does not affect the maximum number of MANAGED NPCs, 
+          which remains hard coded at 32. A Managed NPC is any NPC that you
+          are enhancing with AFT.
           
      2) Chat Settings
            
@@ -2307,7 +2646,7 @@ IV. > > > >  Usage
                (*) 2 comments
                ( ) 3 comments
                ( ) 4 comments
-           [ ] Limit Loot Comments
+           [X] Limit Loot Comments
 	   [ ] Lock Comment Rotation to ...
            ----------------------
            
@@ -2404,11 +2743,13 @@ IV. > > > >  Usage
            [ ] Ignore Murder
            [X] Info Reveals Synths
            [ ] Allow Core Companion Import
-           [ ] FOllower Flee in Workshop Mode
+           [X] Follower Flee in Workshop Mode
            [ ] Disable AutoRelax (Global Override)
            [ ] All Followers ride Vertibird
            [X] Restore AFT Items on Game Load
            [ ] Treat Settlements as Cities
+           [ ] Combat Outfits on Weapon Draw
+           [X] Add Progress to Affinity Feedback
            ----------------------
            
         DETAILS:
@@ -2529,6 +2870,24 @@ IV. > > > >  Usage
            Covenant, Vault 81 and GoodNeighbor. When this global toggle
            is checked, all player settlements will also be treated as 
            cities for the purpose of outfit enforcement. 
+		   
+        k) Combat Outfit on Weapon Draw
+           
+           This option causes followers to equip their Combat Outfit 
+           when you have your weapon drawn instead of waiting for 
+           combat to begin. The Combat Outfit will remain on as
+           long as your weapon is drawn. 
+           
+        l) Add Progress to Affinity Feedback
+           
+           Adds [##/100] progress indicator to the end of like/love
+           dislike/hate messages so you can keep tabs on follower
+           relationship progress without having to use the INFO 
+           menu on them constantly. Note that the game allows
+           a buffer so that you can actually raise your companions
+           score to 110/100. (So you dont loose their admiration
+           just because you do 1 thing they dislike).		   
+		   
 
      4) Cooldown Settings
 
@@ -2699,10 +3058,10 @@ IV. > > > >  Usage
           they will remain dead.
 
         - Custom Faction removals are not undone. AFT only knows about 
-          vanilla factions, so if you force recruit a Mod Companion that
+          vanilla factions, so if you Import (Full) a Mod Companion that
           has Mod-Specific factions, those factions are not recovered.
    
-  C. AFT Camp
+  F. AFT Camp
      
      Access AFT's mobile camp from the Actions menu by selecting "Setup Camp".
      
@@ -2787,10 +3146,11 @@ IV. > > > >  Usage
            ----------------------
            Buildings
            ----------------------
-           [ ] Module 1
-           [ ] Module 2
-           [ ] Module 3
-           [ ] Module 4
+		   [X] Foundation
+               [X] Module 1
+               [X] Module 2
+               [X] Module 3
+               [X] Module 4
            ----------------------
            
         Modules will appear as you complete portions of the Camp Expansion 
@@ -2800,6 +3160,12 @@ IV. > > > >  Usage
         Each module has a sliding door and light switch that lets you 
         customize the interior lighting of your camp. The first module 
         (Module 1) also includes a water fountain.
+		
+		You can also disable the Foundation. This causes camp items to 
+		get placed with the lay of the land (as best as possible). As 
+		the UI implies, Modules (and their light sources) will not appear
+		if you disable the foundation. But all other items will still
+		appear when foundation is disabled.
 
      4) Camp Terminal : Amenities
         
@@ -3078,7 +3444,7 @@ IV. > > > >  Usage
            pulled (you may still see materials available after transfer due
            to a supply line link).
       
-  D. Saving your Spouse
+  G. Saving your Spouse
        
      To save your spouse, you need to locate Robot Curie in Vault81 and bring
      her to your spouse's cryopod before the power runs out. Power runs out no 
@@ -3229,7 +3595,7 @@ IV. > > > >  Usage
                 any of the companions have passed away, some lines may not
                 play.
                                  
-  E. Creating Your Own Settlement Snapshots
+  H. Creating Your Own Settlement Snapshots (Batch)
         
      1) Make sure your version of AFT support SnapShots
 
@@ -3283,8 +3649,17 @@ IV. > > > >  Usage
         You can use the technique to move Settlements between save games or
         share the settlement with a friend who also has AFT installed. 
 
+		See this video for a demonstration:
+		https://www.youtube.com/watch?v=uCYX_mUH4bY&t=11s
+		
         NOTE: If you are playing in Survival Mode, the console will not work
               without the aid of a console enabling mod.
+			  
+		If you wish to distribute your batch file to others without requiring
+		them to use/install all of AFT, you can place a requirement on the
+		mod: PrefabBatchLoader. This file includes a single, stand-alone, 
+		non-conflicting script to support AFT Batch File expansion (for 
+		PC users). 
 
 -------------------------------------------------------------------------------
 V. > > > > Hot Keys
@@ -3352,17 +3727,18 @@ V. > > > > Hot Keys
 
      Actions:
      --------
-     1: SummonAllFollowers
-     2: All Wait
-     3: AllHangout
-     4: All Follow
-     5: Enter PowerArmor
-     6: Exit Powerarmor
-     7: Setup Camp
-     8: Teardown Camp
-
+       1: SummonAllFollowers
      125: Gather Loose Items
-
+       2: All Wait
+       3: All Hangout
+       4: All Follow
+	 128: All Retreat
+	 129: All Attack
+       5: Enter PowerArmor
+       6: Exit Powerarmor
+       7: Setup Camp
+       8: Teardown Camp
+	   
      Gear:
      -----
      9: UnequipAll
@@ -3432,6 +3808,7 @@ V. > > > > Hot Keys
      52: Set Brave
      53: Set Foolhardy
 
+    130: Toggle Scout Ahead
      54: Set Distance Near
      55: Set Distance Med
      56: Set Distance Far
@@ -4287,7 +4664,7 @@ VIII. > > > >  Technical (For developers)
      NoRicochet
              
 -------------------------------------------------------------------------------
-IX. > > > >  Making an AFT addon mod that expands settlement Prefab options
+IX. > > > >  Creating Your Own AFT Prefab option (Papyrus)
 -------------------------------------------------------------------------------
           
   The settlement prefab system was intentionally designed to be easily expanded
@@ -4300,7 +4677,13 @@ IX. > > > >  Making an AFT addon mod that expands settlement Prefab options
   there.
 
   You can even create Prefabs for DLC or MOD based Settlements (as long as the
-  mod properly registers the Settlement with the WorkshopParent). 
+  mod properly registers the Settlement with the WorkshopParent).
+
+  (Optional) : These instructions require the use of the CreationKit. If you 
+  would like to setup a better editor/compiler for the papyrus scripts, see 
+  the developer setup instructions here: 
+
+      https://github.com/Dheuster/AFT-FO4Edition/wiki/Developer-Setup
          
   A. Prefab Components:
           
@@ -4472,11 +4855,14 @@ endif
 
         - Look for the existing Script "TweakRegisterPrefabScript"
 
-        - The Properties Window should appear. Double Click the "Prefabs" 
-          Property and then Click Add. You will see two entries appear: 
+        - The Properties Window should appear. Double Click the "Prefabs"
+          Property and then Click Add. You will see three entries appear: 
 
             PrefabFurniture : Fill with [AuthorName][PrefabName]Furn
-            PrefabLocation  : Fill with the Location of the Settlement
+            PrefabLocation  : Fill with the Location of a Vanilla Settlement
+            MaskedPrefabLocation : Fill with FORMID of DLC settlement mod 0x01000000
+			
+			** You will only fill in Prefab location OR MaskedPrefabLocation. Not both. 
 
               ** Standard Locations for the Original Settlements:
 
@@ -4511,13 +4897,23 @@ endif
                    WarwickHomestead    : WarwickHomesteadLocation
                    HomePlate           : DiamondCityPlayerHouseLocatio
 
-              ** If it is a DLC or Mod settlement, you can figure it out by 
-                 looking at the papyrus output. The first parameter to 
-                 tbs.init() is the ID of the location of the settlement. Use 
-                 Windows Calculator to convert this to Hex and then search for 
-                 The hex value in the CK Filter box to get the name of the 
-                 location.
+              ** If it is a DLC, use special negative values:
+			  
+                   FarHarbor - Longfellows Cabin : -50464329 
+                   FarHarbor - NationalPark      : -50369363
+                   FarHarbor - EchoLake          : -50393345
+                   FarHarbor - DaltonFarm        : -50564782
+				   
+              ** Value for Farharbor is based on FormID of original location
+                 masked against a forced resid of -03.  ie: EchoLake normally
+                 has formid (0x0100F101). Here that maps to (-0x0300F101), 
+                 which is -50393345 in decimal.
 
+              ** Settlements provided by mods are supported (Batch transfer
+			     is fine), but generally will not work on different machines
+				 as the resource ID of the mod location will vary based on 
+				 load order. 
+				 				 
         - Click OK (twice) until you are back at the scripts tab. 
 
           NOTES: You can use this single script to Register multiple Prefabs by
@@ -4560,7 +4956,8 @@ EndFunction
           If you saved off a Wall-Only export, you will need to rename the 
           "BuildFull" function to "BuildWallOnly" and also change the
           default for "clearFirst" and "requireNoFood" to be 0 and paste
-          the edited function below the BuildFull() version. IE: 
+          the edited function below the BuildFull() version. You also 
+		  want to add a skip_powerup() option. IE: 
 
 --------------------------------------------------------------------------          
 ScriptName Example Extends Quest Const
@@ -4582,6 +4979,18 @@ requireNoFood = 0)
     if !tbs
         return
     endif
+
+	tbs.init(######, requireNoFood) ; SomeSettlement
+	
+	; Options
+	tbs.skip_powerup()
+
+	if 0 != clearFirst
+		tbs.clearsettlement(#####)
+	endif
+	
+	tbs.buildstart(####)
+	
     ...
 EndFunction
 --------------------------------------------------------------------------          
@@ -4589,6 +4998,24 @@ EndFunction
         - Finally, you need to compile the script. Do this by opening the 
           script with the CK's default editor. Go to the File menu of the 
           Editor and Select compile.
+		  
+		  ** NOTE: Compile Debug will generally work. But Compile Release
+		  will sometimes complain about an unrecognized 9th or 10th paramater. 
+		  Turns out that Papyrus can't can't handle small negative numbers 
+		  when optimizations are turned on. You can fix by searching for 
+		  the following values and replacing with suggested value:
+		  
+		  -0.000020  ->  -0.000021
+		  -0.000010  ->  -0.000011
+		  -0.000009  ->  -0.000011
+		  -0.000008  ->  -0.000011
+		  -0.000007  ->  -0.000011
+		  -0.000006  ->  -0.000011
+		  -0.000005  ->  0.000000
+		  -0.000004  ->  0.000000
+		  -0.000003  ->  0.000000
+		  -0.000002  ->  0.000000
+		  -0.000001  ->  0.000000
 
     10) Update Furniture
 
@@ -4776,15 +5203,14 @@ EndFunction
 X. > > > >  Version History
 -------------------------------------------------------------------------------
 
-  1.00 : Initial Release. No Changes/Updates.
+  1.00 : ( Compiled against FO4 version 1.10.26 )
+   - Initial Release. No Changes/Updates.
 
-  1.01 :
-
+  1.01 : ( Compiled against FO4 version 1.10.26 )
    - Fixed bug that occurred when using Master Control from inventory as 
      a consumable instead of as a favorite. 
 
-  1.02 : 
-
+  1.02 : ( Compiled against FO4 version 1.10.26 )
    - Improved Fix for AFT Activator as Consumable (Both genders this time)
    - Fixed Stealth to work with more NPCs. (Mr. Handy for example)
    - Add Kill Counter (See Info -> Stats)
@@ -4796,8 +5222,7 @@ X. > > > >  Version History
    - Fixed Bar Stool persistence issue.
    - Castle Settlement Menu wont show until radio is powered (To avoid bugs)
 
-  1.03 :
-
+  1.03 : ( Compiled against FO4 version 1.10.26 )
    - Fixed issue with 1.02 mod not initializing
    - Core companions keep original Factions (hoping to increase compatibility with DLC)
    - Workshop keywords added to Managed Followers (required to work with settlements)
@@ -4809,8 +5234,7 @@ X. > > > >  Version History
    - Timings updated so that Toggles are less likely to fail to update. 
    - "Manage Follower" become "Force Recruit NPC?" to clarify purpose.
 
-  1.04 :
-
+  1.04 : ( Compiled against FO4 version 1.10.26 )
    - Added Hang out Here (= Wait + Idle)
    - Added GLobal chat cooldown settings (To mitigate issues with other mods)
    - Added [ ] UFO toggle to Camp Console Buildings
@@ -4832,8 +5256,7 @@ X. > > > >  Version History
    - Outfit management updates (Trying to avoid nudity flashing)
    - Fixed Dismiss message to display correct Follower.
    
-  1.05
-
+  1.05 : ( Compiled against FO4 version 1.10.26 )
    - Fixed Teleport bug that could break Quest "The Nuclear Option"
    - Fixed Dedupe. New implementation no longer spams item change messages
    - Fixed Dedupe. New implementation now safe for use from Power Armor
@@ -4846,18 +5269,18 @@ X. > > > >  Version History
    - ClearSettlement now unassigns existing settler jobs as a precaution
    - Load Prefab now prompts if user wishes to remove food or proceed (at risk)
    
-  1.06/1.05b
+  1.06 : ( Compiled against FO4 version 1.10.40 )
    - Fixed Bug preventing one of spouses conv from firing.
    - Updated code to avoid computation bugs for users with over 128 mods.
    - Deacon and MacCready updates (outfit bugs). Unmanage/manage if upgrading
    - "Exit Power Armor" now still appears if frame disappears.
 
-  1.07
+  1.07 : ( Compiled against FO4 version 1.10.40 )
    - Added Sculpt option to Curie
    - Setup camp now less strict about proximity of hostiles
    - Fixed Camp Stove placement so it can be used. (re-setup if upgrading)
 
-  1.08
+  1.08 : ( Compiled against FO4 version 1.10.40 )
    - Added Multiple Follower Dialog Interjection Support
    - Added Camp Settings to synchronize workbenches with local Settlement.
    - Added Idle Comment Cooldowns for Active vs Dismissed followers.
@@ -4867,7 +5290,7 @@ X. > > > >  Version History
    - Deacon disguises only disabled if outfits are used. (un/re manage if upgrading) 
    - Yet more updates/fixes for users with more than 128 mods.
 
-  1.09
+  1.09 : ( Compiled against FO4 version 1.10.40 )
   - Added Automatron Support (Ada).
   - Added Far Harbor Support (Longfellow).
   - Added Nuka World Support (Porter Gage).
@@ -4877,7 +5300,7 @@ X. > > > >  Version History
   - Disabled Idle Comment Cooldowns as they're ignored by Vanilla Game
   - Fixed memory lounger bug that resulted in unexpected radiation immunity
 
-  1.10
+  1.10 : ( Compiled against FO4 version 1.10.40 )
   - Added Combat Styles : Optionally assign style or use "Dynamic" to adjust on the fly.
   - Added Stat/Level up support : You can now change Special Stats
   - Added Camp Docking feature (Camp uses settlement dock for build location if present)
@@ -4887,7 +5310,7 @@ X. > > > >  Version History
   - Min 300 carryweight no longer forced on followers (toggle packmule on/off to fix)
   - Spelling fixes
 
-  1.11
+  1.11 : ( Compiled against FO4 version 1.10.40 )
   - Added Carry Weight buff based on Strength. 
   - Added Health buff based on Endurance. 
   - Refined carryweight logic (un/re toggle packmule if upgrading)
@@ -4897,7 +5320,7 @@ X. > > > >  Version History
   - Fixed Vertibird AI so only 1 companion gets into vertibird.
   - Fixed several Synchronizes PowerArmor issues
 
-  1.12
+  1.12 : ( Compiled against FO4 version 1.10.40 )
   - Added Water Fountain to AFT Camp (un/re toggle Module 1 if upgrading)
   - Added Spouse ability to now unlock Terminals as well as Doors.
   - Fixed AFT Camp Turrets so they wont attack caravans and friendly raiders.
@@ -4909,7 +5332,7 @@ X. > > > >  Version History
   - Robot companions will no longer ride Vertibirds (size/weight restrictions)
   - Added multi-interjection subtitles option (Prototype. Mostly only works on spouse)
 
-  1.13
+  1.13 : ( Compiled against FO4 version 1.10.40 )
   - Added Home Outfit
   - Added [ ] Limit Loot Comments 
   - Added support for FO4HotKeys (See Readme for Setup)
@@ -4921,7 +5344,7 @@ X. > > > >  Version History
   - Fixed Home Marker persistence in unnamed locations
   - Minor Spelling fixes
 
-  1.14
+  1.14 : ( Compiled against FO4 version 1.10.40 )
   - Added More Dialog Interjections
   - Added damage bonuses for Perception and Agility
   - Added skill synergy for charisma and Luck
@@ -4938,7 +5361,7 @@ X. > > > >  Version History
   - Fixed outfit bug involving AID items (stimpaks)
   - Dogmeat no longer "ready's weapon" by default.
 
-  1.15
+  1.15 : ( Compiled against FO4 version 1.10.64 )
   - Added Action "Gather Loose Items" See Readme for usage details.
   - Added Auto Aggression setting so followers wont attack when in stealth.
   - Added background noise mute during interjections to help hear NPC comments.
@@ -4951,7 +5374,7 @@ X. > > > >  Version History
   - Follower Carryweight reduced during combat to avoid mid-combat item pickup
   - Follower Idle Comments now allowed in most situations.
   
-  1.16
+  1.16 : ( Compiled against FO4 version 1.10.64 )
   - Added Swim Outfit
   - Updated Camp Shower so that it is compatible with GetDirty/CWSS 
   - Updated Gather Scrap with some missed items.
@@ -4960,6 +5383,34 @@ X. > > > >  Version History
   - Fixed Faction Kickout bug that could lead to immortal enemies
   - Fixed Load Prefab. Added delay before showing Prefab to avoid timing bugs.
   - Fixed bug that could cause Danse/Gage to use Sanctuary as default Home. 
+  
+  1.17 : ( Compiled against FO4 version 1.10.89 )
+  - Added Prefab options for all Far Harbor Settlements.
+  - Added optional affinity feedback to Like/Hate messages
+  - Added Scout Ahead option to Distance settings.
+  - Added Mini-Fridge to Camp Bar (Cryofridge container access)
+  - Added All Retreat command in ALL FOLLOWERS mode. 
+  - Added All Attack command in ALL FOLLOWERS mode. 
+  - Added Camp Foundation option (can now be disabled)
+  - Added Global Option: Combat Outfits on Weapon Draw 
+  - Updated Stimpak/heal Companion so only the NPC you heal comments. 
+  - Updated AI so that Player distance is honored when in stealth.
+  - Updated Gather Loose Items. Improved quest/uniq item recognition.
+  - Updated Initialization so AFT plays better with Alt Start mods.
+  - Updated Teardown Camp Speed (A little faster) 
+  - Updated Max followers so that it defaults to five.
+  - Updated Cooldown timers so they take effect immediately.
+  - Updated Prefab Builder to support customer content and callbacks.
+  - Updated Prefab Batch Exports to Clear Settlement before building
+  - Updated Import menu to add more import options and clarity. 
+  - Fixed bug where changing follower gear could caused health loss 
+  - Fixed bug where tearing down camp wearing PA broke ability to exit PA
+  - Fixed bug where Power-Up stage of Prefab could cause CTD.
+  - Fixed bug where AFT Camp turrets didn't always spawn
+  - Fixed bug where [] Teleport Player PA was ignored during camp teardown
+  - Fixed bug where Danse could unexpectedly return to Prydwen. 
+  - Fixed bug where Codsworth could interrupt/break spouse rescue
+  - Fixed bug where factions (AI) could be lost during uninstall/unamanage
   
 -------------------------------------------------------------------------------
 XI. Credits
@@ -4994,6 +5445,13 @@ XI. Credits
       The Castle            - Raven Rock         by Dheuster (6350/1025)
       The Slog              - Tarnation          by Dheuster (2875/400)
       Warwick Homestead     - The Plunge         by Dheuster (2625/1250)
+	  
+                            Far Harbor Settlements
+			
+      Longfellows Cabin     - Bridge to NoWhere  by Dheuster (8675/4250)
+      Echo Lake             - Tauron             by Dheuster (7100/2250)
+      National Park         - Trailer Park       by Dheuster (6530/1900)
+      Dalton Farm           - Overkill           by Dheuster (14850/3800)
 
                                      
                              [Lead Programmer]
@@ -5013,7 +5471,7 @@ XI. Credits
 
                                      
                                  [Testers]
-                                   Dheu
+                                  Hello!
                                     
                                      
                               [Documentation]

@@ -25,6 +25,11 @@ Function RunDiagnosticsHelper(Actor npc = None) debugOnly
 		else
 			debug.TraceUser(logName, "  [ ] TweakAllowFriendlyFire\n", 0)
 		endif
+		if npc.IsInFaction(Game.GetFormFromFile(0x0101AE9A,"AmazingFollowerTweaks.esp") as Faction)
+			debug.TraceUser(logName, "  [X] TweakAutoStanceFaction\n", 0)
+		else
+			debug.TraceUser(logName, "  [ ] TweakAutoStanceFaction\n", 0)
+		endif
 		if npc.IsInFaction(Game.GetFormFromFile(0x01010E6D,"AmazingFollowerTweaks.esp") as Faction)
 			debug.TraceUser(logName, "  [X] TweakBoomstickFaction\n", 0)
 		else
@@ -104,6 +109,11 @@ Function RunDiagnosticsHelper(Actor npc = None) debugOnly
 			debug.TraceUser(logName, "  [X] TweakHangoutFaction\n", 0)
 		else
 			debug.TraceUser(logName, "  [ ] TweakHangoutFaction\n", 0)
+		endif
+		if npc.IsInFaction(Game.GetFormFromFile(0x0101FAAE,"AmazingFollowerTweaks.esp") as Faction)
+			debug.TraceUser(logName, "  [X] TweakHomeOutFitFaction\n", 0)
+		else
+			debug.TraceUser(logName, "  [ ] TweakHomeOutFitFaction\n", 0)
 		endif
 		if npc.IsInFaction(Game.GetFormFromFile(0x01068A47,"AmazingFollowerTweaks.esp") as Faction)
 			debug.TraceUser(logName, "  [X] TweakIgnoredFaction\n", 0)
@@ -190,10 +200,20 @@ Function RunDiagnosticsHelper(Actor npc = None) debugOnly
 		else
 			debug.TraceUser(logName, "  [ ] TweakPosedFaction\n", 0)
 		endif
+		if npc.IsInFaction(Game.GetFormFromFile(0x0101AEC5,"AmazingFollowerTweaks.esp") as Faction)
+			debug.TraceUser(logName, "  [X] TweakRangedFaction\n", 0)
+		else
+			debug.TraceUser(logName, "  [ ] TweakRangedFaction\n", 0)
+		endif
 		if npc.IsInFaction(Game.GetFormFromFile(0x0106643E,"AmazingFollowerTweaks.esp") as Faction)
 			debug.TraceUser(logName, "  [X] TweakReadyWeaponFaction\n", 0)
 		else
 			debug.TraceUser(logName, "  [ ] TweakReadyWeaponFaction\n", 0)
+		endif
+		if npc.IsInFaction(Game.GetFormFromFile(0x0100C1FB,"AmazingFollowerTweaks.esp") as Faction)
+			debug.TraceUser(logName, "  [X] TweakRotateLockFollowerFaction\n", 0)
+		else
+			debug.TraceUser(logName, "  [ ] TweakRotateLockFollowerFaction\n", 0)
 		endif
 		if npc.IsInFaction(Game.GetFormFromFile(0x0105AD9A,"AmazingFollowerTweaks.esp") as Faction)
 			debug.TraceUser(logName, "  [X] TweakSkipGoHomeFaction\n", 0)
@@ -210,6 +230,11 @@ Function RunDiagnosticsHelper(Actor npc = None) debugOnly
 		else
 			debug.TraceUser(logName, "  [ ] TweakStandardOutfitFaction\n", 0)
 		endif
+		if npc.IsInFaction(Game.GetFormFromFile(0x010106DC,"AmazingFollowerTweaks.esp") as Faction)
+			debug.TraceUser(logName, "  [X] TweakSwimOutfitFaction\n", 0)
+		else
+			debug.TraceUser(logName, "  [ ] TweakSwimOutfitFaction\n", 0)
+		endif
 		if npc.IsInFaction(Game.GetFormFromFile(0x0103FEBD,"AmazingFollowerTweaks.esp") as Faction)
 			debug.TraceUser(logName, "  [X] TweakSyncPAFaction\n", 0)
 		else
@@ -225,7 +250,7 @@ Function RunDiagnosticsHelper(Actor npc = None) debugOnly
 		else
 			debug.TraceUser(logName, "  [ ] TweakTrackKills\n\n", 0)
 		endif
-
+		
 		; Scan Keywords:
 		debug.TraceUser(logName, "KEYWORDS:\n", 0)
 		

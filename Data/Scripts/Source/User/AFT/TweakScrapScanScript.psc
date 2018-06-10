@@ -32,6 +32,10 @@ Quest Property pTweakScanNonConstructed_Trees Auto Const
 Quest Property pTweakScanNonConstructed_Food  Auto Const
 Quest Property pTweakScanNonConstructed_Extra Auto Const
 
+Quest Property pTweakDLC01	Auto Const
+Quest Property pTweakDLC03	Auto Const
+Quest Property pTweakDLC04	Auto Const
+
 Keyword Property LocTypeWorkshopSettlement    Auto Const
 Keyword Property WorkshopLinkCenter           Auto Const
 
@@ -236,7 +240,7 @@ Function ScanHelper()
 	string wsname
 	int    lid = WorkshopRef.GetCurrentLocation().GetFormID()
 	int    lookupindex = SettlementLookup.FindStruct("locid",lid)
-	
+		
 	if (lookupindex > -1)
 		Trace("Lookup of [" + lid + "] Succeeded!")
 		wsname = SettlementLookup[lookupindex].name
@@ -245,7 +249,58 @@ Function ScanHelper()
 		center.SetPosition(SettlementLookup[lookupindex].bs_x, SettlementLookup[lookupindex].bs_y, SettlementLookup[lookupindex].bs_z)
 		Utility.wait(0.5)		
 		cleanup_center = true
-	else
+	endif
+	
+	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+	AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+	AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+	
+	; DLC 01 Support (Automatron)
+	if (lookupindex < 0 && pTweakDLC01Script && pTweakDLC01Script.Installed)
+		lookupindex = pTweakDLC01Script.FindLocation(lid)
+		if (lookupindex > -1)
+			wsname   = pTweakDLC01Script.GetLocationName(lookupindex)
+			radius   = pTweakDLC01Script.GetLocationRadius(lookupindex)
+			float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
+			float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
+			float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
+			center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+			center.SetPosition(center_x, center_y, center_z)
+			Utility.wait(0.5)
+		endif
+	endif
+
+	; DLC 03 Support (Far Harbor)
+	if (lookupindex < 0 && pTweakDLC03Script && pTweakDLC03Script.Installed)	
+		lookupindex = pTweakDLC03Script.FindLocation(lid)
+		if (lookupindex > -1)
+			wsname   = pTweakDLC03Script.GetLocationName(lookupindex)
+			radius   = pTweakDLC03Script.GetLocationRadius(lookupindex)
+			float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
+			float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
+			float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
+			center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+			center.SetPosition(center_x, center_y, center_z)
+			Utility.wait(0.5)
+		endif	
+	endif
+	
+	; DLC 04 Support (Nuka World)
+	if (lookupindex < 0 && pTweakDLC04Script && pTweakDLC04Script.Installed)
+		lookupindex = pTweakDLC04Script.FindLocation(lid)
+		if (lookupindex > -1)
+			wsname   = pTweakDLC04Script.GetLocationName(lookupindex)
+			radius   = pTweakDLC04Script.GetLocationRadius(lookupindex)
+			float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
+			float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
+			float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
+			center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+			center.SetPosition(center_x, center_y, center_z)
+			Utility.wait(0.5)
+		endif
+	endif
+
+	if (lookupindex < 0)
 		Trace("Lookup of [" + lid + "] Failed. Using Default.")
 		wsname = "Settlement"
 		center = WorkshopRef.GetLinkedRef(WorkshopLinkCenter)
@@ -406,7 +461,7 @@ Function ScanHelper()
 			else
 				Trace("Cast to AFT:TweakScanCFloorsScript Failed")
 			endif
-		endif		
+		endif
 		if (pTweakOptionsScanC_ExBenches.GetValue() == 0.0)
 			AFT:TweakScanCBenchesScript pBenches = (pTweakScanConstructed_Benches as AFT:TweakScanCBenchesScript)
 			if pBenches
@@ -646,8 +701,20 @@ Function ScanHelper()
 				Trace("Cast to AFT:TweakScanNCVtowScript Failed")
 			endif
 		endif	
-	endif		
-		
+	endif
+	
+	if pTweakDLC01Script && pTweakDLC01Script.installed
+		expected += 1
+	endif
+	
+	if pTweakDLC03Script && pTweakDLC03Script.installed
+		expected += 1
+	endif
+
+	if pTweakDLC04Script && pTweakDLC04Script.installed
+		expected += 1
+	endif
+	
 	if (unassignsettlers && !scrapAll && !snapshot)
 		ObjectReference[] WorkshopActors = WorkshopParent.GetWorkshopActors(workshopRef)						
 		int wa = 0
@@ -1018,6 +1085,21 @@ Function ScanHelper()
 			endif
 		endif
 	endif
+	
+	if pTweakDLC01Script && pTweakDLC01Script.installed
+		Trace("Calling pTweakDLC01Script.Scan()")
+		pTweakDLC01Script.Scan(center, radius) ; Asynchronous
+	endif
+	
+	if pTweakDLC03Script && pTweakDLC03Script.installed
+		Trace("Calling pTweakDLC03Script.Scan()")
+		pTweakDLC03Script.Scan(center, radius) ; Asynchronous
+	endif
+
+	if pTweakDLC04Script && pTweakDLC04Script.installed
+		Trace("Calling pTweakDLC04Script.Scan()")
+		pTweakDLC04Script.Scan(center, radius) ; Asynchronous
+	endif
 
 	
     int timeout
@@ -1088,6 +1170,7 @@ Function ScanHelper()
 			code += "=== BEGIN BATCH === \n"
 			code += requirements
 			requirements = ""
+			code += "ScrapAll\n"
 			code += "player.APS TweakBuilderScript\n"
 			code += "player.cf \"TweakBuilderScript.init\" " + lid + " 0\n"
 			code += "player.cf \"TweakBuilderScript.buildstart\" " + totalobjectsfound + "\n"
@@ -1114,9 +1197,11 @@ Function ScanHelper()
 			code += "\tif !tbs\n"
 			code += "\t\treturn\n"
 			code += "\tendif\n"
-			code += "\ttbs.init(" + lid + ", requireNoFood) ; " + wsname + "\n"
+			code += "\ttbs.init(" + lid + ", requireNoFood) ; " + wsname + "\n"			
 			code += "\tif 0 != clearFirst\n"
 			code += "\t\ttbs.clearsettlement(" + lid + ")\n"
+			code += "\telse\n"
+			code += "\t\ttbs.skip_powerup()\n"			
 			code += "\tendif\n"
 			code += "\ttbs.buildstart(" + totalobjectsfound + ")\n"
 			code += buildoutput[0]
@@ -1191,8 +1276,8 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
     ;      when values are positive. So we can check for them by doing a polarity switch.
 	
 	if (posx < 0)
-		float checkv = (posx * -1)
-		if checkv <= 0.000010 && checkv >= 0.000001
+		float checkv = Math.abs(posx)
+		if checkv <= 0.000010
 			if checkv < 0.000006
 				posx = -0.000000
 			else
@@ -1203,8 +1288,8 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		endif
 	endif
 	if (posy < 0)
-		float checkv = (posy * -1)
-		if checkv <= 0.000010 && checkv >= 0.000001
+		float checkv = Math.abs(posy)
+		if checkv <= 0.000010
 			if checkv < 0.000006
 				posy = -0.000000
 			else
@@ -1215,8 +1300,8 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		endif
 	endif
 	if (posz < 0)
-		float checkv = (posz * -1)
-		if checkv <= 0.000010 && checkv >= 0.000001
+		float checkv = Math.abs(posz)
+		if checkv <= 0.000010
 			if checkv < 0.000006
 				posz = -0.000000
 			else
@@ -1227,8 +1312,8 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		endif
 	endif
 	if (anglex < 0)
-		float checkv = (anglex * -1)
-		if checkv <= 0.000010 && checkv >= 0.000001
+		float checkv = Math.abs(anglex)
+		if checkv <= 0.000010
 			if checkv < 0.000006
 				anglex = -0.000000
 			else
@@ -1238,9 +1323,9 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 			anglex = -0.000021
 		endif
 	endif
-	if (angley < 0 && angley > -0.000011)
-		float checkv = (angley * -1)
-		if checkv <= 0.000010 && checkv >= 0.000001
+	if (angley < 0)
+		float checkv = Math.abs(angley)
+		if checkv <= 0.000010
 			if checkv < 0.000006
 				angley = -0.000000
 			else
@@ -1250,9 +1335,9 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 			angley = -0.000021
 		endif
 	endif
-	if (anglez < 0 && anglez > -0.000011)
-		float checkv = (anglez * -1)
-		if checkv <= 0.000010 && checkv >= 0.000001
+	if (anglez < 0)
+		float checkv = Math.abs(anglez)
+		if checkv <= 0.000010
 			if checkv < 0.000006
 				anglez = -0.000000
 			else
@@ -1261,7 +1346,7 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		elseif (0.000020 == checkv)
 			anglez = -0.000021
 		endif
-	endif
+	endif	
 	if (0 == buildType) ; Batch
 		string line = "; " + name + "\n"
 		line += "player.cf \"TweakBuilderScript.build\" " + base + " "
@@ -1384,12 +1469,15 @@ EndFunction
 
 Function initialize_SettlementData()
 
-
-	; Data pulled from WOrldObjects/Static/Workshop/*Border (Used NifScope to 
-	; extract boundary offset information) People tend to put walls and turrets
-	; on the borders. A sphere may not include these items if they go too high,
-	; which is why we add a minimum buffer of 450 to all radiuses to ensure 
-	; those on-the-border turrents are included in clearing operations. 
+	; Data pulled from WOrldObjects/Static/Workshop/*Border
+	; (Provides map coordinates of border objects)
+	;
+    ; Then use Used NifScope to extract bounding sphere information
+	; and its offset (bs offset = bounding sphere offset). People 
+	; tend to put walls and turrets on the borders. A sphere may not 
+	; include these items if they go too high, which is why we add a 
+	; minimum buffer of 450 to all radiuses to ensure those 
+	; on-the-border turrents are included in clearing operations. 
 	
 	allocate_SettlementLookup(39)
 	
@@ -1584,6 +1672,153 @@ Function allocate_SettlementLookup(int len)
 		SettlementLookup[i] = new SettlementData
 		i += 1
 	endWhile
+EndFunction
+
+
+ObjectReference Function getCenter(int lid)
+
+	WorkshopParentScript WorkshopParent = pWorkshopParent as WorkshopParentScript
+	ObjectReference 	spawnTarget     = None
+	if WorkshopParent
+		spawnTarget    = WorkshopParent.GetWorkshopFromLocation(Game.GetPlayer().GetCurrentLocation())
+	endif
+	if !spawnTarget
+		spawnTarget = Game.GetPlayer()
+	endif
+
+	int lookupindex = SettlementLookup.FindStruct("locid",lid)		
+	if (lookupindex > -1)
+		Trace("Lookup of [" + lid + "] Succeeded!")
+		ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+		result.SetPosition(SettlementLookup[lookupindex].bs_x, SettlementLookup[lookupindex].bs_y, SettlementLookup[lookupindex].bs_z)
+		Utility.wait(0.5)
+		return result
+	endif
+	
+	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+	if (pTweakDLC01Script && pTweakDLC01Script.Installed)
+		lookupindex = pTweakDLC01Script.FindLocation(lid)
+		if (lookupindex > -1)
+			Trace("Lookup of [" + lid + "] Succeeded!")
+			float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
+			float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
+			float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
+			ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+			result.SetPosition(center_x, center_y, center_z)
+			Utility.wait(0.5)
+			return result
+		endif
+	endif
+
+	AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+	if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
+		lookupindex = pTweakDLC03Script.FindLocation(lid)
+		if (lookupindex > -1)
+			Trace("Lookup of [" + lid + "] Succeeded!")
+			float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
+			float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
+			float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
+			ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+			result.SetPosition(center_x, center_y, center_z)
+			Utility.wait(0.5)
+			return result
+		endif
+	endif
+	
+	AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+	if (pTweakDLC04Script && pTweakDLC04Script.Installed)
+		lookupindex = pTweakDLC04Script.FindLocation(lid)
+		if (lookupindex > -1)
+			float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
+			float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
+			float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
+			ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+			result.SetPosition(center_x, center_y, center_z)
+			Utility.wait(0.5)
+			return result
+		endif
+	endif
+
+	Trace("Lookup of [" + lid + "] Failed.")
+	return None
+	
+endFunction
+
+float Function getRadius(int lid)
+
+	int    lookupindex = SettlementLookup.FindStruct("locid",lid)		
+	if (lookupindex > -1)
+		Trace("Lookup of [" + lid + "] Succeeded!")
+		return SettlementLookup[lookupindex].bs_radius
+	endif
+	
+	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)	
+	if (pTweakDLC01Script && pTweakDLC01Script.Installed)
+		lookupindex = pTweakDLC01Script.FindLocation(lid)
+		if (lookupindex > -1)
+			return pTweakDLC01Script.GetLocationRadius(lookupindex)
+		endif
+	endif
+
+	AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)	
+	if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
+		lookupindex = pTweakDLC03Script.FindLocation(lid)
+		if (lookupindex > -1)
+			return pTweakDLC03Script.GetLocationRadius(lookupindex)
+		endif	
+	endif
+
+	AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+	if (pTweakDLC04Script && pTweakDLC04Script.Installed)
+		lookupindex = pTweakDLC04Script.FindLocation(lid)
+		if (lookupindex > -1)
+			return pTweakDLC04Script.GetLocationRadius(lookupindex)
+		endif
+	endif
+
+	
+	Trace("Lookup of [" + lid + "] Failed. Using Default.")
+	return 8000.0
+endFunction
+
+String Function getName(int lid)
+
+	int lookupindex = SettlementLookup.FindStruct("locid",lid)		
+	if (lookupindex > -1)
+		Trace("Lookup of [" + lid + "] Succeeded!")
+		return SettlementLookup[lookupindex].name
+	endif
+	
+	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+	if (pTweakDLC01Script && pTweakDLC01Script.Installed)
+		lookupindex = pTweakDLC01Script.FindLocation(lid)
+		if (lookupindex > -1)
+			Trace("Lookup of [" + lid + "] Succeeded!")
+			return pTweakDLC01Script.GetLocationName(lookupindex)
+		endif
+	endif
+		
+	AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+	if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
+		lookupindex = pTweakDLC03Script.FindLocation(lid)
+		if (lookupindex > -1)
+			Trace("Lookup of [" + lid + "] Succeeded!")
+			return pTweakDLC03Script.GetLocationName(lookupindex)
+		endif
+	endif
+		
+	AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+	if (pTweakDLC04Script && pTweakDLC04Script.Installed)
+		lookupindex = pTweakDLC04Script.FindLocation(lid)
+		if (lookupindex > -1)
+			Trace("Lookup of [" + lid + "] Succeeded!")
+			return pTweakDLC04Script.GetLocationName(lookupindex)
+		endif
+	endif
+	
+	Trace("Lookup of [" + lid + "] Failed. Using Default.")
+	return "Settlement"
+
 EndFunction
 
 GlobalVariable Property pTweakScanAcidFound Auto

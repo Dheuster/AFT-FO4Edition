@@ -31,6 +31,25 @@ ActorValue PowerRequired
 bool stillrunning
 Actor player
 GlobalVariable DisablePrefabSafety
+ObjectReference center
+float radius
+
+; Custom Content Support
+string addonMod
+Quest addonQuest
+string addonQuestScript
+string addonQuestScriptCallback
+
+; Example: tbs.RegisterCustomContent("AwesomeMod.esp")
+Function RegisterCustomContent(string NameOfAddonMod)
+	addonMod = NameOfAddonMod
+EndFunction
+
+Function RegisterCustomCallBack(Quest addon_quest, String addon_quest_script, String addon_quest_script_callback)
+	addonQuest = addon_quest
+	addonQuestScript = addon_quest_script
+	addonQuestScriptCallback = addon_quest_script_callback	
+EndFunction
 
 Event OnInit()
 	stillrunning = true
@@ -70,6 +89,12 @@ Event OnInit()
 	TerminalLightBrightness = Game.GetForm(0x00210C77) as ActorValue
 	TerminalLightColor      = Game.GetForm(0x001F57D2) as ActorValue
 	DisablePrefabSafety     = Game.GetFormFromFile(0x0101699F,"AmazingFollowerTweaks.esp") as GlobalVariable
+	center = None
+	radius = 0.0
+	addonMod = ""
+	addonQuest = None
+	addonQuestScript = ""
+	addonQuestScriptCallback = ""
 EndEvent
 
 Function initializeBuilderScript()
@@ -102,7 +127,6 @@ bool Function log(string asTextToPrint, int aiSeverity = 0) debugOnly
 	RETURN debug.TraceUser("TweakBuilderScript", asTextToPrint, aiSeverity)
 EndFunction
 
-; init() gets used exclusived from batch builds. 
 Function init(int lid, int requirenofood = 1)
 	bs_ignore = false
 	if !WorkshopParent
@@ -150,8 +174,23 @@ Function init(int lid, int requirenofood = 1)
 		endif
 	endif
 	
-	; Will generally be 0 for walls and 1 for full prefrabs. 
+	; Calculate Center and radius
+	Quest ScrapScanMaster = Game.GetFormFromFile(0x0100919A,"AmazingFollowerTweaks.esp") as Quest
+	if (ScrapScanMaster)
+		ScriptObject Scrapper = ScrapScanMaster.CastAs("AFT:TweakScrapScanScript")
+		if (Scrapper)
+			Var[] lidparam = new Var[1]
+			lidparam[0] = lid
+			center = Scrapper.CallFunction("getCenter", lidparam) as ObjectReference
+			if (center)
+				radius = Scrapper.CallFunction("getRadius", lidparam) as float
+			else
+				log("CallFunction getCenter failed")
+			endif
+		endIf
+	endIf
 	
+	; Will generally be 0 for walls and 1 for full prefrabs. 
 	if 0 != requirenofood
 		log("Require no food is True.")
 		if (DisablePrefabSafety && 0 == DisablePrefabSafety.GetValueInt())
@@ -206,7 +245,23 @@ Function clearsettlement(int lid)
 		WorkshopRef = WorkshopParent.GetWorkshopFromLocation(pc.GetCurrentLocation())
 		if (WorkshopRef)
 			int locid = WorkshopRef.GetCurrentLocation().GetFormID()
-			if locid == lid
+
+			int locidMasked
+			if (locid > 0x80000000)
+				locidMasked = (locid - 0x80000000) % (0x01000000)
+			else
+				locidMasked = locid % (0x01000000)
+			endif
+			
+			int lidMasked
+			; DLC/MOD Settlement Support
+			if (lid > 0x80000000)
+				lidMasked           = (lid - 0x80000000) % (0x01000000)
+			else
+				lidMasked           = lid % (0x01000000)
+			endif
+						
+			if lidMasked == locidMasked
 				Quest ScrapScanMaster = Game.GetFormFromFile(0x0100919A,"AmazingFollowerTweaks.esp") as Quest
 				if (ScrapScanMaster)
 					ScriptObject Scrapper = ScrapScanMaster.CastAs("AFT:TweakScrapScanScript")
@@ -270,7 +325,74 @@ Function build(int base, float posx, float posy, float posz, float anglex, float
 	spawnMarker.SetAngle(anglex,angley,anglez)
 	Utility.wait(0.05)
 	stillrunning = true	
-    ObjectReference ret = spawnMarker.PlaceAtMe(Game.GetForm(base),1,true)
+    ObjectReference ret
+	if (base > 0)
+		ret = spawnMarker.PlaceAtMe(Game.GetForm(base),1,true)		
+	elseif (base > -0x05000000)
+		if (base < -0x03FFFFFF)
+			; -0x04??????			
+			Form lookup = Game.GetFormFromFile(((-1 * base) - 0x04000000), "DLCNukaWorld.esm")
+			if !lookup
+				log("Lookup Failure for [" + base + " abs(+ 0x04000000)]")
+				bs_expected -= 1
+				spawnMarker.Disable()
+				spawnMarker.Delete()
+				return
+			endif
+			ret = spawnMarker.PlaceAtMe(lookup,1,true)
+		elseif (base < -0x02FFFFFF)
+			; -0x03??????
+			Form lookup = Game.GetFormFromFile(((-1 * base) - 0x03000000), "DLCCoast.esm")
+			if !lookup
+				log("Lookup Failure for [" + base + " abs(+ 0x03000000)]")
+				bs_expected -= 1
+				spawnMarker.Disable()
+				spawnMarker.Delete()
+				return
+			endif
+			ret = spawnMarker.PlaceAtMe(lookup,1,true)
+		elseif (base > -0x02000000)
+			; -0x01??????
+			Form lookup = Game.GetFormFromFile(((-1 * base) - 0x01000000), "DLCRobot.esm")
+			if !lookup
+				log("Lookup Failure for [" + base + " abs(+ 0x01000000)]")
+				bs_expected -= 1
+				spawnMarker.Disable()
+				spawnMarker.Delete()
+				return
+			endif
+			ret = spawnMarker.PlaceAtMe(lookup,1,true)
+		else
+			; -0x02??????
+			log("DLC object Unsupported: [" + base + " abs(+ 0x02000000)]")
+			bs_expected -= 1
+			spawnMarker.Disable()
+			spawnMarker.Delete()
+			return
+		endif			
+	elseif (base < -0x06FFFFFF && (addonMod != ""))
+		; Custom Items provided by Prefab Addon Mod : -0x07??????
+		Form lookup = Game.GetFormFromFile(((-1 * base) - 0x07000000), addonMod)
+		if !lookup
+			log("Lookup Failure for [" + base + " abs(+ 0x07000000)]")
+			bs_expected -= 1
+			spawnMarker.Disable()
+			spawnMarker.Delete()
+			return
+		endif
+		ret = spawnMarker.PlaceAtMe(lookup,1,true)
+		if (addonQuest)
+			ret.WaitFor3DLoad()
+			ScriptObject AddonHandler = addonQuest.CastAs(addonQuestScript)
+			if AddonHandler
+				Var[] params = new Var[3]
+				params[0] = WorkshopRef
+				params[1] = base
+				params[2] = ret
+				AddonHandler.CallFunctionNoWait(addonQuestScriptCallback, params)
+			endif
+		endIf		
+	endif
 	ret.WaitFor3DLoad()
 	stillrunning = true
 	; ret.SetPosition(posx,posy,posz)
@@ -344,10 +466,21 @@ Function builddone()
 	Actor pc = Game.GetPlayer()
 	if power_up
 		log("power_up true")
-		Keyword WorkshopLinkCenter = Game.GetForm(0x00038C0B) as Keyword
-		ObjectReference center = WorkshopRef.GetLinkedRef(WorkshopLinkCenter)
-		if !center
-			center = WorkshopRef as ObjectReference
+		ObjectReference pucenter
+		float puradius
+		bool clearCenter = false
+		
+		if center
+			pucenter = center
+			puradius = radius
+			clearCenter = true
+		else
+			Keyword WorkshopLinkCenter = Game.GetForm(0x00038C0B) as Keyword
+			pucenter = WorkshopRef.GetLinkedRef(WorkshopLinkCenter)
+			if !pucenter
+				pucenter = WorkshopRef as ObjectReference
+			endif
+			puradius = 8000
 		endif
 		
 		ObjectReference[] results
@@ -362,7 +495,7 @@ Function builddone()
 		
 			log("power_up_all phase 1 : Searching for 'PowerConnection'")
 		
-			results = center.FindAllReferencesWithKeyword(PowerConnection, 15000)
+			results = pucenter.FindAllReferencesWithKeyword(PowerConnection, puradius)
 			results_len = results.length
 			
 			log("found [" + results_len + "] items")
@@ -422,7 +555,7 @@ Function builddone()
 			endWhile
 		
 			log("phase 2 : Searching for 'CanBePowered'")
-			results = center.FindAllReferencesWithKeyword(CanBePowered, 15000)
+			results = pucenter.FindAllReferencesWithKeyword(CanBePowered, puradius)
 			results_len = results.length
 			
 			log("found [" + results_len + "] items")
@@ -465,12 +598,12 @@ Function builddone()
 			
 		else
 		
-			results = center.FindAllReferencesOfType(TweakPowerUpTargets, 15000)	
+			results = pucenter.FindAllReferencesOfType(TweakPowerUpTargets, puradius)	
 			results_len = results.length
 			log("found [" + results_len + "] items")
 			
 			; Method gets optimized out when building Release....
-			diagnostics(results, center)
+			diagnostics(results, pucenter)
 						
 			r = 0
 			while (r < results_len)
@@ -527,6 +660,10 @@ Function builddone()
 			endWhile
 		endIf
 		log("power_up complete")
+		if clearCenter
+			center = None
+			radius = 0.0
+		endif
 	else
 		log("power_up false")
 	endif
@@ -555,10 +692,10 @@ Function builddone()
 	DoneMsg.Show()			
 EndFunction
 
-Function diagnostics(ObjectReference[] results, ObjectReference center) debugOnly
+Function diagnostics(ObjectReference[] results, ObjectReference p_center) debugOnly
 	int r = 0
 	while (r < results.length)
-		log("Item [" + r + "] = [" + results[r].GetBaseObject() + "] [" + results[r].GetBaseObject().GetFormID() + "] d[" + center.GetDistance(results[r]) + "] 3D[" + results[r].Is3DLoaded() + "]")
+		log("Item [" + r + "] = [" + results[r].GetBaseObject() + "] [" + results[r].GetBaseObject().GetFormID() + "] d[" + p_center.GetDistance(results[r]) + "] 3D[" + results[r].Is3DLoaded() + "]")
 		r += 1
 	endWhile
 EndFunction
@@ -574,15 +711,15 @@ EndFunction
 ;  -90     = Object's left 
 ;   90     = Object's right 
 ; 180/-180 = Object's back
-Function replicate(ObjectReference n, Float radius = 500.0, Float angleOffset = 0.0)
-    log("replicate(" + n.GetBaseObject().GetFormID() + "," + radius + "," + angleOffset + ")")
+Function replicate(ObjectReference n, Float p_radius = 500.0, Float angleOffset = 0.0)
+    log("replicate(" + n.GetBaseObject().GetFormID() + "," + p_radius + "," + angleOffset + ")")
     log("  height : [" + n.GetHeight() + "] width : [" + n.GetWidth() + "] length : [" + n.GetLength() + "]")	
     ObjectReference replica = n.placeatme(n.GetBaseObject(),1,true)
 	Utility.wait(0.05)
 	replica.WaitFor3DLoad()
 	float azimuth = ConvertToSinCosCompatibleAngle(n.GetAngleZ(), angleOffset)
-	Float xoffset = radius * Math.cos(azimuth)
-	Float yoffset = radius * Math.sin(azimuth)
+	Float xoffset = p_radius * Math.cos(azimuth)
+	Float yoffset = p_radius * Math.sin(azimuth)
 	replica.SetPosition(n.GetPositionX() + xoffset, n.GetPositionY() + yoffset, n.GetPositionZ())
 	replica.Disable() ; Fuzzy Texture Bug Fix...
 	replica.Enable()

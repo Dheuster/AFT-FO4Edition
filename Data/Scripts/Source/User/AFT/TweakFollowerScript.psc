@@ -4,13 +4,6 @@ Scriptname AFT:TweakFollowerScript extends Quest conditional
 ; release/final archive, the scripts wont be found and everything will break...
 ; import AFT
 
-; You can decrease MAX_MANAGED to quickly see what happens
-; when aliases are exhausted. This is mostly variablized
-; for testing. NOTE: You can't increase beyond 32 without 
-; adding support aliases
-
-int MAX_MANAGED	   = 32 const 
-
 Group FollowerQuestAliasesRelayCombatEndEvent
 ReferenceAlias  Property pCompanion1        Auto Const
 ReferenceAlias  Property pCompanion2        Auto Const
@@ -31,6 +24,8 @@ GlobalVariable Property iFollower_Com_Wait  Auto Const
 GlobalVariable Property iFollower_Stance_Aggressive Auto Const
 GlobalVariable Property iFollower_Stance_Defensive  Auto Const
 GlobalVariable Property pTweakIgnoreAffinity		Auto Const
+GlobalVariable Property pTweakMaxManaged		Auto Const
+GlobalVariable Property pTweakManageBoostOffset	Auto Const
 
 EndGroup
 
@@ -161,6 +156,7 @@ Bool  Property instituteSummonMsgOnce Auto hidden
 int CONFIRM_VERSION        = 3 const
 int UPDATE_VERSION         = 4 const
 int COMBAT_MONITOR         = 5 const
+int RETREAT_END            = 6 const
 
 int EXIT_PA_BASE           = 30 const
 int EXIT_PA_COMPANION1	   = 30 const
@@ -228,6 +224,9 @@ GlobalVariable Property pTweakIdleCooldownDismissedMax	Auto Const
 GlobalVariable Property pTweakSynergyChrBoost	Auto Const
 GlobalVariable Property pTweakSynergyLckBoost	Auto Const
 
+GlobalVariable Property pTweakRetreat			Auto Const
+
+
 ; Use by TweakMakeFollowerSpell to identify name of NPC.
 Location Property PlayerHome Auto Conditional
 
@@ -260,6 +259,7 @@ ActorBase Property Codsworth				Auto Const
 ActorBase Property CompanionCurie			Auto Const
 ActorBase Property BoSPaladinDanse			Auto Const
 ActorBase Property CompanionDeacon			Auto Const
+ActorBase Property Dogmeat					Auto Const
 ActorBase Property Hancock					Auto Const
 ActorBase Property CompanionMacCready		Auto Const
 ActorBase Property CompanionNickValentine	Auto Const
@@ -278,6 +278,10 @@ Perk	  Property pTweakPlayerSynergyChrPerk	Auto Const ; Perk increases Ranged Da
 Perk	  Property pTweakPlayerSynergyLckPerk	Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakZeroCarryInCombat		Auto Const ; Perk prevent weapon pickup during combat
 Perk	  Property pTweakPlayerSwimMonitorPerk	Auto Const ; Sends OnEnterWater/OnExitWater to TweakMonitorPlayer
+
+;Perk	Property pCompanionInspirational		Auto Const
+;Spell	Property pAbMagLiveLoveCompanionPerks	Auto Const
+
 ; 194 ....
 GlobalVariable[] Property pToggles Auto Const
 
@@ -380,6 +384,7 @@ GlobalVariable[] Property pToggles Auto Const
 ; GlobalVariable Property pTweakToggle88 Auto Const
 ; GlobalVariable Property pTweakToggle89 Auto Const
 
+Location Property pListeningPostBravoLocation Auto Const
 
 
 
@@ -458,13 +463,15 @@ Function OnGameLoaded(bool firstTime=false)
 	
 	RegisterForKickOut()
 	
-	if (1.16 != version)
+	if (1.17 != version)
 		; In case this is new game, wait for pInstalled to be true....
 		StartTimer(0, CONFIRM_VERSION)
 	else
 		Trace("No Update Required")
 		CheckForErrors()  ; Because... you know... Fallout 4
 		GiveAFTToPlayer() ; Just in case....
+		UnregisterForMenuOpenCloseEvent("ContainerMenu")
+		RegisterForMenuOpenCloseEvent("ContainerMenu")		
 		SendOnGameLoadToAliasScripts()
 	endif	
 	
@@ -481,6 +488,11 @@ Event OnTimer(int aiTimerID)
 		endif
 		return
 	endif
+	
+	if (RETREAT_END == aiTimerID)
+		OnRetreatStop()
+		return	
+	endif
 
 	if (CONFIRM_VERSION == aiTimerID)
 		; Since this is fed by Player OnGameLoad event, this can actually fire BEFORE OnInit.
@@ -488,7 +500,7 @@ Event OnTimer(int aiTimerID)
 		; if it appears we beat the script initializer...
 
 		if (pInstalled)
-			if (version  < 1.16)
+			if (version  < 1.17)
 				StartTimer(0,UPDATE_VERSION)
 			else
 				CheckForErrors()
@@ -522,179 +534,209 @@ Event OnTimer(int aiTimerID)
 		Actor player	= Game.GetPlayer()
 		float ov        = version
 		float ov_102fix = version
-		version  = 1.16
+		version  = 1.17
+		
+		if ov < 1.17 ; 1.17 Added items to ScrapScanner (DLC Prefab support) + Perk Loss Bug Fix
+			if ov < 1.16 ; 1.16 : Added Swim Outfit 
+				if ov < 1.13 ; 1.13 : Added Home Outfit and Outfit Management Reset
+					if ov < 1.12 ; 1.11 : Health/Endurance boosts. 1.12 : Fixed Ghosting artifacts 
+						if ov < 1.09 ; Added DLC support in 1.09. 
+							if ov < 1.04 ; Affinity Fixes + No Fall Damage
+								if (ov < 1.03) ; Fix 1.02 non-init and Settlement assignement compatibiliy		
+								
+									if (ov == 1.02)
+										; Potential Bug in 1.02 upgrade process.
+										if (0 == pManagedMap.Length)
+											ov_102fix = 0.0
+										endif
+									endif
+										
+									if (ov_102fix < 1.0)	; First time init		
+						
+						
+										if (20 < pTimeScale.GetValue())
+											Trace("Timescale is too high. Alerting user")
+											pTweakTimescale.Show()
+										endif
+										
+										; " [ Initializing AFT :          : ]"
+										pTweakUpdateMsg.Show()
+													
+										pFollowerNoMorals        = true
+										pFollowerCatchup         = true
+										pFollowerPackMule        = true
+										pFollowerSynergy         = true
+										PlayerHome               = None
 
-		if ov < 1.15 ; 1.16 : Added Swim Outfit 
-			if ov < 1.13 ; 1.13 : Added Home Outfit and Outfit Management Reset
-				if ov < 1.12 ; 1.11 : Health/Endurance boosts. 1.12 : Fixed Ghosting artifacts 
-					if ov < 1.09 ; Added DLC support in 1.09. 
-						if ov < 1.04 ; Affinity Fixes + No Fall Damage
-							if (ov < 1.03) ; Fix 1.02 non-init and Settlement assignement compatibiliy		
-							
-								if (ov == 1.02)
-									; Potential Bug in 1.02 upgrade process.
-									if (0 == pManagedMap.Length)
-										ov_102fix = 0.0
-									endif
-								endif
-									
-								if (ov_102fix < 1.0)	; First time init		
-					
-					
-									if (20 < pTimeScale.GetValue())
-										Trace("Timescale is too high. Alerting user")
-										pTweakTimescale.Show()
-									endif
-									
-									; " [ Initializing AFT :          : ]"
-									pTweakUpdateMsg.Show()
-												
-									pFollowerNoMorals        = true
-									pFollowerCatchup         = true
-									pFollowerPackMule        = true
-									pFollowerSynergy         = true
-									PlayerHome               = None
+										if (0 == pManagedMap.Length)
+											initializeManagedMap()
+											initializeFollowerMap()
+										endif
+										
+										int import_count = pDFScript.v10Update()
 
-									if (0 == pManagedMap.Length)
-										initializeManagedMap()
-										initializeFollowerMap()
-									endif
-									
-									int import_count = pDFScript.v10Update()
+										; bool gotlock = GetSpinLock(pTweakMutexCompanions,1, "OnTimer (UpdateVersion)") ; low priority since it is read-only	
+										int numFollowers = GetAllTweakFollowers().length
+										pTweakFollowerCount.SetValueInt(numFollowers)
+										; ReleaseSpinLock(pTweakMutexCompanions, gotlock, "OnTimer (UpdateVersion)")
 
-									; bool gotlock = GetSpinLock(pTweakMutexCompanions,1, "OnTimer (UpdateVersion)") ; low priority since it is read-only	
-									int numFollowers = GetAllTweakFollowers().length
-									pTweakFollowerCount.SetValueInt(numFollowers)
-									; ReleaseSpinLock(pTweakMutexCompanions, gotlock, "OnTimer (UpdateVersion)")
-
-									; As AFT lets you import NPCs, protect a few important ones with
-									; pDisallowedCompanionFaction
-									
-									Actor Kellog = (Game.GetForm(0x0009BC6C) as ActorBase).GetUniqueActor()
-									Actor Amari  = (Game.GetForm(0x0009A680) as ActorBase).GetUniqueActor()
-									Actor Father = (Game.GetForm(0x0002A19A) as ActorBase).GetUniqueActor()
-									Actor Virgil = (Game.GetForm(0x0006B503) as ActorBase).GetUniqueActor()
-									Actor Maxon  = (Game.GetForm(0x000642B8) as ActorBase).GetUniqueActor()
-									Actor Des    = (Game.GetForm(0x00045AD1) as ActorBase).GetUniqueActor()
-									Actor MS16SonyaBot = (Game.GetForm(0x000C895F) as ActorBase).GetUniqueActor()
-									
-									if Kellog
-										Kellog.AddToFaction(pDisallowedCompanionFaction)
+										; As AFT lets you import NPCs, protect a few important ones with
+										; pDisallowedCompanionFaction
+										
+										Actor Kellog = (Game.GetForm(0x0009BC6C) as ActorBase).GetUniqueActor()
+										Actor Amari  = (Game.GetForm(0x0009A680) as ActorBase).GetUniqueActor()
+										Actor Father = (Game.GetForm(0x0002A19A) as ActorBase).GetUniqueActor()
+										Actor Virgil = (Game.GetForm(0x0006B503) as ActorBase).GetUniqueActor()
+										Actor Maxon  = (Game.GetForm(0x000642B8) as ActorBase).GetUniqueActor()
+										Actor Des    = (Game.GetForm(0x00045AD1) as ActorBase).GetUniqueActor()
+										Actor MS16SonyaBot = (Game.GetForm(0x000C895F) as ActorBase).GetUniqueActor()
+										
+										if Kellog
+											Kellog.AddToFaction(pDisallowedCompanionFaction)
+										endif
+										if Amari
+											Amari.AddToFaction(pDisallowedCompanionFaction)
+										endIf
+										if Father
+											Father.AddToFaction(pDisallowedCompanionFaction)
+										endIf
+										if Virgil
+											Virgil.AddToFaction(pDisallowedCompanionFaction)
+										endIf
+										if Maxon
+											Maxon.AddToFaction(pDisallowedCompanionFaction)
+										endif
+										if Des
+											Des.AddToFaction(pDisallowedCompanionFaction)
+										endif
+										if MS16SonyaBot
+											MS16SonyaBot.AddToFaction(pDisallowedCompanionFaction)
+										endif
+										
+										; "Thanks for installing AFT v%.2f by Dheuster<BR>See Aft Readme in your inventory for usage"
+										; Old - Aft Version %.2f update complete. [%.0f] Followers Imported.  See Aft Readme in 
+										; inventory for usage.									
+										pTweakUpdateDoneMsg.Show(version)
+										
+										GiveAFTToPlayer()
+										
+										player.AddPerk(pTweakPlayerSynergyChrPerk)
+										player.AddPerk(pTweakPlayerSynergyLckPerk)
+										player.AddPerk(pTweakPlayerSwimMonitorPerk)
+										EvaluateSynergy()
+										
+										Trace("[" + import_count + "] followers imported")
+									endif ; ov < 1.0
+															
+								endif ; ov < 1.03
+								
+								if (ov != 0.0)
+								
+									AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
+									if TweakCOMSpouseScript
+										TweakCOMSpouseScript.ResetAffinityScene()
 									endif
-									if Amari
-										Amari.AddToFaction(pDisallowedCompanionFaction)
-									endIf
-									if Father
-										Father.AddToFaction(pDisallowedCompanionFaction)
-									endIf
-									if Virgil
-										Virgil.AddToFaction(pDisallowedCompanionFaction)
-									endIf
-									if Maxon
-										Maxon.AddToFaction(pDisallowedCompanionFaction)
-									endif
-									if Des
-										Des.AddToFaction(pDisallowedCompanionFaction)
-									endif
-									if MS16SonyaBot
-										MS16SonyaBot.AddToFaction(pDisallowedCompanionFaction)
-									endif
 									
-									; "Thanks for installing AFT v%.2f by Dheuster<BR>See Aft Readme in your inventory for usage"
-									; Old - Aft Version %.2f update complete. [%.0f] Followers Imported.  See Aft Readme in 
-									; inventory for usage.									
-									pTweakUpdateDoneMsg.Show(version)
-									
-									GiveAFTToPlayer()
-									
-									player.AddPerk(pTweakPlayerSynergyChrPerk)
-									player.AddPerk(pTweakPlayerSynergyLckPerk)
-									player.AddPerk(pTweakPlayerSwimMonitorPerk)
-									EvaluateSynergy()
-									
-									Trace("[" + import_count + "] followers imported")
-								endif ; ov < 1.0
-														
-							endif ; ov < 1.03
-							
-							if (ov != 0.0)
-							
-								AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
-								if TweakCOMSpouseScript
-									TweakCOMSpouseScript.ResetAffinityScene()
 								endif
 								
+							endif ; ov < 1.04
+							
+							if (ov != 0.0)
+								((self as Quest) as TweakShelterScript).v109Upgrade()
+								
+								; DLC01 Support
+								if pTweakDLC01Script.Installed
+									if pTweakDLC01Script.Ada && pTweakDLC01Script.Ada.IsInFaction(pTweakFollowerFaction)
+										ImportTopicsForCompanion(pTweakDLC01Script.Ada)
+									endif
+								endif
+
+								; DLC03 Support
+								if pTweakDLC03Script.Installed
+									if pTweakDLC03Script.OldLongfellow && pTweakDLC03Script.OldLongfellow.IsInFaction(pTweakFollowerFaction)
+										ImportTopicsForCompanion(pTweakDLC03Script.OldLongfellow)
+									endif
+								endif
+
+								; DLC04 Support
+								if pTweakDLC04Script.Installed
+									if pTweakDLC04Script.PorterGage && pTweakDLC04Script.PorterGage.IsInFaction(pTweakFollowerFaction)
+										ImportTopicsForCompanion(pTweakDLC04Script.PorterGage)
+									endif
+								endif
+								
+								; Reset IdleCooldowns to defaults (since 1.09 disables controls)
+								pTweakIdleCooldownActiveMin.SetValue(240)
+								pTweakIdleCooldownActiveMax.SetValue(300)
+								pTweakIdleCooldownDismissedMin.SetValue(240)
+								pTweakIdleCooldownDismissedMax.SetValue(480)
 							endif
 							
-						endif ; ov < 1.04
-						
+						endif ; ov < 1.09
+
 						if (ov != 0.0)
-							((self as Quest) as TweakShelterScript).v109Upgrade()
-							
-							; DLC01 Support
-							if pTweakDLC01Script.Installed
-								if pTweakDLC01Script.Ada && pTweakDLC01Script.Ada.IsInFaction(pTweakFollowerFaction)
-									ImportTopicsForCompanion(pTweakDLC01Script.Ada)
-								endif
-							endif
-
-							; DLC03 Support
-							if pTweakDLC03Script.Installed
-								if pTweakDLC03Script.OldLongfellow && pTweakDLC03Script.OldLongfellow.IsInFaction(pTweakFollowerFaction)
-									ImportTopicsForCompanion(pTweakDLC03Script.OldLongfellow)
-								endif
-							endif
-
-							; DLC04 Support
-							if pTweakDLC04Script.Installed
-								if pTweakDLC04Script.PorterGage && pTweakDLC04Script.PorterGage.IsInFaction(pTweakFollowerFaction)
-									ImportTopicsForCompanion(pTweakDLC04Script.PorterGage)
-								endif
-							endif
-							
-							; Reset IdleCooldowns to defaults (since 1.09 disables controls)
-							pTweakIdleCooldownActiveMin.SetValue(240)
-							pTweakIdleCooldownActiveMax.SetValue(300)
-							pTweakIdleCooldownDismissedMin.SetValue(240)
-							pTweakIdleCooldownDismissedMax.SetValue(480)
+							((self as Quest) as TweakShelterScript).v112Upgrade()
 						endif
 						
-					endif ; ov < 1.09
-
+					endif ; ov < 1.12
+					
+					; 1.13						
 					if (ov != 0.0)
-						((self as Quest) as TweakShelterScript).v112Upgrade()
+						int pmlength = pManagedMap.Length
+						int pm = 1
+						while (pm < pmlength)
+							ReferenceAlias pmfix = pManagedMap[pm]
+							if pmfix && pmfix.GetActorReference()
+								(pmfix as TweakInventoryControl).v13upGrade()
+							endif
+							pm += 1
+						endwhile
 					endif
 					
-				endif ; ov < 1.12
-				
-				; 1.13						
+				endif
+
+				; 1.16						
 				if (ov != 0.0)
 					int pmlength = pManagedMap.Length
 					int pm = 1
 					while (pm < pmlength)
 						ReferenceAlias pmfix = pManagedMap[pm]
 						if pmfix && pmfix.GetActorReference()
-							(pmfix as TweakInventoryControl).v13upGrade()
+							(pmfix as TweakInventoryControl).v16upGrade()
 						endif
 						pm += 1
 					endwhile
 				endif
 				
 			endif
-
-			; 1.16						
-			if (ov != 0.0)
-				int pmlength = pManagedMap.Length
-				int pm = 1
-				while (pm < pmlength)
-					ReferenceAlias pmfix = pManagedMap[pm]
-					if pmfix && pmfix.GetActorReference()
-						(pmfix as TweakInventoryControl).v16upGrade()
-					endif
-					pm += 1
-				endwhile
-			endif
 			
+			; 1.17
+			UnregisterForMenuOpenCloseEvent("ContainerMenu")
+			RegisterForMenuOpenCloseEvent("ContainerMenu")		
+			
+			if (ov != 0.0)
+				; Updated the pref/scrap scanner with camp items
+				Quest pTweakScanNonConstructed_BtoC = Game.GetFormFromFile(0x0105B53D,"AmazingFollowerTweaks.esp") as Quest
+				if pTweakScanNonConstructed_BtoC
+					AFT:TweakScanNCBtoCScript pTweakScanNCBtoCScript = pTweakScanNonConstructed_BtoC as AFT:TweakScanNCBtoCScript
+					if pTweakScanNCBtoCScript
+						pTweakScanNCBtoCScript.initialize_ComponentData()
+					else
+						trace("Upgrade Failure. Unable To cast pTweakScanNonConstructed_BtoC to pTweakScanNCBtoCScript")
+					endif
+				else
+					trace("Upgrade Failure. Unable To load pTweakScanNonConstructed_BtoC. ")
+				endIf
+				
+				Actor dmeat = Dogmeat.GetUniqueActor()
+				if dmeat && dmeat.IsInFaction(pTweakFollowerFaction)
+					Faction TweakRangedFaction = Game.GetFormFromFile(0x0101AEC5,"AmazingFollowerTweaks.esp") as Faction
+					if TweakRangedFaction
+						dmeat.AddToFaction(TweakRangedFaction)
+					endif
+				endif
+			endif
+						
 		endif
 			
 		if (ov != 0.0)
@@ -789,6 +831,9 @@ Function AftReset()
 	CancelTimer(CONFIRM_VERSION)
 	CancelTimer(UPDATE_VERSION)
 	CancelTimer(COMBAT_MONITOR)
+	CancelTimer(RETREAT_END)
+	
+	pTweakRetreat.SetValue(0.0)
 
 	Actor player = Game.GetPlayer()
 	
@@ -1977,21 +2022,21 @@ int Function AssignFollowerID(Actor npc, bool silent)
 	ReferenceAlias a      = None
 	ReferenceAlias r      = None
 	Actor f               = None	
-	int pManagedMapLength = MAX_MANAGED + 1 ; 33 ( 1 -> 32, dont include 0 )
-	int max_minus_one     = MAX_MANAGED
+	int pManagedMapLength = pManagedMap.length ; 33 ( 1 -> 32, dont include 0 )
+	int maxManaged       = pManagedMapLength - 1
 	bool free             = true
-	int i                 = 1 ; intentional. Index 0 = Player. 1 - (MAX_MANAGED + 1) are alias slots. 
+	int i                 = 1 ; intentional. Index 0 = Player. 1 - (maxManaged + 1) are alias slots. 
 	int searched          = 0 ; track how many we have visited ...
 	
 	; Speed up by starting at last known used slot
-	if (MAX_MANAGED == pfCount)
+	if (maxManaged == pfCount)
 		pfCount          = 0
 	else
 		i = pfCount + 1
 	endif
 	
 	if (!a)
-		Trace("Searching [" + MAX_MANAGED + "] aliases for free slot start at [" + i + "]")
+		Trace("Searching [" + maxManaged + "] aliases for free slot start at [" + i + "]")
 	endif
 	
 	while (!a && i < pManagedMapLength)
@@ -2028,7 +2073,7 @@ int Function AssignFollowerID(Actor npc, bool silent)
 		endwhile
 	endif
 
-	if (MAX_MANAGED == searched)
+	if (maxManaged == searched)
 		Trace("AFT Warning: Unable to manage NPC. Out of available Slots.")
 		pfCount = 0
 		if (!silent)
@@ -2036,7 +2081,7 @@ int Function AssignFollowerID(Actor npc, bool silent)
 		endif
 		return 0
 	else
-		Trace("MAX_MANAGED [" + MAX_MANAGED + "] != searched [" + searched + "]")	
+		Trace("maxManaged [" + maxManaged + "] != searched [" + searched + "]")	
 	endif	
 	
 	if (!a)
@@ -2049,8 +2094,8 @@ int Function AssignFollowerID(Actor npc, bool silent)
 		Trace("AFT Warning: id < 1 : Assertion Failure")
 		return 0
 	endif
-	if (id > MAX_MANAGED)
-		Trace("AFT Warning: ID > " + MAX_MANAGED + " : Assertion Failure")
+	if (id > maxManaged)
+		Trace("AFT Warning: ID > " + maxManaged + " : Assertion Failure")
 		return 0
 	endif
 	
@@ -3133,6 +3178,57 @@ Function SculptByNameId(int id = 0, int uiMenu = 1)
 	
 EndFunction
 
+; BUGFIX: When player changes Followers equipment, the perks are lost. 
+; This can cause a sudden drop in health and kill the NPC. So we make
+; all companions invulnerable (SetGhost) when trade menu opens. When 
+; the menu closes, we reset AFT's perks before removing the invulnerability. 
+; (And heal the player if they are 0 or less HP).
+
+Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
+	if (asMenuName == "ContainerMenu")
+		if abOpening == true
+			int i = 0
+			int pFollowerMapLength = pFollowerMap.length	
+			Actor npc
+			while (i < pFollowerMapLength)
+				npc = pFollowerMap[i].GetActorRef()
+				if (npc)
+					int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+					if (followerId > 0)
+						(pManagedMap[followerId] as TweakSettings).CallFunctionNoWait("EventTradeBegin", new Var[0])
+					endIf
+				endif
+				i += 1
+			endWhile
+		else
+			HandleCloseTradeMenu()
+		endif
+	endif
+EndEvent
+
+Function HandleCloseTradeMenu()
+	if (Utility.IsInMenuMode())
+		Trace("In Menu Mode, Waiting")
+		Utility.waitmenumode(0.03)
+		self.CallFunctionNoWait("HandleCloseTradeMenu", new Var[0])
+		return
+	endIf	
+	
+	int i = 0
+	int pFollowerMapLength = pFollowerMap.length	
+	Actor npc
+	while (i < pFollowerMapLength)
+		npc = pFollowerMap[i].GetActorRef()
+		if (npc)
+			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+			if (followerId > 0)
+				(pManagedMap[followerId] as TweakSettings).CallFunctionNoWait("EventTradeEnd", new Var[0])
+			endIf
+		endif
+		i += 1
+	endWhile	
+EndFunction
+
 Function SculptLeveledByNameId(int id = 0, int uiMenu = 1)
 
 	Trace("SculptLeveledByNameId [" + id + "]")
@@ -3959,9 +4055,10 @@ EndFunction
 ; Called from TweakNamesScript
 bool[] Function GetUsedGenericNameSlots()
 	Trace("GetUsedGenericNameSlots() Called")
-	bool[] ret = new bool[MAX_MANAGED]
+	int maxManaged = pManagedMap.Length - 1
+	bool[] ret = new bool[maxManaged]
 	int r = 0
-	while (r < MAX_MANAGED)
+	while (r < maxManaged)
 		ret[r] = false
 		r += 1
 	endwhile
@@ -4237,6 +4334,71 @@ Function MoveToPlayerByNameId(int id, bool excludeWaiting=false, float startingO
 		endif		
 	endIf
 	
+EndFunction
+
+Function AttackVisible()
+	CancelTimer(RETREAT_END)
+	pTweakRetreat.SetValue(0.0)
+	int i = 0
+	int pFollowerMapLength = pFollowerMap.length
+	if pFollowerMapLength > 0
+		Actor npc
+		while (i < pFollowerMapLength)
+			npc = pFollowerMap[i].GetActorRef()
+			if (npc)
+				int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+				if (followerId > 0)
+					ReferenceAlias a = pManagedMap[followerId]
+					; We can add more as needed
+					(a As TweakSettings).AttackVisible()
+				endif
+			endif
+			i += 1
+		endWhile
+	endif
+EndFunction
+
+Function OnRetreatStart()
+	pTweakRetreat.SetValue(1.0)
+	int i = 0
+	int pFollowerMapLength = pFollowerMap.length
+	if pFollowerMapLength > 0
+		Actor npc
+		while (i < pFollowerMapLength)
+			npc = pFollowerMap[i].GetActorRef()
+			if (npc)
+				int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+				if (followerId > 0)
+					ReferenceAlias a = pManagedMap[followerId]
+					; We can add more as needed
+					(a As TweakSettings).OnRetreatStart()
+				endif
+			endif
+			i += 1
+		endWhile
+	endif
+	StartTimer(20, RETREAT_END)
+EndFunction
+
+Function OnRetreatStop()
+	pTweakRetreat.SetValue(0.0)
+	int i = 0
+	int pFollowerMapLength = pFollowerMap.length
+	if pFollowerMapLength > 0
+		Actor npc
+		while (i < pFollowerMapLength)
+			npc = pFollowerMap[i].GetActorRef()
+			if (npc)
+				int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+				if (followerId > 0)
+					ReferenceAlias a = pManagedMap[followerId]
+					; We can add more as needed
+					(a As TweakSettings).OnRetreatStop()
+				endif
+			endif
+			i += 1
+		endWhile
+	endif
 EndFunction
 
 ; For combatStart events, each script is on its own. We dont want to share
@@ -4630,22 +4792,38 @@ Function initializeFollowerMap()
 endFunction
 
 Function initializeManagedMap()
-	 
-	int max_aliases  = MAX_MANAGED + 1 ; index 0 = player. Actually only 32 followers.
-	pManagedMap      = new ReferenceAlias[max_aliases]
-	
+	 	
 	Quest selfQuest = (self as Quest)
 	if (!selfQuest)
 		Trace("AFT Warning: Unable to cast self (TweakFollowerScript) to Quest. initializeManagedMap aborted.")
 		return
 	endif
+
+	int base_max  = 33 ; index 0 = player. 1 -> 32 = followers. Total = 33
+	int boost_max = pTweakMaxManaged.GetValueInt() + 1
+	
+	pManagedMap.Clear()
+	pManagedMap      = new ReferenceAlias[boost_max]
+
 	
 	int i            = 0
-	Trace("Initializing ManagedMap from [" + max_aliases + "] aliases")
-	while (i < max_aliases)
+	Trace("Initializing ManagedMap from [" + base_max + "] aliases")
+	while (i < base_max)
 		pManagedMap[i] = (selfQuest.GetAlias(i) as ReferenceAlias)
 		i += 1
 	endwhile
+	
+	if (boost_max > base_max)
+		Trace("Boosting ManagedMap from [" + base_max + "] to [" + boost_max + "] aliases")	
+		i = 0
+		int diff = (boost_max - base_max)
+		int first_alias = pTweakManageBoostOffset.GetValueInt()
+		
+		while (i < diff)
+			pManagedMap[(base_max + i)] = (selfQuest.GetAlias(first_alias + i) as ReferenceAlias)
+			i += 1
+		endWhile
+	endIf
 
 EndFunction
 
@@ -5409,10 +5587,28 @@ Function HandleBoSKickOut()
 		if Danse.IsInFaction(pTweakFollowerFaction)	
 			if BoS302.GetStageDone(20) != 1
 				UnManageFollower(Danse)
-				Danse.SetEssential(false)
+				WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+				if pWorkshopParent
+					pWorkshopParent.UnassignActor((Danse as WorkshopNPCScript),true)
+				endif
+				Faction BrotherhoodofSteelFaction = Game.GetForm(0x0005DE41) as Faction
+				if BrotherhoodofSteelFaction
+					Danse.RemoveFromFaction(BrotherhoodofSteelFaction)
+				endif
+				Faction BoS302DanseFaction = Game.GetForm(0x0003A5F3) as Faction 
+				if BoS302DanseFaction
+					Danse.AddToFaction(BoS302DanseFaction)
+				endif
+				ActorValue pAssistance = Game.GetForm(0x000002C1) as ActorValue 
+				Danse.SetValue(pAssistance, 0)
+				Danse.SetEssential(False)
 				Danse.GetActorBase().SetEssential(false)
-				Danse.GetActorBase().SetProtected(false)
+				Danse.SetProtected(True)				
 				Danse.SetGhost(false)
+				CompanionActorScript CAS = Danse as CompanionActorScript
+				if CAS
+					CAS.HomeLocation = pListeningPostBravoLocation
+				endIf				
 			endif
 		endif	
 	endIf
@@ -5626,3 +5822,7 @@ EndFunction
 	; return bitmask
 
 ; EndFunction
+
+
+int MAX_MANAGED	   = 32 const ; deprecated
+

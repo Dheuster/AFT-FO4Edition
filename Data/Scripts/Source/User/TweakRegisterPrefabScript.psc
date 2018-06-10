@@ -10,7 +10,10 @@ Struct PrefabData
     { Populate with Furniture Objects that Have TweakPrefabOption and TweakBuilder Scripts attached }	
 	
 	Location  PrefabLocation
-	{ The Location of the settlement. Used to find the WorkBench From the WorkshopParent and install the Prefab }
+	{ Set this value with Core Game Settlement. Choose the Location of the settlement. }
+
+	int  MaskedPrefabLocation
+	{ Set this value for DLC Settlements. See readme for valid values. }
 EndStruct
 
 PrefabData[] Property Prefabs Auto Const
@@ -74,6 +77,7 @@ Function RegisterPrefabs()
 	
 	Furniture			PrefabFurn		= None
     Location			PrefabLoc		= None
+	int  				MaskedPrefabLoc = 0
 	RefCollectionAlias	PrefabRegistry	= None
 	
 	Quest TweakSettlmentLoader = Game.GetFormFromFile(0x0105F22F,"AmazingFollowerTweaks.esp") as Quest
@@ -82,7 +86,37 @@ Function RegisterPrefabs()
 	endif
 		
 	while ( i < Prefabs_length)
-		PrefabLoc  = Prefabs[i].PrefabLocation
+		MaskedPrefabLoc = Prefabs[i].MaskedPrefabLocation
+		if ((MaskedPrefabLoc < 0) && (MaskedPrefabLoc > -0x05000000))
+			if (MaskedPrefabLoc < -0x03FFFFFF)
+				; -0x04??????			
+				PrefabLoc = Game.GetFormFromFile(((-1 * MaskedPrefabLoc) - 0x04000000), "DLCNukaWorld.esm") as Location
+				if !PrefabLoc
+					trace("Lookup Failure for [" + MaskedPrefabLoc + " abs(+ 0x04000000)]")
+					PrefabLoc  = Prefabs[i].PrefabLocation
+				endif
+			elseif (MaskedPrefabLoc < -0x02FFFFFF)
+				; -0x03??????
+				PrefabLoc = Game.GetFormFromFile(((-1 * MaskedPrefabLoc) - 0x03000000), "DLCCoast.esm") as Location
+				if !PrefabLoc
+					trace("Lookup Failure for [" + MaskedPrefabLoc + " abs(+ 0x03000000)]")
+					PrefabLoc  = Prefabs[i].PrefabLocation
+				endif
+			elseif (MaskedPrefabLoc > -0x02000000)
+				; -0x01??????
+				PrefabLoc = Game.GetFormFromFile(((-1 * MaskedPrefabLoc) - 0x01000000), "DLCRobot.esm") as Location
+				if !PrefabLoc
+					trace("Lookup Failure for [" + PrefabLoc + " abs(+ 0x01000000)]")
+					PrefabLoc  = Prefabs[i].PrefabLocation
+				endif
+			else
+				; -0x02??????
+				trace("DLC location Unsupported: [" + MaskedPrefabLoc + " abs(+ 0x02000000)]")
+				PrefabLoc  = Prefabs[i].PrefabLocation
+			endif						
+		else
+			PrefabLoc  = Prefabs[i].PrefabLocation
+		endif
 		PrefabFurn = Prefabs[i].PrefabFurniture
 		if (PrefabLoc && PrefabFurn)
 			WorkshopScript WorkshopRef = WorkshopParent.GetWorkshopFromLocation(PrefabLoc)
