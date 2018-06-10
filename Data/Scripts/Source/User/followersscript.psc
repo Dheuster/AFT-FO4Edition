@@ -1496,7 +1496,7 @@ Function HandleTimer_LoiterSample()
 	EndiF
 	bool LoiterCoolingDown
 	CurrentLoiterCoolDownTime -= TimerInterval_LoiterSample
-	LoiterCoolingDown = CurrentLoiterCoolDownTime > 0
+	LoiterCoolingDown = (CurrentLoiterCoolDownTime > 0)
 	bool Traveled = FurthestDistanceSquared > 2250000.0 ; LoiterRadiusSquared
 	bool InCombat = PlayerRef.IsInCombat()
 	bool Sneaking = PlayerRef.IsSneaking()
@@ -1513,10 +1513,7 @@ Function HandleTimer_LoiterSample()
 		Trace(self, "WeaponOut: " + WeaponOut)
 		Trace(self, "NotSitting: " + NotSitting)
 	endif
-	
-	; TODO : Find Loitering Package AI and add Random Int to condition so everyone 
-	;        doesn't loiter at the same time...
-	
+		
 	bool shouldEVPFollowers
 	if ( Traveled || LoiterCoolingDown || InCombat || Sneaking || Sprinting || WeaponOut ) && NotSitting
 		if (isPlayerLoitering == true)
@@ -1541,23 +1538,45 @@ Function HandleTimer_LoiterSample()
 	endif
 	
 	if shouldEVPFollowers
-		if DogmeatCompanion.GetActorReference()
-			DogmeatCompanion.GetActorReference().EvaluatePackage()
+	
+		; 25% chance that any given follower will not immediatly relax, 
+		; but wait for the next AI heartbeat (about 15 seconds)
+		
+		int roll = Utility.RandomInt(0, 100)
+		if (roll > 25)
+			if DogmeatCompanion.GetActorReference()
+				DogmeatCompanion.GetActorReference().EvaluatePackage()
+			endif
 		endif
-		if (pCompanion1 && pCompanion1.GetActorReference())
-			pCompanion1.GetActorReference().EvaluatePackage()
+		roll = Utility.RandomInt(0, 100)
+		if (roll > 25)
+			if (pCompanion1 && pCompanion1.GetActorReference())
+				pCompanion1.GetActorReference().EvaluatePackage()
+			endif
 		endif
-		if (pCompanion2 && pCompanion2.GetActorReference())
-			pCompanion2.GetActorReference().EvaluatePackage()
+		roll = Utility.RandomInt(0, 100)
+		if (roll > 25)
+			if (pCompanion2 && pCompanion2.GetActorReference())
+				pCompanion2.GetActorReference().EvaluatePackage()
+			endif
 		endif
-		if (pCompanion3 && pCompanion3.GetActorReference())
-			pCompanion3.GetActorReference().EvaluatePackage()
+		roll = Utility.RandomInt(0, 100)
+		if (roll > 25)
+			if (pCompanion3 && pCompanion3.GetActorReference())
+				pCompanion3.GetActorReference().EvaluatePackage()
+			endif
 		endif
-		if (pCompanion4 && pCompanion4.GetActorReference())
-			pCompanion4.GetActorReference().EvaluatePackage()
+		roll = Utility.RandomInt(0, 100)
+		if (roll > 25)
+			if (pCompanion4 && pCompanion4.GetActorReference())
+				pCompanion4.GetActorReference().EvaluatePackage()
+			endif
 		endif
-		if (pCompanion5 && pCompanion5.GetActorReference())
-			pCompanion5.GetActorReference().EvaluatePackage()
+		roll = Utility.RandomInt(0, 100)
+		if (roll > 25)
+			if (pCompanion5 && pCompanion5.GetActorReference())
+				pCompanion5.GetActorReference().EvaluatePackage()
+			endif
 		endif
 	endif
 	startTimer(TimerInterval_LoiterSample, iTimerID_LoiterSample)

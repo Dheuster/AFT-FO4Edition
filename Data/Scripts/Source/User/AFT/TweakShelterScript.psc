@@ -203,6 +203,7 @@ GlobalVariable Property pTweakCampMisc2Enabled     Auto Const
 GlobalVariable Property pTweakUsingMemoryLounger Auto Const
 GlobalVariable Property pTweakCampIgnorePA		 Auto Const
 GlobalVariable Property pTweakCampDoorsLocked     Auto Const
+GlobalVariable Property pTweakCampFoundationEnabled Auto Const
 
 Terminal       Property pTweakCampTerminal         Auto Const
 
@@ -461,10 +462,12 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 		Trace("Error, Unable to create pccopy")
 		return
 	endif
+	
 	pccopy.SetPosition(playerx,playery,playerz)
 	pccopy.SetAngle(0.0,0.0, playeraz)
 		
 	float[] posdata
+	int maxwait
   
 	; Note, when TweakExpandCamp transitions from phase 20 to 30 (purchase foundation),
 	; that quest calls TearDownCamp. So we dont need to worry about scenarios where
@@ -472,8 +475,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 	; never have to build a foundation when refresh is true...
  
 	myCenterMarker = pShelterCenter.GetReference()
-	bool hasFoundation = pTweakExpandCamp.GetStage() > 20
-	bool teleport = false
+	bool hasFoundation = ((1.0 == pTweakCampFoundationEnabled.GetValue()) && (pTweakExpandCamp.GetStage() > 20))
  
 	if (!refresh)
  
@@ -530,7 +532,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 		
   		Trace("Requesting Player Exit Armor")
   		player.SwitchToPowerArmor(None)
-		int maxwait = 6
+		maxwait = 6
 		while (0 != player.GetSitState() && maxwait > 0)
 			Utility.wait(1.0)
 			maxwait -= 1
@@ -599,22 +601,28 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			Trace("Current Location does NOT have Workshop")
 			inSettlement = false
 		endif
+		
+	endif
+		
+	; ----------------------------------
+	; Foundation
+	; ----------------------------------
 
-		
-		; ----------------------------------
-		; ----------------------------------
-		; Foundation
-		; ----------------------------------
+	bool FoundationChanged = false
 	
-		if (hasFoundation)
-		
-			; Foundation includes things that can't be disabled. 
+	if (hasFoundation)
+	
+		; Did it change?
+		if (myFoundation.length == 0)
+			FoundationChanged = true
 			
+			bool teleport = false
+
 			pTweakScanTerrain.Show()
-   
+
 			; Camp consists of a 1024x1024 grid. We spawn havok reactive objects at 
 			; the corners to test terrain high and figure out how to proceed. 
-   
+
 			; |---|---|---|---|
 			; |   |   |   |   |
 			; |---|---|---|---|  * = pShelterCenter/myCenterMarker
@@ -629,8 +637,8 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			; Width    = 256     Center to Corner : SQRT(512^2 + 512^2) = 724.08
 			; Length   = 256     Angle = ArcTan(512/512) = 45
 			; Height   = 215
-   
-  
+
+
 			MiscObject BobbyPin = Game.GetForm(0x0000000A) as MiscObject  
 			ObjectReference ne_test = myCenterMarker.PlaceAtMe(BobbyPin)
 			ObjectReference se_test = myCenterMarker.PlaceAtMe(BobbyPin)
@@ -642,13 +650,13 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			ne_test.SetPosition(spawnMarker.GetPositionX(),spawnMarker.GetPositionY(),spawnMarker.GetPositionZ() + 200)
 			float ne_z = ne_test.GetPositionZ()
 			Trace("ne_z [" + ne_z + "]")
-  
+
 			posdata = TraceCircle(myCenterMarker, 724.08, 45.0)   ; Bottom Right
 			spawnMarker.SetPosition(posdata[0],posdata[1],posdata[2])
 			se_test.SetPosition(spawnMarker.GetPositionX(),spawnMarker.GetPositionY(),spawnMarker.GetPositionZ() + 200)
 			float se_z = se_test.GetPositionZ()
 			Trace("se_z [" + se_z + "]")
-   
+
 			posdata = TraceCircle(myCenterMarker, 724.08, -135.0)    ; Top Left
 			spawnMarker.SetPosition(posdata[0],posdata[1],posdata[2])
 			nw_test.SetPosition(spawnMarker.GetPositionX(),spawnMarker.GetPositionY(),spawnMarker.GetPositionZ() + 200)
@@ -660,7 +668,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			sw_test.SetPosition(spawnMarker.GetPositionX(),spawnMarker.GetPositionY(),spawnMarker.GetPositionZ() + 200)
 			float sw_z = sw_test.GetPositionZ()
 			Trace("sw_z [" + sw_z + "]")
-   
+
 			maxwait = 11
 			bool keepwaiting = true   
 			while (keepwaiting && maxwait > 0)
@@ -691,12 +699,12 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				endif
 				maxwait -= 1
 			endWhile
-   
+
 			ne_test.Delete()   
 			se_test.Delete()
 			nw_test.Delete()
 			sw_test.Delete()
-      
+	  
 			if (0 == maxwait)
 				Trace("Search timed out (10 sec). Aborting")
 				pTweakCampTerrainFail.show()
@@ -704,17 +712,17 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				spawnMarker.Delete()
 				return
 			endif
-   
+
 			float highest = Math.Max(ne_z,se_z) 
 			highest = Math.Max(highest,nw_z) 
 			highest = Math.Max(highest,sw_z) 
 			float lowest  = Math.Min(ne_z,se_z)
 			lowest  = Math.Min(lowest,nw_z)
 			lowest  = Math.Min(lowest,sw_z)
-   
+
 			Trace("Highest [" + highest + "]")
 			Trace("Lowest  [" + lowest +  "]")
-      
+	  
 			float diff = highest - lowest
 			If (diff > 2580)
 				Trace("Diff Between Highest and Lowest Point is greater than 12 stories. Aborting...")
@@ -723,7 +731,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				spawnMarker.Delete()
 				return
 			endif
-     
+	 
 			if playerz > highest
 				highest = playerz
 			elseif (highest > playerz)
@@ -743,20 +751,8 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				endif
 			endif
 
-			if (myFoundation.length != 0)
-				Trace("Removing Previous Foundation")
-				int d = 0
-				int flen = myFoundation.length
-				while (d < flen)
-					myFoundation[d].disable()
-					myFoundation[d].delete()
-					d += 1
-				endWhile
-				myFoundation.Clear()
-			endIf
-   
 			; Build the 16x16 foundation first:
-   
+
 			; |---|---|---|---|
 			; |nw |s11|s12| ne|
 			; |---|---|---|---|  * = pShelterCenter/myCenterMarker
@@ -766,7 +762,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			; |---|---P---|---|  *->sw angle    : -45 (Center is facing player) 
 			; |sw | s1|s2 | se|
 			; |---|---|---|---|   
-   
+
 			form ShackFoundation02 = Game.GetForm(0x0022C663) ; workshop_ShackMidFloor01Foundation02
 			form ShackFloor01 = Game.GetForm(0x000E0B88)      ; workshop_ShackMidFloor01   
 			
@@ -803,45 +799,14 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			myfoundation.Add(s12)   
 			ObjectReference ne = CreateFoundation(se, ShackFoundation02,768.0,   0.0, playeraz, playerz, spawnMarker)
 			myfoundation.Add(ne)
-
-			;======================================
-			; Player Armor
-			;======================================
-
-			if 0 == pTweakCampIgnorePA.GetValue() && !player.WornHasKeyword(pArmorTypePower)
-				; LinkedRef Managed by TweakMonitorPlayer Quest....
-				ObjectReference pa = player.GetLinkedRef(pLinkPowerArmor)
-				if (pa && myCenterMarker)
-					if (pa.GetLinkedRef(pLinkPowerArmor) == player)
-						posdata = TraceCircle(myCenterMarker, 384, -82)
-						spawnMarker.SetPosition(posdata[0],posdata[1],posdata[2])
-						if (!hasFoundation)
-							spawnMarker.MoveToNearestNavmeshLocation()
-						endif
-						spawnMarker.SetAngle(0.0,0.0, myCenterMarker.GetAngleZ() - 90)
-						if (!pa.Is3DLoaded())
-							pa.MoveTo(spawnMarker)
-							pa.Disable()
-							pa.Enable()
-							Utility.wait(0.1)
-						elseif !DistanceWithin(pa, spawnMarker, 10) ; Did it move?
-							pa.SetPosition(spawnMarker.GetPositionX(), spawnMarker.GetPositionY(), spawnMarker.GetPositionZ())
-							pa.SetAngle(0.0,0.0, spawnMarker.GetAngleZ())
-							pa.Disable()
-							pa.Enable()
-							Utility.wait(0.1)
-						endif
-					endif
-				endif
-			endif
-
+			
 			if (teleport)
 				player.TranslateToRef(pccopy, 500.0)
 			endif
 			
 			; Now extend down for each corner as necessary:
 			Trace("Extending Foundation Down")
-   
+
 			CreateFoundationLeg(sw.GetPositionX(), sw.GetPositionY(), playeraz, playerz, sw_z, spawnMarker)
 			CreateFoundationLeg(se.GetPositionX(), se.GetPositionY(), playeraz, playerz, se_z, spawnMarker)
 			CreateFoundationLeg(nw.GetPositionX(), nw.GetPositionY(), playeraz, playerz, nw_z, spawnMarker)
@@ -948,17 +913,94 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				Trace("myCenterMarker.GetAngleZ() = [" + myCenterMarker.GetAngleZ() + "]")
 				CreateStairwell(myCenterMarker, 681.375, -122.29, myCenterMarker.GetAngleZ() - 90, west_z, spawnMarker)								
 			endif
-			
-			; ----------------------------------
-			; Create Camp Terminal
-			; ----------------------------------
+		
+		endif
+		
+	else ; !hasFoundation
+	
+		; Remove if it changed....
+		
+		if (myStairs.length != 0)
+			Trace("Stairs has : [" + myStairs.length + "] pieces. Deleting")
+			int d = 0
+			int flen = myStairs.length
+			while (d < flen)
+				myStairs[d].disable()
+				myStairs[d].delete()
+				d += 1
+			endWhile
+			myStairs.Clear()
+		else
+			Trace("Stairs has : [" + myStairs.length + "] pieces. Delete not necessary")
+		endif
 
+		; ----------------------------------
+		; Remove Foundation
+		; ----------------------------------
+		
+		if (myFoundation.length != 0)
+			FoundationChanged = true
+			Trace("Foundation has : [" + myFoundation.length + "] pieces. Deleting")
+			int d = 0
+			int flen = myFoundation.length
+			while (d < flen)
+				myFoundation[d].disable()
+				myFoundation[d].delete()
+				d += 1
+			endWhile
+			myFoundation.Clear()
+		else
+			Trace("Foundation has : [" + myFoundation.length + "] pieces. Delete not necessary")
+		endif
+		
+	endif
+
+    ; Things we only create/move when setting up....
+	if (!refresh)
+	
+		; ----------------------------------
+		; Create Camp Terminal
+		; ----------------------------------
+
+		if (pTweakExpandCamp.GetStage() > 20)
+		
 			Static DCKitMetalIBeam01 = Game.GetForm(0x000C570C) as Static
 			CreateDecoration(myCenterMarker, pTweakCampTerminalStandID, DCKitMetalIBeam01, 368, -35, -133, 130, spawnMarker, true)
 			CreateDecoration(myCenterMarker, pTweakCampTerminalID,      pTweakCampTerminal,368, -37,    0, 130, spawnMarker, true)
 			
 		endif ; if (pTweakExpandCamp.GetStage() > 20)
-    
+
+		;======================================
+		; Player Armor
+		;======================================
+
+		if 0 == pTweakCampIgnorePA.GetValue() && !player.WornHasKeyword(pArmorTypePower)
+			; LinkedRef Managed by TweakMonitorPlayer Quest....
+			ObjectReference pa = player.GetLinkedRef(pLinkPowerArmor)
+			if (pa && myCenterMarker)
+				if (pa.GetLinkedRef(pLinkPowerArmor) == player)
+					posdata = TraceCircle(myCenterMarker, 384, -82)
+					spawnMarker.SetPosition(posdata[0],posdata[1],posdata[2])
+					if (!hasFoundation)
+						spawnMarker.MoveToNearestNavmeshLocation()
+					endif
+					spawnMarker.SetAngle(0.0,0.0, myCenterMarker.GetAngleZ() - 90)
+					if (!pa.Is3DLoaded())
+						pa.MoveTo(spawnMarker)
+						pa.Disable()
+						pa.Enable()
+						Utility.wait(0.1)
+					elseif !DistanceWithin(pa, spawnMarker, 10) ; Did it move?
+						pa.SetPosition(spawnMarker.GetPositionX(), spawnMarker.GetPositionY(), spawnMarker.GetPositionZ())
+						pa.SetAngle(0.0,0.0, spawnMarker.GetAngleZ())
+						pa.Disable()
+						pa.Enable()
+						Utility.wait(0.1)
+					endif
+				endif
+			endif
+		endif
+		
 		posdata = TraceCircle(pccopy,256)
 		myCenterMarker.SetPosition(posdata[0],posdata[1],posdata[2])
 		Utility.wait(0.1)
@@ -976,8 +1018,6 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 		if pAFTMarkerHeading.IsDisabled()
 			pAFTMarkerHeading.Enable()
 		endif
-				
-	
 	endif ; if (!refresh)  
    
 	if (!myCenterMarker)
@@ -1062,7 +1102,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 					Utility.Wait(0.1)
 					
 					; wait for 3D to load before continuing. (Or sound will fail)					
-					int maxwait = 25
+					maxwait = 25
 					while (!theUFO.Is3DLoaded() && maxwait > 0)
 						Utility.wait(0.2)
 						maxwait -= 1
@@ -1146,19 +1186,21 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 	
     int cookChoice = pTweakCampCookEnabled.GetValueInt()
     if (0 != cookChoice)
-		if (1 == cookChoice)
+		if (1 == cookChoice || FoundationChanged)
 			Trace("Cooking Pot currently disabled [" + cookChoice + "]") 
 			EnsureCookBenchDisabled()
-		elseif (2 == cookChoice)
+		endif
+		if (2 == cookChoice)
 			Furniture WorkbenchCookingPot   = Game.GetForm(0x0010C3B6) as Furniture
 			MovableStatic pFXFireSmall01    = Game.GetForm(0x001DA027) as MovableStatic
 			Light defaultLightFire01Flicker = Game.GetForm(0x0008ADF9) as Light
 			ObjectReference theCookBench    = CreateBench(myCenterMarker, pShelterCookBench, WorkbenchCookingPot, 60, 90, 0, 135, spawnMarker, true, !hasFoundation )
 			CreateDecoration(theCookBench, pTweakCampFireID, pFXFireSmall01,       60,    0,     15,       0,  spawnMarker, true)
 			CreateDecoration(theCookBench, pTweakCampFireLightID, defaultLightFire01Flicker, 60, 0, 20,    0,  spawnMarker, true)
-		elseif (3 == cookChoice)
+		endif
+		if (3 == cookChoice)
 			Furniture WorkbenchCookingStove = Game.GetForm(0x001865B9) as Furniture
-			ObjectReference theCookBench    = CreateBench(myCenterMarker, pShelterCookBench, WorkbenchCookingStove, 575, -136.2, 0, 180, spawnMarker, true)
+			ObjectReference theCookBench    = CreateBench(myCenterMarker, pShelterCookBench, WorkbenchCookingStove, 575, -136.2, 0, 180, spawnMarker, true, !hasFoundation)
 			DeleteDecoration(pTweakCampFireID)
 			DeleteDecoration(pTweakCampFireLightID)
 		endIf
@@ -1185,11 +1227,11 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
     int module1Global = TweakCampModule1Enabled.GetValueInt()
 	if (0 != module1Global)
 		ObjectReference theModule = myObjectCache[pTweakModule1ID]
-		if (1 == module1Global)
+		if (1 == module1Global || !hasFoundation)
 			if (myObjectState[pTweakModule1ID] > 1)
 				myObjectState[pTweakModule1ID] = 1
 				if (theModule)
-					DeleteDecorationRange(pTweakModule1ID,pTweakModule1LightDID)
+					DeleteDecorationRange(pTweakModule1ID,pTweakModule1LightDID)			
 				endIf
 			endIf
 		else
@@ -1307,7 +1349,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
     int module2Global = TweakCampModule2Enabled.GetValueInt()
 	if (0 != module2Global)
 		ObjectReference theModule = myObjectCache[pTweakModule2ID]
-		if (1 == module2Global)
+		if (1 == module2Global || !hasFoundation)
 			if (myObjectState[pTweakModule2ID] > 1)
 				myObjectState[pTweakModule2ID] = 1
 				if (theModule)
@@ -1428,7 +1470,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
     int module3Global = TweakCampModule3Enabled.GetValueInt()
 	if (0 != module3Global)
 		ObjectReference theModule = myObjectCache[pTweakModule3ID]
-		if (1 == module3Global)
+		if (1 == module3Global || !hasFoundation)
 			if (myObjectState[pTweakModule3ID] > 1)
 				myObjectState[pTweakModule3ID] = 1
 				if (theModule)
@@ -1548,7 +1590,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
     int module4Global = TweakCampModule4Enabled.GetValueInt()
 	if (0 != module4Global)
 		ObjectReference theModule = myObjectCache[pTweakModule4ID]
-		if (1 == module4Global)
+		if (1 == module4Global || !hasFoundation)
 			if (myObjectState[pTweakModule4ID] > 1)
 				myObjectState[pTweakModule4ID] = 1
 				if (theModule)
@@ -1680,12 +1722,13 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
     int chemChoice = pTweakCampChemEnabled.GetValueInt()
     if (0 != chemChoice)
 		ObjectReference theChemBench = pShelterChemBench.GetReference()
-		if (1 == chemChoice && theChemBench && theChemBench.IsEnabled())
+		if ((1 == chemChoice || FoundationChanged) && theChemBench && theChemBench.IsEnabled())
 			EnsureChemBenchDisabled()
-		elseif (2 == chemChoice)
+		endif
+		if (2 == chemChoice)
 			Trace("Ensuring Chemical Bench [" + chemChoice + "]")
 			Furniture WorkbenchChemistryB = Game.GetForm(0x001487C1) as Furniture
-			CreateBench(myCenterMarker, pShelterChemBench, WorkbenchChemistryB, 542, -130, 0, 90, spawnMarker, true)
+			CreateBench(myCenterMarker, pShelterChemBench, WorkbenchChemistryB, 542, -130, 0, 90, spawnMarker, true, !hasFoundation)
 		endIf
 	endIf
 	
@@ -1706,12 +1749,13 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
     int weapChoice = pTweakCampWeapEnabled.GetValueInt()
     if (0 != weapChoice)
 		ObjectReference theWeapBench = pShelterWeapBench.GetReference()
-		if (1 == weapChoice && theWeapBench && theWeapBench.IsEnabled())
+		if ((1 == weapChoice || FoundationChanged) && theWeapBench && theWeapBench.IsEnabled())
 			EnsureWeapBenchDisabled()
-		elseif (2 == weapChoice)
+		endif
+		if (2 == weapChoice)
 			Trace("Ensuring Weapon Bench [" + weapChoice + "]")
 			Furniture workbenchWeaponsB = Game.GetForm(0x0017E787) as Furniture
-			CreateBench(myCenterMarker, pShelterWeapBench, workbenchWeaponsB, 405, 103, 0, -90, spawnMarker, true)			
+			CreateBench(myCenterMarker, pShelterWeapBench, workbenchWeaponsB, 405, 103, 0, -90, spawnMarker, true, !hasFoundation)			
 		endIf
 	endIf
 
@@ -1732,13 +1776,13 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
     int armorChoice = pTweakCampArmorEnabled.GetValueInt()
     if (0 != armorChoice)
 		ObjectReference theArmorBench = pShelterArmorBench.GetReference()
-		if (1 == armorChoice && theArmorBench && theArmorBench.IsEnabled())
+		if ((1 == armorChoice || FoundationChanged) && theArmorBench && theArmorBench.IsEnabled())
 			EnsureArmorBenchDisabled()
-		elseif (2 == armorChoice)
+		endif
+		if (2 == armorChoice)
 			Trace("Ensuring Armor Bench [" + armorChoice + "]")
 			Furniture WorkbenchArmorA = Game.GetForm(0x0012EA9B) as Furniture
-			CreateBench(myCenterMarker, pShelterArmorBench, WorkbenchArmorA, 440, 13, 0, 0, spawnMarker, true)
-
+			CreateBench(myCenterMarker, pShelterArmorBench, WorkbenchArmorA, 440, 13, 0, 0, spawnMarker, true, !hasFoundation)
 		endIf
 	endIf
 	
@@ -1760,12 +1804,13 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
     int paChoice = pTweakCampPAStationEnabled.GetValueInt()
     if (0 != paChoice)
 		ObjectReference thePowerBench = pShelterPowerBench.GetReference()
-		if (1 == paChoice && thePowerBench && thePowerBench.IsEnabled())
-			EnsurePowerBenchDisabled()			
-		elseif (2 == paChoice)
+		if ((1 == paChoice || FoundationChanged) && thePowerBench && thePowerBench.IsEnabled())
+			EnsurePowerBenchDisabled()
+		endif
+		if (2 == paChoice)
 			Trace("Ensuring Power Armor Bench [" + paChoice + "]")
 			Furniture WorkbenchPowerArmorSmall = Game.GetForm(0x0013BD08) as Furniture
-			CreateBench(myCenterMarker, pShelterPowerBench, WorkbenchPowerArmorSmall, 384, -82, 0, -90, spawnMarker, true)			
+			CreateBench(myCenterMarker, pShelterPowerBench, WorkbenchPowerArmorSmall, 384, -82, 0, -90, spawnMarker, true, !hasFoundation)			
 		endIf
 	endIf
 	
@@ -1795,7 +1840,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				endIf
 			endIf
 			
-		elseif (myObjectState[pTweakBed1ID] != bed1Global || !theBed)
+		elseif (myObjectState[pTweakBed1ID] != bed1Global || !theBed || FoundationChanged)
 		
 			; int previousState = myObjectState[pTweakBed1ID]
 			myObjectState[pTweakBed1ID] = bed1Global	
@@ -1809,29 +1854,29 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			if (2 == bed1Global) ; Floor Mattress
 				Trace("Creating bed1 [" + bed1Global + "]")
 				Form NpcBedGroundSleep01 = Game.GetForm(0x0002FBF9)
-				if (!hasFoundation)
-					CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedGroundSleep01, 100, -60, 0.0, 135.0, spawnMarker, true, true )
+				if (pTweakExpandCamp.GetStage() > 20)
+					CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedGroundSleep01, 553.77, -43.9, 0.0, 0, spawnMarker, true, !hasFoundation)
 				else
-					CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedGroundSleep01, 553.77, -43.9, 0.0, 0, spawnMarker, true)
+					CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedGroundSleep01, 100, -60, 0.0, 135.0, spawnMarker, true, true )
 				endif
 			elseif (3 == bed1Global) ; Bunk
 				Trace("Creating bed1 [" + bed1Global + "]")
 				Form NpcBedVaultBunkLay01 = Game.GetForm(0x000AB568)
-				CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedVaultBunkLay01, 578, -48, 0.0, 0, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedVaultBunkLay01, 578, -48, 0.0, 0, spawnMarker, true, !hasFoundation)
 			elseif (4 == bed1Global) ; Single
 				Trace("Creating bed1 [" + bed1Global + "]")
 				Form NpcBedVaultLay02 = Game.GetForm(0x0004329F)
-				CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedVaultLay02, 578, -48, 0.0, 0, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedVaultLay02, 578, -48, 0.0, 0, spawnMarker, true, !hasFoundation)
 			elseif (5 == bed1Global) ; Dbl: Hi-tech
 				Trace("Creating bed1 [" + bed1Global + "]")
 				; Form NPCBedInstituteMedBaySleep01 = Game.GetForm(0x000B0A71)
 				; CreateDecoration(myCenterMarker, pTweakBed1ID, NPCBedInstituteMedBaySleep01, 578, -48, 0.0, -180, spawnMarker, true)
 				Form NPCBedInstituteMountedSleepDbl01 = Game.GetForm(0x000550D3)
-				CreateDecoration(myCenterMarker, pTweakBed1ID, NPCBedInstituteMountedSleepDbl01, 560, -46, 0.0, -180, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed1ID, NPCBedInstituteMountedSleepDbl01, 560, -46, 0.0, -180, spawnMarker, true, !hasFoundation)
 			elseif (6 == bed1Global) ; Dbl: Pre-war
 				Trace("Creating bed1 [" + bed1Global + "]")
 				Form NpcBedPlayerHouseLay01 = Game.GetForm(0x00054835)
-				CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedPlayerHouseLay01, 550, -44.26, 0.0, 0, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed1ID, NpcBedPlayerHouseLay01, 550, -44.26, 0.0, 0, spawnMarker, true, !hasFoundation)
 			endif
 		endif
 	endif
@@ -1865,7 +1910,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				endIf
 			endIf
 			
-		elseif (myObjectState[pTweakBed2ID] != bed2Global || !theBed)
+		elseif (myObjectState[pTweakBed2ID] != bed2Global || !theBed || FoundationChanged)
 		
 			; int previousState = myObjectState[pTweakBed2ID]
 			myObjectState[pTweakBed2ID] = bed2Global	
@@ -1874,24 +1919,24 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			if (2 == bed2Global) ; Floor Mattress
 				Trace("Creating bed2 [" + bed2Global + "]")
 				Form NpcBedGroundSleep01 = Game.GetForm(0x0002FBF9)
-				CreateDecoration(myCenterMarker, pTweakBed2ID, NpcBedGroundSleep01, 553.77, 133.9, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed2ID, NpcBedGroundSleep01, 553.77, 133.9, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (3 == bed2Global) ; Bunk
 				Trace("Creating bed2 [" + bed2Global + "]")
 				Form NpcBedVaultBunkLay01 = Game.GetForm(0x000AB568)
-				CreateDecoration(myCenterMarker, pTweakBed2ID, NpcBedVaultBunkLay01, 578, 138, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed2ID, NpcBedVaultBunkLay01, 578, 138, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (4 == bed2Global) ; Single
 				Trace("Creating bed2 [" + bed2Global + "]")
 				Form NpcBedVaultLay02 = Game.GetForm(0x0004329F)
-				CreateDecoration(myCenterMarker, pTweakBed2ID, NpcBedVaultLay02, 578, 138, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed2ID, NpcBedVaultLay02, 578, 138, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (5 == bed2Global) ; Med Bay
 				Trace("Creating bed2 [" + bed2Global + "]")
 				; Form NPCBedInstituteMountedSleepDbl01 = Game.GetForm(0x000550D3)
 				Form NPCBedInstituteMedBaySleep01 = Game.GetForm(0x000B0A71)
-				CreateDecoration(myCenterMarker, pTweakBed2ID, NPCBedInstituteMedBaySleep01, 578, 138, 0.0, 90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed2ID, NPCBedInstituteMedBaySleep01, 578, 138, 0.0, 90, spawnMarker, true, !hasFoundation)
 			elseif (6 == bed2Global) ; Dbl: Pre-war
 				Trace("Creating bed2 [" + bed2Global + "]")
 				Form NpcBedPlayerHouseLay01 = Game.GetForm(0x00054835)
-				CreateDecoration(myCenterMarker, pTweakBed2ID, NpcBedPlayerHouseLay01, 550, 134.26, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakBed2ID, NpcBedPlayerHouseLay01, 550, 134.26, 0.0, -90, spawnMarker, true, !hasFoundation)
 			endif
 		endif
 	endif	
@@ -1922,7 +1967,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				endIf
 			endIf
 			
-		elseif (myObjectState[pTweakSeat1ID] != seat1Global || !theSeat)
+		elseif (myObjectState[pTweakSeat1ID] != seat1Global || !theSeat || FoundationChanged)
 		
 			; int previousState = myObjectState[pTweakSeat1ID]
 			myObjectState[pTweakSeat1ID] = seat1Global	
@@ -1931,27 +1976,27 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			if (2 == seat1Global) ; Wood Bench
 				Trace("Creating seat 1 [" + seat1Global + "]")
 				Form NpcBenchFederalistSit01 = Game.GetForm(0x0001F484)
-				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcBenchFederalistSit01, 200, 90, 0.0, 90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcBenchFederalistSit01, 200, 90, 0.0, 90, spawnMarker, true, !hasFoundation)
 			elseif (3 == seat1Global) ; Basic
 				Trace("Creating seat 1 [" + seat1Global + "]")
 				Form NpcCouchModernDomesticCleanSit01 = Game.GetForm(0x000FDC8B)
-				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcCouchModernDomesticCleanSit01, 200, 90, 0.0, 90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcCouchModernDomesticCleanSit01, 200, 90, 0.0, 90, spawnMarker, true, !hasFoundation)
 			elseif (4 == seat1Global) ; Vault 111
 				Trace("Creating seat 1 [" + seat1Global + "]")
 				Form NpcBenchVaultSit01 = Game.GetForm(0x000B30BC)
-				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcBenchVaultSit01, 200, 90, 0.0, 90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcBenchVaultSit01, 200, 90, 0.0, 90, spawnMarker, true, !hasFoundation)
 			elseif (5 == seat1Global) ; Hi-tech
 				Trace("Creating seat 1 [" + seat1Global + "]")
 				Form NpcCouchInstituteSit02 = Game.GetForm(0x00120451)
-				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcCouchInstituteSit02, 200, 90, 0.0, 90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcCouchInstituteSit02, 200, 90, 0.0, 90, spawnMarker, true, !hasFoundation)
 			elseif (6 == seat1Global) ; Pre-war
 				Trace("Creating seat 1 [" + seat1Global + "]")
 				Form NpcCouchPlayerHouseSit01 = Game.GetForm(0x0004D1D8)
-				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcCouchPlayerHouseSit01, 200, 90, 0.0, 90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat1ID, NpcCouchPlayerHouseSit01, 200, 90, 0.0, 90, spawnMarker, true, !hasFoundation)
 			elseif (7 == seat1Global) ; Luxury
 				Trace("Creating seat 1 [" + seat1Global + "]")
 				Form MQ202IrmaSit01 = Game.GetForm(0x00108F58)
-				CreateDecoration(myCenterMarker, pTweakSeat1ID, MQ202IrmaSit01, 200, 90, 0.0, 90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat1ID, MQ202IrmaSit01, 200, 90, 0.0, 90, spawnMarker, true, !hasFoundation)
 			endif
 		endif
 	endif
@@ -1982,7 +2027,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				endIf
 			endIf
 			
-		elseif (myObjectState[pTweakSeat2ID] != seat2Global || !theSeat)
+		elseif (myObjectState[pTweakSeat2ID] != seat2Global || !theSeat || FoundationChanged)
 		
 			; int previousState = myObjectState[pTweakSeat2ID]
 			myObjectState[pTweakSeat2ID] = seat2Global	
@@ -1991,27 +2036,27 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			if (2 == seat2Global) ; Wood Bench
 				Trace("Creating seat 2 [" + seat2Global + "]")
 				Form NpcBenchFederalistSit01 = Game.GetForm(0x0001F484)
-				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcBenchFederalistSit01, 180, -90, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcBenchFederalistSit01, 180, -90, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (3 == seat2Global) ; Basic
 				Trace("Creating seat 2 [" + seat2Global + "]")
 				Form NpcCouchModernDomesticCleanSit01 = Game.GetForm(0x000FDC8B)
-				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcCouchModernDomesticCleanSit01, 180, -90, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcCouchModernDomesticCleanSit01, 180, -90, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (4 == seat2Global) ; Vault 111
 				Trace("Creating seat 2 [" + seat2Global + "]")
 				Form NpcBenchVaultSit01 = Game.GetForm(0x000B30BC)
-				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcBenchVaultSit01, 180, -90, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcBenchVaultSit01, 180, -90, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (5 == seat2Global) ; Hi-tech
 				Trace("Creating seat 2 [" + seat2Global + "]")
 				Form NpcCouchInstituteSit02 = Game.GetForm(0x00120451)
-				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcCouchInstituteSit02, 180, -90, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcCouchInstituteSit02, 180, -90, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (6 == seat2Global) ; Pre-war
 				Trace("Creating seat 2 [" + seat2Global + "]")
 				Form NpcCouchPlayerHouseSit01 = Game.GetForm(0x0004D1D8)
-				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcCouchPlayerHouseSit01, 180, -90, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat2ID, NpcCouchPlayerHouseSit01, 180, -90, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (7 == seat2Global) ; Luxury
 				Trace("Creating seat 2 [" + seat2Global + "]")
 				Form MQ202IrmaSit01 = Game.GetForm(0x00108F58)
-				CreateDecoration(myCenterMarker, pTweakSeat2ID, MQ202IrmaSit01, 180, -90, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakSeat2ID, MQ202IrmaSit01, 180, -90, 0.0, -90, spawnMarker, true, !hasFoundation)
 			endif
 		endif
 	endif
@@ -2031,6 +2076,18 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 
     int misc1Global = pTweakCampDogHouseEnabled.GetValueInt()
 	if (0 != misc1Global)
+	
+		; When state is 3, the cached object is the CryoLever (Not
+		; the pod itself). Fortunately, the OnActivate gets the
+		; pod from the pShelterFridge ref, so it doesn't use
+		; the linkedrefs. So.. we could make the BAR a child
+		; decoration of the fridge. (Treat 6 and 3 the same
+		; except as 6, the scale and location is different 
+		; and a child bar decoration is linked to the lever
+		; for cleanup... Tricky part is if bar is on ground, 
+		; then fridge and lever need location relative to bar (where
+		; ever it ended up). 
+				
 		ObjectReference theMisc = myObjectCache[pTweakMisc1ID]
 		ObjectReference thePod  = pShelterFridge.GetReference()
 
@@ -2050,6 +2107,20 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 					ObjectReference theChild1 = theMisc.GetLinkedRef(LinkCustom08)
 					if (theChild1)
 						theMisc.SetLinkedRef(None,LinkCustom08)
+						ObjectReference thesubChild1 = theChild1.GetLinkedRef(LinkCustom08)
+						if (thesubChild1)
+							theChild1.SetLinkedRef(None,LinkCustom08)
+							thesubChild1.Disable()
+							thesubChild1.Delete()
+							thesubChild1 = None
+						endif
+						ObjectReference thesubChild2 = theChild1.GetLinkedRef(LinkCustom09)
+						if (thesubChild2)
+							theChild1.SetLinkedRef(None,LinkCustom09)
+							thesubChild2.Disable()
+							thesubChild2.Delete()
+							thesubChild2 = None
+						endif						
 						theChild1.Disable()
 						theChild1.Delete()
 						theChild1 = None
@@ -2066,12 +2137,26 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			endIf
 			
 			
-		elseif (myObjectState[pTweakMisc1ID] != misc1Global || !theMisc)
+		elseif (myObjectState[pTweakMisc1ID] != misc1Global || !theMisc || FoundationChanged)
 		
 			if (theMisc)
 				ObjectReference theChild1 = theMisc.GetLinkedRef(LinkCustom08)
 				if (theChild1)
 					theMisc.SetLinkedRef(None,LinkCustom08)
+					ObjectReference thesubChild1 = theChild1.GetLinkedRef(LinkCustom08)
+					if (thesubChild1)
+						theChild1.SetLinkedRef(None,LinkCustom08)
+						thesubChild1.Disable()
+						thesubChild1.Delete()
+						thesubChild1 = None
+					endif
+					ObjectReference thesubChild2 = theChild1.GetLinkedRef(LinkCustom09)
+					if (thesubChild2)
+						theChild1.SetLinkedRef(None,LinkCustom09)
+						thesubChild2.Disable()
+						thesubChild2.Delete()
+						thesubChild2 = None
+					endif						
 					theChild1.Disable()
 					theChild1.Delete()
 					theChild1 = None
@@ -2085,7 +2170,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				endif
 			endif
 
-			if (3 == previousState)
+			if (3 == previousState || 6 == previousState)
 				UnregisterForRemoteEvent(myObjectCache[pTweakMisc1ID],"OnActivate")
 				if (thePod && thePod.IsEnabled())
 					thePod.Disable()
@@ -2098,21 +2183,43 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			if (2 == misc1Global) ; Dog House
 				Trace("Creating misc 1 [" + misc1Global + "]")
 				Form Dogmeat_Doghouse = Game.GetForm(0x001C244E)
-				CreateDecoration(myCenterMarker, pTweakMisc1ID, Dogmeat_Doghouse, 410, -170, 0.0, -180, spawnMarker, true)				
+				CreateDecoration(myCenterMarker, pTweakMisc1ID, Dogmeat_Doghouse, 410, -170, 0.0, -180, spawnMarker, true, !hasFoundation)				
 			elseif (3 == misc1Global) ; CryoPod
 				; Fridge is a special case and a bit of a pain since it needs to be persisted..
 				Form TweakCryoFridge = Game.GetFormFromFile(0x0102DCA3,"AmazingFollowerTweaks.esp")
-				thePod = CreateBench(myCenterMarker, pShelterFridge, TweakCryoFridge, 390, -170, 0, -180, spawnMarker, true, linkToStorage=false)
+				thePod = CreateBench(myCenterMarker, pShelterFridge, TweakCryoFridge, 390, -170, 0, -180, spawnMarker, true, !hasFoundation, false)
 				thePod.SetScale(0.75)
 				Form TweakCryoLever = Game.GetFormFromFile(0x0102DCA5,"AmazingFollowerTweaks.esp")
-				ObjectReference thePodLever = CreateDecoration(myCenterMarker, pTweakMisc1ID, TweakCryoLever, 412, -167.43, -25, -180, spawnMarker, true)
+				ObjectReference thePodLever = CreateDecoration(myCenterMarker, pTweakMisc1ID, TweakCryoLever, 412, -167.43, -25, -180, spawnMarker, true, !hasFoundation)
 				thePodLever.SetScale(0.75)
 				RegisterForRemoteEvent(thePodLever,"OnActivate")				
-			elseif (6 == misc1Global) ; Bar
-				Trace("Creating misc 1 [" + misc1Global + "]")
-				; TweakFurnBar spawns/manages 2 child Objects under the linkedref LinkCustom08 and LinkCustom09
+			elseif (6 == misc1Global) ; Mini-CryoPod w/Bar
+			
 				Form TweakFurnBar = Game.GetFormFromFile(0x0102CD6F,"AmazingFollowerTweaks.esp")				
-				ObjectReference theBar = CreateDecoration(myCenterMarker, pTweakMisc1ID, TweakFurnBar, 360, -164.5, 0.0, -180, spawnMarker, true)
+				ObjectReference theBar = CreateDecoration(myCenterMarker, pTweakMisc1ID, TweakFurnBar, 360, -164.5, 0.0, -180, spawnMarker, true, !hasFoundation)
+				myObjectCache[pTweakMisc1ID] = None ; Ensure next call to CreateDecoration doesn't delete the Bar...				
+				; Fridge is a special case and a bit of a pain since it needs to be persisted..
+				Form TweakCryoFridge = Game.GetFormFromFile(0x0102DCA3,"AmazingFollowerTweaks.esp")
+				thePod = CreateBench(theBar, pShelterFridge, TweakCryoFridge, 110, -112, 78, 130, spawnMarker, true, false, false)
+				thePod.SetScale(0.20)
+				thePod.Disable()
+				;Utility.wait(0.5)
+				;thePod.Disable()
+				;Utility.wait(0.5)
+				;thePod.Enable()
+				
+				Form TweakCryoLever = Game.GetFormFromFile(0x0102DCA5,"AmazingFollowerTweaks.esp")
+				ObjectReference thePodLever = CreateDecoration(theBar, pTweakMisc1ID, TweakCryoLever, 110, -112, 78, 130, spawnMarker, true, false)
+				thePodLever.SetScale(0.20)
+				thePodLever.Disable()
+				Utility.wait(1.0)
+				thePod.Enable()				
+				thePodLever.Enable()
+				RegisterForRemoteEvent(thePodLever,"OnActivate")
+				
+				; We need subchild support because the bar has 2 children of its own for the stools....
+				thePodLever.SetLinkedRef(theBar,LinkCustom08)
+				
 			; elseif (7 == misc1Global) ; NPCNukaMachine or Trophy stand...
 				; Trace("Creating misc 1 [" + misc1Global + "]")
 				; Form NPCNukaMachine = Game.GetForm(0x0018DFDC)
@@ -2173,7 +2280,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				DeleteDecoration(pTweakMisc2HelperID)
 			endif
 			
-		elseif (myObjectState[pTweakMisc2ID] != misc2Global || !theMisc)
+		elseif (myObjectState[pTweakMisc2ID] != misc2Global || !theMisc || FoundationChanged)
 		
 			if (theMisc)
 				ObjectReference theChild1 = theMisc.GetLinkedRef(LinkCustom08)
@@ -2208,19 +2315,19 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			if (2 == misc2Global) ; Dog House
 				Trace("Creating misc 2 [" + misc2Global + "]")
 				Form Dogmeat_Doghouse = Game.GetForm(0x001C244E)
-				CreateDecoration(myCenterMarker, pTweakMisc2ID, Dogmeat_Doghouse, 552, 45, 0.0, -90, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakMisc2ID, Dogmeat_Doghouse, 552, 45, 0.0, -90, spawnMarker, true, !hasFoundation)
 			elseif (4 == misc2Global) ; Memory Lounder
 				Trace("Creating misc 2 [" + misc2Global + "]")
 				Form NPCMemoryLounger01 = Game.GetForm(0x000CA06D)
-				ObjectReference theMemoryLounger = CreateDecoration(myCenterMarker, pTweakMisc2ID, NPCMemoryLounger01, 503, 40, 0.0, 90, spawnMarker, true)
+				ObjectReference theMemoryLounger = CreateDecoration(myCenterMarker, pTweakMisc2ID, NPCMemoryLounger01, 503, 40, 0.0, 90, spawnMarker, true, !hasFoundation)
 				RegisterForRemoteEvent(theMemoryLounger,"OnActivate")
 			elseif (5 == misc2Global) ; Bathroom
 				Trace("Creating misc 2 [" + misc2Global + "]")
 				; TweakFurnShower spawns/manages 2 child Objects under the linkedref LinkCustom08 and LinkCustom09				
 				Form TweakFurnShower = Game.GetFormFromFile(0x0102AF07,"AmazingFollowerTweaks.esp")
-				CreateDecoration(myCenterMarker, pTweakMisc2ID, TweakFurnShower, 578, 50, 0.0, 90, spawnMarker, true)				
+				CreateDecoration(myCenterMarker, pTweakMisc2ID, TweakFurnShower, 578, 50, 0.0, 90, spawnMarker, true, !hasFoundation)				
 				Form TweakFurnToilet = Game.GetFormFromFile(0x0102C5D3,"AmazingFollowerTweaks.esp")
-				CreateDecoration(myCenterMarker, pTweakMisc2HelperID, TweakFurnToilet, 575, 38, 0.0, 0, spawnMarker, true)
+				CreateDecoration(myCenterMarker, pTweakMisc2HelperID, TweakFurnToilet, 575, 38, 0.0, 0, spawnMarker, true, !hasFoundation)
 			; elseif (7 == misc2Global) ; NPCNukaMachine or Trophy stand...
 				; Trace("Creating misc 2 [" + misc2Global + "]")
 				; Form NPCNukaMachine = Game.GetForm(0x0018DFDC)
@@ -2235,8 +2342,8 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 	
     int turretsGlobal =  pTweakCampTurretsEnabled.GetValueInt()
 	if (0 != turretsGlobal)
-		ObjectReference theNorthTurret1 = myObjectCache[pTweakSeat2ID]
-		Trace("Seat 1 [" + turretsGlobal + "] [" + theNorthTurret1 + "]")
+		ObjectReference theNorthTurret1 = myObjectCache[pTweakTurretNorth1ID]
+		Trace("turretsGlobal [" + turretsGlobal + "] [" + theNorthTurret1 + "]")
 		if (1 == turretsGlobal)
 		
 			if (myObjectState[pTweakTurretNorth1ID] > 1)
@@ -2244,9 +2351,9 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				DeleteDecorationRange(pTweakTurretNorth1ID,pTweakTurretWest2ID)
 			endIf
 			
-		elseif (myObjectState[pTweakTurretNorth1ID] != turretsGlobal || !theNorthTurret1)
+		elseif (myObjectState[pTweakTurretNorth1ID] != turretsGlobal || !theNorthTurret1 || FoundationChanged)
 			
-			; int previousState = myObjectState[pTweakSeat2ID]
+			; int previousState = myObjectState[pTweakTurretNorth1ID]
 			myObjectState[pTweakTurretNorth1ID] = turretsGlobal	
 			
 			form theTurret
@@ -2254,7 +2361,6 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			if (2 == turretsGlobal) ; Mark I
 				Trace("Using Mark I") ; < Level 7
 				theTurret = Game.GetFormFromFile(0x01025B3A,"AmazingFollowerTweaks.esp")
-				; theTurret = Game.GetForm(0x00111320)
 			elseif (3 == turretsGlobal) ; Mark III
 				Trace("Using Mark II") ; < Level 17
 				theTurret = Game.GetFormFromFile(0x010337E2,"AmazingFollowerTweaks.esp")
@@ -2277,14 +2383,14 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			; |   |   |   |###|
 			; |---T---|---T---|   
 			
-			CreateDecoration(myCenterMarker, pTweakTurretSouth1ID, theTurret, 551.07,  -27.68, 0.0, 0, spawnMarker, true)
-			CreateDecoration(myCenterMarker, pTweakTurretSouth2ID, theTurret, 551.07,   27.68, 0.0, 0, spawnMarker, true)
-			CreateDecoration(myCenterMarker, pTweakTurretNorth1ID, theTurret, 551.07, -152.32, 0.0, 180, spawnMarker, true)
-			CreateDecoration(myCenterMarker, pTweakTurretNorth2ID, theTurret, 551.07,  152.32, 0.0, 180, spawnMarker, true)
-			CreateDecoration(myCenterMarker, pTweakTurretEast1ID,  theTurret, 551.07,  117.68, 0.0, -90, spawnMarker, true)
-			CreateDecoration(myCenterMarker, pTweakTurretEast2ID,  theTurret, 551.07,   62.32, 0.0, -90, spawnMarker, true)
-			CreateDecoration(myCenterMarker, pTweakTurretWest1ID,  theTurret, 551.07, -117.68, 0.0, 90, spawnMarker, true)
-			CreateDecoration(myCenterMarker, pTweakTurretWest2ID,  theTurret, 551.07,  -62.32, 0.0, 90, spawnMarker, true)
+			CreateDecoration(myCenterMarker, pTweakTurretSouth1ID, theTurret, 551.07,  -27.68, 0.0, 0, spawnMarker, true, !hasFoundation)
+			CreateDecoration(myCenterMarker, pTweakTurretSouth2ID, theTurret, 551.07,   27.68, 0.0, 0, spawnMarker, true, !hasFoundation)
+			CreateDecoration(myCenterMarker, pTweakTurretNorth1ID, theTurret, 551.07, -152.32, 0.0, 180, spawnMarker, true, !hasFoundation)
+			CreateDecoration(myCenterMarker, pTweakTurretNorth2ID, theTurret, 551.07,  152.32, 0.0, 180, spawnMarker, true, !hasFoundation)
+			CreateDecoration(myCenterMarker, pTweakTurretEast1ID,  theTurret, 551.07,  117.68, 0.0, -90, spawnMarker, true, !hasFoundation)
+			CreateDecoration(myCenterMarker, pTweakTurretEast2ID,  theTurret, 551.07,   62.32, 0.0, -90, spawnMarker, true, !hasFoundation)
+			CreateDecoration(myCenterMarker, pTweakTurretWest1ID,  theTurret, 551.07, -117.68, 0.0, 90, spawnMarker, true, !hasFoundation)
+			CreateDecoration(myCenterMarker, pTweakTurretWest2ID,  theTurret, 551.07,  -62.32, 0.0, 90, spawnMarker, true, !hasFoundation)
 			
 		endif
 	endif	
@@ -3254,6 +3360,20 @@ Function TearDownCamp(bool remote=false)
 		ObjectReference theChild1 = theMisc1.GetLinkedRef(LinkCustom08)
 		if (theChild1)
 			theMisc1.SetLinkedRef(None,LinkCustom08)
+			ObjectReference thesubChild1 = theChild1.GetLinkedRef(LinkCustom08)
+			if (thesubChild1)
+				theChild1.SetLinkedRef(None,LinkCustom08)
+				thesubChild1.Disable()
+				thesubChild1.Delete()
+				thesubChild1 = None
+			endif
+			ObjectReference thesubChild2 = theChild1.GetLinkedRef(LinkCustom09)
+			if (thesubChild2)
+				theChild1.SetLinkedRef(None,LinkCustom09)
+				thesubChild2.Disable()
+				thesubChild2.Delete()
+				thesubChild2 = None
+			endif						
 			theChild1.Disable()
 			theChild1.Delete()
 			theChild1 = None
@@ -3335,28 +3455,33 @@ Function TearDownCamp(bool remote=false)
 	; ----------------------------------
 	ObjectReference theModule4 = myObjectCache[pTweakModule4ID]
 	if (theModule4 && theModule4.IsEnabled())
-		DeleteDecorationRange(pTweakModule4ID,pTweakModule4LightDID,true)			
+		DeleteDecorationRange(pTweakModule4ID,pTweakModule4DoorID,true)			
+		DeleteDecorationRange(pTweakModule4SwitchID,pTweakModule4LightDID)			
 	else
 		Trace("No Module4 or it is already disabled")
 	endif
-
+	
 	ObjectReference theModule3 = myObjectCache[pTweakModule3ID]
 	if (theModule3 && theModule3.IsEnabled())
-		DeleteDecorationRange(pTweakModule3ID,pTweakModule3LightDID,true)
+		DeleteDecorationRange(pTweakModule3ID,pTweakModule3DoorID,true)			
+		DeleteDecorationRange(pTweakModule3SwitchID,pTweakModule3LightDID)			
 	else
 		Trace("No Module3 or it is already disabled")
 	endif
-
+	
+	
 	ObjectReference theModule2 = myObjectCache[pTweakModule2ID]
 	if (theModule2 && theModule2.IsEnabled())
-		DeleteDecorationRange(pTweakModule2ID,pTweakModule2LightDID,true)
+		DeleteDecorationRange(pTweakModule2ID,pTweakModule2DoorID,true)			
+		DeleteDecorationRange(pTweakModule2SwitchID,pTweakModule2LightDID)			
 	else
 		Trace("No Module2 or it is already disabled")
 	endif
-
+	
 	ObjectReference theModule1 = myObjectCache[pTweakModule1ID]
 	if (theModule1 && theModule1.IsEnabled())
-		DeleteDecorationRange(pTweakModule1ID,pTweakModule1LightDID,true)
+		DeleteDecorationRange(pTweakModule1ID,pTweakFountainID,true)			
+		DeleteDecorationRange(pTweakModule1SwitchID,pTweakModule1LightDID)			
 	else
 		Trace("No Module1 or it is already disabled")
 	endif
@@ -3447,14 +3572,20 @@ Function TearDownCamp(bool remote=false)
 	; Move PowerArmors to accessible location
 	; ----------------------------------
 	
-	ObjectReference pa = player.GetLinkedRef(pLinkPowerArmor)
-	if (pa && pa.GetLinkedRef(pLinkPowerArmor) == player)
-		pa.MoveToNearestNavmeshLocation()
-		pa.Disable()
-		pa.Enable()
-		Utility.wait(0.1)
+	ObjectReference pa;
+	; BUG FIX 1.17 : Confirm player isn't wearing it:
+	if 0 == pTweakCampIgnorePA.GetValue() && !player.WornHasKeyword(pArmorTypePower)
+		pa = player.GetLinkedRef(pLinkPowerArmor)
+		if (pa && pa.GetLinkedRef(pLinkPowerArmor) == player)
+			pa.MoveToNearestNavmeshLocation()
+			pa.Disable()
+			pa.Enable()
+			Utility.wait(0.1)
+		else
+			Trace("No Armor assigned to player (found)")
+		endif
 	else
-		Trace("No Armor assigned to player (found)")
+		Trace("Player wearing their PA. Skipping.")
 	endif
 	
     if (pTweakFollowerScript)

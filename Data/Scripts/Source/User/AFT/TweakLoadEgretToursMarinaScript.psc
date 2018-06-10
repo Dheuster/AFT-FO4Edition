@@ -17,6 +17,10 @@ Function BuildWallOnly(TweakBuilderScript tbs, int clearFirst = 0,  int requireN
 	endif
 	
 	tbs.init(137855, requireNoFood)
+
+	; Options
+	tbs.skip_powerup()
+	
 	if 0 != clearFirst
 		tbs.clearsettlement(137855)
 	endif

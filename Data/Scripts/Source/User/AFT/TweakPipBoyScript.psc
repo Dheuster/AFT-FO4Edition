@@ -135,8 +135,11 @@ Faction	 Property pTweakAutoStanceFaction	Auto Const
 
 Faction	 Property pTweakManagedOutfit		Auto Const
 Faction	 Property pDanversFaction			Auto Const
-GlobalVariable Property pTweakMarkedForIgnore	Auto Const
+Faction	 Property pSalemFaction				Auto Const
+Faction  Property pTweakIgnoredFaction		Auto Const
+Faction  Property pTweakRangedFaction		Auto Const
 
+GlobalVariable Property pTweakMarkedForIgnore Auto Const
 
 Potion   Property pTweakActivateAFT           Auto Const
 Holotape Property pTweakHoloTape              Auto Const
@@ -168,6 +171,7 @@ Terminal Property pTweakFailNoPrefab		 Auto COnst
 Terminal Property pTweakFailBadPrefab		 Auto COnst
 Terminal Property pTweakCombatStyleTerminal  Auto Const
 Terminal Property pTweakSelectNameTerminal	 Auto Const
+Terminal Property pTweakCombatDistanceTerminal Auto Const
 
 Terminal Property pTweakSpecial				Auto Const
 
@@ -270,6 +274,7 @@ Idle	Property ScrapIdle Auto Const
 
 Faction	Property DisallowedCompanionFaction Auto Const
 Faction Property PotentialCompanionFaction	Auto Const
+Faction Property pHasBeenCompanionFaction	Auto Const
 Faction Property pCurrentCompanionFaction	Auto Const
 Faction Property TweakAllowFriendlyFire  	Auto Const
 
@@ -298,6 +303,9 @@ GlobalVariable Property TweakPrefabShowFull Auto Const
 
 GlobalVariable Property pTweakNoImportRestrictions Auto Const
 GlobalVariable Property pTweakRestoreAFTItems Auto Const
+
+GlobalVariable Property pTweakScoutAhead	Auto Const
+
 
 
 ActorValue	Property pFavorsPerDay			Auto Const
@@ -1330,6 +1338,37 @@ Function ToggleReadyWeapon(bool backToPip=True)
 	
 EndFunction
 
+Function ToggleScoutAhead(bool backToPip=True)
+
+	Utility.waitmenumode(0.1)
+	
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[1]
+		params[0] = backToPip
+		self.CallFunctionNoWait("ToggleScoutAhead", params)
+		return
+	endIf
+
+	if (TerminalTarget)
+		bool current = TerminalTarget.IsInFaction(pTweakRangedFaction)
+		if current
+			TerminalTarget.RemoveFromFaction(pTweakRangedFaction)
+			pTweakScoutAhead.SetValue(0.0)
+		else
+			TerminalTarget.AddToFaction(pTweakRangedFaction)
+			pTweakScoutAhead.SetValue(1.0)
+		endIf
+		
+		if backToPip
+			bool TerminalTargetScoutAhead = TerminalTarget.IsInFaction(pTweakRangedFaction)		
+			if (TerminalTargetScoutAhead != current)
+				pTweakCombatDistanceTerminal.ShowOnPipBoy()
+			endIf
+		endIf
+	endIf
+	
+EndFunction
+
 
 Function SetConfidenceRelay(int value, bool backToPip=True)
 	Utility.waitmenumode(0.1)
@@ -1860,9 +1899,14 @@ Function EvaluateTerminalTarget()
 		if TerminalTarget.IsInFaction(pTweakManagedOutfit)
 			pTweakOutfitManaged.SetValue(1.0)
 		else
-			pTweakOutfitManaged.SetValue(0.0)			
+			pTweakOutfitManaged.SetValue(0.0)
 		endIf
 		
+		If TerminalTarget.IsInFaction(pTweakRangedFaction)
+			pTweakScoutAhead.SetValue(1.0)
+		else
+			pTweakScoutAhead.SetValue(0.0)
+		endIf
 		
 		if (TerminalTarget.IsInFaction(pTweakCombatOutFitFaction))
 			TerminalTargetHasCombatOutfit = true
@@ -2530,7 +2574,7 @@ Function SetLoiterCooldown(float value)
 	FollowersScript pFollowersScript = (pFollowers AS FollowersScript)
 	if pFollowersScript
 		pTweakLoiterCooldown.SetValue(value)
-		pFollowersScript.SetStandardLoiterCoolDownTime(pTweakLoiterCooldown.GetValue())
+		pFollowersScript.SetStandardLoiterCoolDownTime(value)
 	endIf
 EndFunction
 
@@ -2682,7 +2726,7 @@ Function ActivateAft(Actor npc = None)
 			Trace("TerminalTarget is not in TweakFOllowerFaction")
 			float theCommand = pTweakCommand.GetValue()
 			if (0 == theCommand)
-				if TerminalTarget.IsInFaction(pDanversFaction)
+				if TerminalTarget.IsInFaction(pTweakIgnoredFaction)
 					pTweakMarkedForIgnore.SetValue(1.0)
 				else
 					pTweakMarkedForIgnore.SetValue(0.0)
@@ -3107,6 +3151,10 @@ Function handleCommand(float theCommand)
 			
 			if 125.0 == theCommand
 				GatherLooseItems()
+			elseif 128 == theCommand ; All Retreat
+				RetreatRelay()
+			elseif 129 == theCommand ; All Attack
+				AttackRelay()
 			elseif 122 == theCommand ; Toggle Mortality
 				ToggleEssential(false)
 			elseif 123 == theCommand ; Edit Special Attributes
@@ -3163,6 +3211,8 @@ Function handleCommand(float theCommand)
 						SwimOutfitReset()
 					endIf
 				endIf
+			elseif 130 == theCommand
+				ToggleScoutAhead(false)
 			endIf
 			
 		endIf		
@@ -3330,10 +3380,12 @@ Function ToggleAFTgnored()
 	Trace("ToggleAFTgnored() Called")
 		
 	if TerminalTarget
-		if TerminalTarget.IsInFaction(pDanversFaction)
+		if TerminalTarget.IsInFaction(pTweakIgnoredFaction)
+			TerminalTarget.RemoveFromFaction(pTweakIgnoredFaction)
 			TerminalTarget.RemoveFromFaction(pDanversFaction)
 			pTweakMarkedForIgnore.SetValue(0.0)
 		else
+			TerminalTarget.AddToFaction(pTweakIgnoredFaction)
 			TerminalTarget.AddToFaction(pDanversFaction)
 			pTweakMarkedForIgnore.SetValue(1.0)
 		endIf		
@@ -3342,28 +3394,55 @@ Function ToggleAFTgnored()
 endFunction
 	
 ; Terminal Target has a value, but NPC is None
-Function ImportNPCRelay()
+Function ImportNPCRelay(int itype = 0)
 	Trace("ImportNPCRelay() Called")
 	
 	if (Utility.IsInMenuMode())
-		Var[] params = new Var[0]
+		Var[] params = new Var[1]
+		params[0] = itype
 		self.CallFunctionNoWait("ImportNPCRelay", params)
 		return
 	endIf
 	
-	int potential = TerminalTarget.GetFactionRank(PotentialCompanionFaction)
-	if (potential > -2 && pTweakNoImportRestrictions.GetValue() == 0.0)
-		Trace("NPC Marked as PotentialCompanion")
-		pTweakFailPotential.ShowOnPipBoy()
-		return
-	endIf
+	if (TerminalTarget.IsInFaction(pHasBeenCompanionFaction) && TerminalTarget.GetFactionRank(pHasBeenCompanionFaction) < 0)
+		if (TerminalTarget.GetFactionRank(PotentialCompanionFaction) > -2 && pTweakNoImportRestrictions.GetValue() == 0.0)
+			Trace("NPC Marked as PotentialCompanion")
+			pTweakFailPotential.ShowOnPipBoy()
+			return
+		endIf
+	endif
 	
 	if (TerminalTarget.IsInFaction(DisallowedCompanionFaction) && pTweakNoImportRestrictions.GetValue() == 0.0)
 		Trace("NPC Marked as Disallowed")
 		pTweakFailDisallowed.ShowOnPipBoy()
 		return
 	endIf
-			
+	
+	if (0 == itype) ; Full Import (AI Override)
+		if TerminalTarget.IsInFaction(pSalemFaction)
+			TerminalTarget.RemoveFromFaction(pSalemFaction)
+		endIf
+		if (TerminalTarget.IsInFaction(pDanversFaction))
+			TerminalTarget.RemoveFromFaction(pDanversFaction)			
+		endif
+	elseif (1 == itype) ; Don't mess with AI
+		; Add to Salem Faction
+		if (TerminalTarget.IsInFaction(pDanversFaction))
+			TerminalTarget.RemoveFromFaction(pDanversFaction)			
+		endif
+		if (!TerminalTarget.IsInFaction(pSalemFaction))
+			TerminalTarget.AddToFaction(pSalemFaction)
+		endif
+	elseif (2 == itype) ; Just a follower
+		; Add to DanversFaction
+		if (!TerminalTarget.IsInFaction(pSalemFaction))
+			TerminalTarget.AddToFaction(pSalemFaction)
+		endif
+		if (!TerminalTarget.IsInFaction(pDanversFaction))
+			TerminalTarget.AddToFaction(pDanversFaction)
+		endif
+	endif
+	
 	FollowersScript pFollowersScript = (pFollowers AS FollowersScript)
 	if (pFollowersScript && TerminalTarget)
 		Actor pc = Game.GetPlayer()
@@ -3447,8 +3526,6 @@ EndFunction
 
 Function GatherLooseItems()
 
-	Trace("GatherLooseItems() v2 Called")
-	
 	if (Utility.IsInMenuMode())
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("GatherLooseItems", params)
@@ -5003,6 +5080,46 @@ Function SummonRelay()
 	
 EndFunction
 
+Function RetreatRelay()
+	
+	Trace("RetreatRelay()")
+	Utility.waitmenumode(0.1)
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("RetreatRelay", params)
+		return
+	endIf
+
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+		pTweakFollowerScript.OnRetreatStart()
+	else
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
+	endIf
+	
+EndFunction
+
+Function AttackRelay()
+	
+	Trace("AttackRelay()")
+	Utility.waitmenumode(0.1)
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("AttackRelay", params)
+		return
+	endIf
+
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+		pTweakFollowerScript.AttackVisible()
+	else
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
+	endIf
+	
+EndFunction
+
+
+
 Function UnEquipAllRelay()
 
 	Trace("UnEquipAllRelay()")
@@ -5241,6 +5358,41 @@ Function EnterPowerArmorRelay()
 		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
 	endIf
 	
+EndFunction
+
+Function UpdateCoolDownDaysLong(float value)
+	AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
+	if DFScript
+		DFScript.UpdateCoolDownDaysLong(value)
+	endIf
+EndFunction
+
+Function UpdateCoolDownDaysMedium(float value)
+	AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
+	if DFScript
+		DFScript.UpdateCoolDownDaysMedium(value)
+	endIf
+EndFunction
+
+Function UpdateCoolDownDaysShort(float value)
+	AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
+	if DFScript
+		DFScript.UpdateCoolDownDaysShort(value)
+	endIf
+EndFunction
+
+Function UpdateIdleCoolDownDismissed(float min, float max)
+	AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
+	if DFScript
+		DFScript.UpdateIdleCoolDownDismissed(min, max)
+	endIf
+EndFunction
+
+Function UpdateIdleCoolDownActive(float min, float max)
+	AFT:TweakDFScript DFScript = (pFollowers as AFT:TweakDFScript)
+	if DFScript
+		DFScript.UpdateIdleCoolDownActive(min, max)
+	endIf
 EndFunction
 
 Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pModIDAV, string hint = "", int first_prob=100, int secondary_prob=100 )

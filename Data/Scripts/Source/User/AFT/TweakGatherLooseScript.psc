@@ -1,6 +1,7 @@
 ScriptName AFT:TweakGatherLooseScript extends Quest
 
 FormList Property lootItemsUnique Auto Const
+FormList Property TweakLootItemsUnique Auto Const
 FormList Property CA_JunkItems Auto Const
 FormList Property TweakConstructed_Cont Auto Const
 FormList Property TweakNonConstructed_Cont Auto Const
@@ -11,6 +12,7 @@ FormList Property TweakDedupe3Items Auto Const
 FormList Property TweakDedupe4Items Auto Const
 FormList Property TweakGatherLoose Auto Const
 FormList Property TweakDedupeStackable Auto Const
+GlobalVariable Property TweakGatherLooseRadius Auto Const
 Container Property Arena_Wager_Container Auto Const
 Keyword Property ActorTypeTurret Auto Const
 Quest Property pFollowers Auto Const
@@ -24,6 +26,7 @@ ObjectReference[] ownedResults
 int lockedCount
 int ownedCount
 int gatheredCount
+float maxRadius
 
 ; TODO: Need to add some more containers:
 ; - CashRegister
@@ -36,7 +39,9 @@ EndFunction
 
 Function GatherLooseItems(ObjectReference targetContainer)
 	Trace("GatherLooseItems()")
-		
+	
+	; Copy the global to a local variable so that processing isn't unexpectedly interrupted
+	maxRadius = TweakGatherLooseRadius.GetValue()
 	if (!targetContainer)
 		AFT:TweakDFScript pTweakDFScript = pFollowers as AFT:TweakDFScript
 		if (pTweakDFScript)
@@ -153,30 +158,32 @@ Function ScanContainersForItems(FormList containers, string name, ObjectReferenc
 	ObjectReference center = pc as ObjectReference
 	
 	Trace("Scanning [" + name + "]...")
-	results = center.FindAllReferencesOfType(containers, 1600)
+	results = center.FindAllReferencesOfType(containers, maxRadius)
 	int numresults = results.length
 	Trace("Scan [" + name + "] Complete: [" + numresults + "] container objects found", 0)
 	
 	int i = 0
 	ObjectReference containedin = None
-	bool moveit = True
+	bool keepit = True
 	
 	if (None == target)
 		target = center
 	endIf
 	
+	float yield = 0
+	
 	while (i < numresults)
-		moveit = True
+		keepit = True
 		result = results[i]
 		if (result)
 			Trace("Found Container [" + result + "] IsLocked [" + result.IsLocked() + "] Lock Level [" + result.GetLockLevel() + "]")
 			if (result.IsLocked())
 				Trace("Rejected: Container is Locked [" + result.GetLockLevel() + "]")
-				moveit = False
+				keepit = False
 				lockedCount += 1
 			elseIf (0 == result.GetItemCount(None))
 				Trace("Rejected: Container is Empty")
-				moveit = False
+				keepit = False
 			else
 				Actor owner = result.GetActorRefOwner()
 				ActorBase ownerBase = result.GetActorOwner()
@@ -185,14 +192,14 @@ Function ScanContainersForItems(FormList containers, string name, ObjectReferenc
 						Trace("Accepted: Container Owner is Ally to player")
 					else
 						Trace("Rejected: Container owned By Another Actor")
-						moveit = False
+						keepit = False
 					endIf
 				elseif (ownerBase)
 					if (ownerBase == Player)
 						Trace("Accepted: Container owner is Player")
 					else
 						Trace("Rejected: Container owned By another Actor Base")
-						moveit = False
+						keepit = False
 					endIf
 				else
 					Faction ownerFaction = result.GetFactionOwner()
@@ -203,20 +210,41 @@ Function ScanContainersForItems(FormList containers, string name, ObjectReferenc
 							Trace("Accepted: Container Faction is Ally to player")
 						else
 							Trace("Rejected: Container Faction isn't associated with Player")
-							moveit = False
+							keepit = False
 						endIf
 					endIf
 				endIf
-				if (!moveit)
+				if (!keepit)
 					ownedCount += 1
 				endIf
 			endIf
-			if (moveit)
+			if (keepit)
+				Trace("Storing Items to Eval Bin")
 				result.RemoveAllItems(target, True)
+				; I would prefer to yield later, but if we wait too long, the 
+				; item is removed and the result coming into the container is None
+				; (And you can't check for ownership on None objects)
+				; Utility.wait(0.01)
+				
+				; yield += 1.0
 			endIf
 		endIf
 		i += 1
 	endWhile
+	
+	; The OnItemEventHandlers are on THIS SCRIPT. So they can't get
+	; called unless we yield. Papyrus to Engine command syncs happen 
+	; in batches sent/received every 0.03 seconds. 
+;	if (0 != yield)
+;		Trace("Processing Eval Bin")
+;		float total = (yield * 0.3)
+;		if total > 1.5
+;			total = 1.5
+;		endIf
+;		Utility.wait(total)
+;	endif
+	
+	
 endFunction
 
 Function ScanDeadActorsForItems(ObjectReference target)
@@ -228,19 +256,20 @@ Function ScanDeadActorsForItems(ObjectReference target)
 	if (None == target)
 		target = pc as ObjectReference
 	endIf
-	
+			
 	ObjectReference[] nearby = None
 	Actor npc = None
 	int nsize = 0
 	int j = 0
 	
-	bool moveit = False
 	ObjectReference opc = pc as ObjectReference
 	int numTypes = TweakActorTypes.GetSize()
 	int i = 0
 	
+	float yield = 0
+	
 	while (i < numTypes)
-		nearby = pc.FindAllReferencesWithKeyword(TweakActorTypes.GetAt(i), 1600)
+		nearby = pc.FindAllReferencesWithKeyword(TweakActorTypes.GetAt(i), maxRadius)
 		if (0 != nearby.length)
 			nsize = nearby.length
 			Trace("Found [" + nsize + "] [" + TweakActorTypes.GetAt(i) + "] nearby ", 0)
@@ -248,8 +277,10 @@ Function ScanDeadActorsForItems(ObjectReference target)
 			while (j < nsize)
 				npc = nearby[j] as Actor
 				if (npc as bool && npc.IsDead() && 0 != npc.GetItemCount(None))
-					Trace("Dead actor [" + npc + "] within 1600 of player with items. Looting")
+					Trace("Dead actor [" + npc + "] within " + maxRadius + " of player with items. Looting")
 					npc.RemoveAllItems(target, False)
+					; Utility.wait(0.01)
+					; yield += 1.0
 				else
 					Trace("Rejected: Actor is Alive or Has No Items")
 				endIf
@@ -260,7 +291,7 @@ Function ScanDeadActorsForItems(ObjectReference target)
 	endWhile
 	
 	; Handle Turrets
-	nearby = pc.FindAllReferencesWithKeyword(ActorTypeTurret, 1600)
+	nearby = pc.FindAllReferencesWithKeyword(ActorTypeTurret, maxRadius)
 	if (0 != nearby.length)
 		nsize = nearby.length
 		Trace("Found [" + nsize + "] [ActorTypeTurret] nearby ")
@@ -268,14 +299,29 @@ Function ScanDeadActorsForItems(ObjectReference target)
 		while (j < nsize)
 			npc = nearby[j] as Actor
 			if (npc && npc.IsDead() && 0 != npc.GetItemCount(None))
-				Trace("Broken Turret [" + npc + "] within 1600 of player with items. Looting")
+				Trace("Broken Turret [" + npc + "] within " + maxRadius + " of player with items. Looting")
 				npc.RemoveAllItems(target, True)
+				Utility.wait(0.01)
+				; yield += 1.0
 			else
 				Trace("Rejected: Turret is Active or Has No Items")
 			endIf
 			j += 1
 		endWhile
 	endIf
+
+	; The OnItemEventHandlers are on THIS SCRIPT. So they can't get
+	; called unless we yield. Papyrus to Engine command syncs happen 
+	; in batches sent/received every 0.03 seconds. 
+;	if (0 != yield)
+;		float total = (yield * 0.3)
+;		if total > 1.5
+;			total = 1.5
+;		endIf
+;		Utility.wait(total)
+;	endif
+	
+	
 EndFunction
 
 Function ScanForLooseItems(FormList list, string name, ObjectReference target)
@@ -295,7 +341,7 @@ Function ScanForLooseItems(FormList list, string name, ObjectReference target)
 		target = center
 	endIf
 	
-	results = center.FindAllReferencesOfType(list, 1600)
+	results = center.FindAllReferencesOfType(list, maxRadius)
 	
 	int numresults = results.length
 	if (numresults < 1)
@@ -305,9 +351,9 @@ Function ScanForLooseItems(FormList list, string name, ObjectReference target)
 	
 	int i = 0
 	ObjectReference containedin = None
-	bool moveit = True
+	bool keepit = True
 	while (i < numresults)
-		moveit = True
+		keepit = True
 		result = results[i]
 		if result.IsEnabled()
 			Actor owner = result.GetActorRefOwner()
@@ -317,14 +363,14 @@ Function ScanForLooseItems(FormList list, string name, ObjectReference target)
 					Trace("Accepted: Loose item owner is Ally to player")
 				else
 					Trace("Rejected: Loose item owned By Another Actor")
-					moveit = False
+					keepit = False
 				endIf
 			elseif (ownerBase)
 				if (ownerBase == Player)
 					Trace("Accepted: Loose item owned by Player")
 				else
 					Trace("Rejected: Loose item owned By another Actor Base")
-					moveit = False
+					keepit = False
 				endIf
 			else
 				Faction ownerFaction = result.GetFactionOwner()
@@ -335,38 +381,49 @@ Function ScanForLooseItems(FormList list, string name, ObjectReference target)
 						Trace("Accepted: Container Faction is Ally to player")
 					else
 						Trace("Rejected: Loose item not associated with Player Faction")
-						moveit = false
+						keepit = false
 					endIf
+				else
+					; Delimma... No ActorRefOwner, No ActorBaseOwner and now Faction Owner. Should we assume unowned?
+					Trace("Accepted: Unable to determined ownership. Assuming unowned.")
 				endIf
 			endIf
-			if (moveit)
+			if (keepit)
 				if (result.IsQuestItem())
 					Trace("Rejected : Is Quest Item")
-					moveit = False
+					keepit = False
 				endIf
 			else
 				ownedCount += 1
 			endIf
-			if (moveit)
+			if (keepit)
 				containedin = result.GetContainer()
 				if (containedin)
 					if (center == containedin)
 						Trace("Rejected: Container is Player")
-						moveit = False
-					elseIf (containedin && !(containedin as Actor).IsDead())
-						Trace("Rejected: Container is Actor [" + (containedin as Actor) + "]")
-						moveit = False
+						keepit = False
+					elseIf (containedin as Actor)
+						if !(containedin as Actor).IsDead()
+							Trace("Rejected: Container is Actor [" + (containedin as Actor) + "]")
+							keepit = False
+						endif
 					elseIf (containedin.IsLocked())
 						Trace("Rejected: Container is Locked [" + containedin.GetLockLevel() + "]")
 						lockedCount += 1
-						moveit = False
+						keepit = False
 					endIf
 				endIf
 			endIf
-			if (moveit)
+			if (keepit)
 				gatheredCount += 1
-				target.AddItem(result, 1, True)
-				result.Disable()
+				Form akBaseItem = result.GetBaseObject()
+				if (TweakLootItemsUnique.HasForm(akBaseItem))
+					Trace("Redirected: Is UNQIUE Item")
+					pc.AddItem(result, 1, True)
+				else
+					target.AddItem(result, 1, True)
+				endIf
+				result.Disable()				
 			endIf
 		endif
 		i += 1
@@ -374,57 +431,79 @@ Function ScanForLooseItems(FormList list, string name, ObjectReference target)
 endFunction
 
 Event ObjectReference.OnItemAdded(ObjectReference theContainer, Form akBaseItem, int aiItemCount, ObjectReference result, ObjectReference akSourceContainer)
-	bool moveit = False
+	Trace("OnItemAdded: theContainer [" + theContainer + "] akBaseItem [" + akBaseItem + "] aiItemCount [" + aiItemCount + "] result [" + result + "]")
+		
+	; Do we keep it? Return it? Or Redirect to the player?
+	; 1) Quest and Unique status Trump ownership
+	if ((None != akBaseItem) && (TweakLootItemsUnique.HasForm(akBaseItem)))
+		Trace("OnItemAdded - Redirected: [" + akBaseItem + "] Is Unique Item")
+		theContainer.RemoveItem(akBaseItem, aiItemCount, False, Game.GetPlayer())
+		gatheredCount += aiItemCount
+		return
+	else
+		Trace("OnItemAdded - Not found in TweakLootItemsUnique.")				
+	endIf
+	
+	; Can't test for unique or ownership unless there is an instance pointer:	
 	if (result)
+	
 		Actor pc = Game.GetPlayer()
+		Trace("Checking Quest Status")				
+		if (result.IsQuestItem())
+			Trace("OnItemAdded - Redirected: Is Quest Item")
+			theContainer.RemoveItem(akBaseItem, aiItemCount, False, pc)
+			gatheredCount += aiItemCount
+			return
+		else
+			Trace("OnItemAdded - Item [" + akBaseItem + "] Not reporting quest item")				
+		endIf
+
+		bool keepit = False
 		Actor owner = result.GetActorRefOwner()
 		if (owner)
 			if (owner.GetFactionReaction(pc) > 1)
 				Trace("OnItemAdded - Accepted: Item owner is Ally to player")
-				moveit = True
+				keepit = True
 			else
 				Trace("OnItemAdded - Rejected: Item owned By Another Actor")
 			endIf
 		else
+			Trace("OnItemAdded : No ActorRefOwner")				
 			ActorBase ownerBase = result.GetActorOwner()
 			if (ownerBase)
 				if (ownerBase == Player)
 					Trace("OnItemAdded - Accepted: Item owned by Player")
-					moveit = True
+					keepit = True
 				else
-					Trace("OnItemAdded - Rejected: Loose item owned By another Actor Base")
+					Trace("OnItemAdded - Loose item owned By another Actor Base")
 				endIf
+			else
+				Trace("OnItemAdded : No ActorOwner")				
 			endIf
 		endIf
-		if (!moveit)
+		if (!keepit)
 			Faction ownerFaction = result.GetFactionOwner()
 			if (ownerFaction)
 				if (pc.IsInFaction(ownerFaction))
 					Trace("OnItemAdded - Accepted: Player member of item owning Faction")
-					moveit = True
+					keepit = True
 				elseIf (ownerFaction.GetFactionReaction(pc) > 1)
 					Trace("OnItemAdded - Accepted: Item Faction is Ally to player")
-					moveit = True
+					keepit = True
 				endIf
+			else
+				; Delimma... No ActorRefOwner, No ActorBaseOwner and no Faction Owner. Should we assume unowned?
+				Trace("Rejected: Unable to determined ownership. Assuming unowned.")
 			endIf
-		endIf
-		if (!moveit)
+		endIf		
+		if (!keepit)
+			Trace("OnItemAdded - Rejecting item [" + akBaseItem + "] as owned...")
 			ownedCount += 1
 			ownedContainers.add(akSourceContainer, 1)
 			ownedResults.add(result, 1)
 			ownedCounts.add(aiItemCount, 1)
 			return 
 		endIf
-		if (result.IsQuestItem())
-			Trace("OnItemAdded - Redirected: Is Quest Item")
-			theContainer.RemoveItem(akBaseItem, aiItemCount, False, pc)
-			gatheredCount += aiItemCount
-			return 
-		endIf
-	endIf
-	if (lootItemsUnique.HasForm(akBaseItem))
-		Trace("OnItemAdded - Redirected: Is Unique Item")
-		theContainer.RemoveItem(akBaseItem, aiItemCount, False, Game.GetPlayer())
 	endIf
 	gatheredCount += aiItemCount
 endEvent

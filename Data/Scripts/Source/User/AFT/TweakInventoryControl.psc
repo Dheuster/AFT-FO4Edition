@@ -61,6 +61,7 @@ Group Injected
 	ActorValue		Property pTweakInPowerArmor			Auto Const
 	Quest			Property pWorkshopParent				Auto Const
 	GlobalVariable	Property pTweakSettlementAsCity		Auto Const
+	GlobalVariable	Property pTweakCombatOutfitOnWeapDraw Auto Const
 
 EndGroup
 
@@ -111,6 +112,7 @@ Weapon Property pTrackedWeapon			Auto hidden
 
 Bool   Property ignorePAEvents			Auto hidden
 Bool   Property combatInProgress		Auto hidden
+Bool   Property weaponDrawn				Auto hidden
 Bool   Property playerIsSwimming		Auto hidden
 int	   Property invRec					Auto hidden
 
@@ -239,6 +241,7 @@ Function initialize()
 	endif
 	
 	combatInProgress = false
+	weaponDrawn      = false
 	playerIsSwimming = false
 	; EventFollowingPlayer()
 	
@@ -334,10 +337,54 @@ endFunction
 ; NOTE : This only gets relayed to current followers...
 Function EventPlayerWeaponDraw()
 	Trace("EventPlayerWeaponDraw()")
+	weaponDrawn = true
+	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
+		Actor npc=self.GetActorRef()
+
+		if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
+			Trace("PowerArmor Detected")
+			if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))		
+				TryToEquipPAHelmet()
+			endif
+			return
+		endif
+
+		if (CombatOutfitEnabled)
+			CurrentOutfitDesired = OUTFIT_COMBAT
+			RestoreTweakOutfit(OUTFIT_COMBAT)
+		endif
+	endif
 EndFunction
 
 Function EventPlayerWeaponSheath()
 	Trace("EventPlayerWeaponSheath()")
+	weaponDrawn = false
+	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
+		Actor npc=self.GetActorRef()	
+		if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
+			Trace("PowerArmor Detected")
+			if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))
+				Trace("NPC is in TweakPAHelmetCombatToggleFaction")
+				if (pTrackedPAHelmet)
+					Trace("pTrackedPAHelmet has value")
+					if (npc.IsEquipped(pTrackedPAHelmet))
+						Trace("pTrackedPAHelmet is Equipped. Attempting to UnEquip")
+						Actor pc = Game.GetPlayer()
+						ignorePAEvents = true
+						npc.UnEquipItem(pTrackedPAHelmet)
+						ignorePAEvents = false
+						if (npc.IsEquipped(pTrackedPAHelmet))
+							Trace("UNEQUIP FAILURE ** But at least it was detected")
+						endif
+					endif
+				endif
+			endif
+			return
+		endif
+		if (CombatOutfitEnabled)
+			RestoreTweakOutfit()
+		endif
+	endif
 EndFunction
 
 Function EventPlayerSwimStart()
@@ -1254,8 +1301,11 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 	; Criteria May not be met (IE: Restore combat outside combat because
 	; it is being disabled)
 	
+	bool weapdrawcomboveride = (weaponDrawn && (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue()))
+	
 	if 0 == targetOutfit
-		if (CombatOutfitEnabled && combatInProgress)
+		if (CombatOutfitEnabled && (combatInProgress || weapdrawcomboveride))
+			Trace("targetOutfit = OUTFIT_COMBAT")
 			targetOutfit = OUTFIT_COMBAT
 		elseif (SwimOutfitEnabled && playerIsSwimming)
 			targetOutfit = OUTFIT_SWIM			
@@ -1303,6 +1353,11 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 		return
 	endif
 	
+	if gear == CurrentOutfit
+		Trace("Skipping Sync. CurrentOutfit is Chosen outfit")
+		Trace("Done")
+		return
+	endif
 		
 	; NOTE : !empty_array evaluates as true. Even (None == empty_array) evaluates as true. 
 	; So, you need to track it independently. 
@@ -1405,12 +1460,6 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 		endif
 	endif
 
-	if gear == CurrentOutfit
-		Trace("Skipping Sync. CurrentOutfit is Chosen outfit")
-		managed = true
-		Trace("Done")
-		return
-	endif
 	
 	int i = 0
 	int curr_len = CurrentOutfit.length
@@ -1452,18 +1501,23 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 endFunction
 
 Function HandleCombatEnd()
+
 	if (!combatInProgress)
 		return
 	endif
 	combatInProgress = False
 	CancelTimer(COMBATEND_DELAYED)
 	
+	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
+		return
+	endIf
+
 	Actor npc=self.GetActorRef()
 	
 	if npc.IsDead()
 		return
 	endif
-
+	
 	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
 		Trace("PowerArmor Detected")
 		if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))
@@ -2387,9 +2441,11 @@ Function OnLoadHelper()
 	; Camp is at the bottom
 	
 	int current = CurrentOutfitDesired
+	bool weapdrawcomboveride = (weaponDrawn && (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue()))
+	
 	if (OUTFIT_NONE == current || OUTFIT_STANDARD == current)
-		if (CombatOutfitEnabled && combatInProgress)
-			Trace("Combat Detected")
+		if (CombatOutfitEnabled && (combatInProgress || weapdrawcomboveride))
+			Trace("Combat Detected or Weapon is drawn")
 			CurrentOutfitDesired = OUTFIT_COMBAT
 		elseif (SwimOutfitEnabled && playerIsSwimming)
 			Trace("Swim Detected")
@@ -2410,7 +2466,7 @@ Function OnLoadHelper()
 			CurrentOutfitDesired = OUTFIT_NONE
 		endIf
 	elseif (OUTFIT_COMBAT == current)
-		if (!combatInProgress)
+		if (!combatInProgress && !weapdrawcomboveride)
 			if (SwimOutfitEnabled && playerIsSwimming)
 				Trace("Swim Detected")
 				CurrentOutfitDesired = OUTFIT_SWIM
@@ -2427,8 +2483,7 @@ Function OnLoadHelper()
 			endif
 		endIf
 	elseif (OUTFIT_SWIM == current)
-		if (CombatOutfitEnabled && combatInProgress)
-			Trace("Combat Detected")
+		if (CombatOutfitEnabled && (combatInProgress || weapdrawcomboveride))
 			CurrentOutfitDesired = OUTFIT_COMBAT
 		elseif (!playerIsSwimming)
 			if (HomeOutfitEnabled && ShouldUseHomeOutfit())
@@ -2448,7 +2503,7 @@ Function OnLoadHelper()
 		endif		
 	elseif (OUTFIT_HOME == current)
 		if (npc.IsInFaction(pCurrentCompanionFaction))
-			if (CombatOutfitEnabled && combatInProgress)
+			if (CombatOutfitEnabled && (combatInProgress || weapdrawcomboveride))
 				Trace("Combat Detected")
 				CurrentOutfitDesired = OUTFIT_COMBAT
 			elseif (SwimOutfitEnabled && playerIsSwimming)
@@ -2468,7 +2523,7 @@ Function OnLoadHelper()
 			endIf
 		endif		
 	elseif (OUTFIT_CITY == current)
-		if (CombatOutfitEnabled && combatInProgress)
+		if (CombatOutfitEnabled && (combatInProgress || weapdrawcomboveride))
 			CurrentOutfitDesired = OUTFIT_COMBAT
 		elseif (SwimOutfitEnabled && playerIsSwimming)
 			CurrentOutfitDesired = OUTFIT_SWIM			
@@ -2484,7 +2539,7 @@ Function OnLoadHelper()
 			endif			
 		endif
 	elseif (OUTFIT_CAMP == current)
-		if (CombatOutfitEnabled && combatInProgress)
+		if (CombatOutfitEnabled && (combatInProgress || weapdrawcomboveride))
 			CurrentOutfitDesired = OUTFIT_COMBAT
 		elseif (SwimOutfitEnabled && playerIsSwimming)
 			CurrentOutfitDesired = OUTFIT_SWIM						
@@ -2521,6 +2576,11 @@ Function OnCombatBegin()
 	combatInProgress=true
 	StartTimer(20,COMBATEND_DELAYED)
 	Trace("OnCombatBegin()")
+	
+	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
+		return
+	endIf
+	
 	Actor npc=self.GetActorRef()
 
 	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)

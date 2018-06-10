@@ -28,7 +28,6 @@ EndFunction
 
 Event OnInit()
 	initialize_ResultArray()
-	allocate_ComponentData()
 	initialize_ComponentData()
 	
 	; PASTE python generated component data without form ids in initialize_ComponentData
@@ -237,7 +236,7 @@ Function initialize_ResultArray()
 EndFunction
 
 Function allocate_ComponentData()
-	ComponentLookup = new ComponentData[100]
+	ComponentLookup = new ComponentData[128]
 	int i = 0
 	while (i < ComponentLookup.length)
 		ComponentLookup[i] = new ComponentData
@@ -248,6 +247,10 @@ EndFunction
 Function initialize_ComponentData()
 
     ; Array co-insides with FORMLIST. This was generated using Python.
+	if (ComponentLookup.length > 0)
+		ComponentLookup.Clear()
+	endif
+	allocate_ComponentData()
 	
     ComponentLookup[0].formid = 215613
     ComponentLookup[0].mask = 528
@@ -644,13 +647,124 @@ Function initialize_ComponentData()
     ComponentLookup[98].formid = 1428616
     ComponentLookup[98].mask = 8
     ComponentLookup[98].counts = 1
-    ComponentLookup[98].name = "CarpetRectangle02"
+    ComponentLookup[98].name = "CarpetRectangle02"	
     ComponentLookup[99].formid = 1428703
     ComponentLookup[99].mask = 8
     ComponentLookup[99].counts = 1
     ComponentLookup[99].name = "CarpetSquare01"
+    ComponentLookup[100].formid = 0x000F15C8
+    ComponentLookup[100].mask = 1
+    ComponentLookup[100].counts = 2
+    ComponentLookup[100].name = "CapsuleExtStairsFree01"
+    ComponentLookup[101].formid = 0x000521ED
+    ComponentLookup[101].mask = 1
+    ComponentLookup[101].counts = 5
+    ComponentLookup[101].name = "CapsuleExtWall01"
+    ComponentLookup[102].formid = 0x000521F5
+    ComponentLookup[102].mask = 1
+    ComponentLookup[102].counts = 3
+    ComponentLookup[102].name = "CapsuleExtWallEnd01"
+    ComponentLookup[103].formid = 0x000203D3
+    ComponentLookup[103].mask = 1
+    ComponentLookup[103].counts = 3
+    ComponentLookup[103].name = "CapsuleExtWallEndFan01"
+    ComponentLookup[104].formid = 0x000521DF
+    ComponentLookup[104].mask = 1
+    ComponentLookup[104].counts = 5
+    ComponentLookup[104].name = "CapsuleExtWallExSmL01"
+    ComponentLookup[105].formid = 0x0010796A
+    ComponentLookup[105].mask = 1
+    ComponentLookup[105].counts = 4
+    ComponentLookup[105].name = "CapsuleExtWallExSmL01a"
+    ComponentLookup[106].formid = 0x0001346C
+    ComponentLookup[106].mask = 1
+    ComponentLookup[106].counts = 2
+    ComponentLookup[106].name = "CapsuleExtWallExSmLDoor01"
+    ComponentLookup[107].formid = 0x00013469
+    ComponentLookup[107].mask = 1
+    ComponentLookup[107].counts = 5
+    ComponentLookup[107].name = "CapsuleExtWallExSmR01"
+    ComponentLookup[108].formid = 0x0010796C
+    ComponentLookup[108].mask = 1
+    ComponentLookup[108].counts = 5
+    ComponentLookup[108].name = "CapsuleExtWallExSmR01a"
+    ComponentLookup[109].formid = 0x0001346D
+    ComponentLookup[109].mask = 1
+    ComponentLookup[109].counts = 2
+    ComponentLookup[109].name = "CapsuleExtWallExSmRDoor01"
+    ComponentLookup[110].formid = 0x0001327F
+    ComponentLookup[110].mask = 1
+    ComponentLookup[110].counts = 5
+    ComponentLookup[110].name = "CapsuleExtWallWin01"
+    ComponentLookup[111].formid = 0x0010796E
+    ComponentLookup[111].mask = 1
+    ComponentLookup[111].counts = 5
+    ComponentLookup[111].name = "CapsuleExtWallWin01a"
+    ComponentLookup[112].formid = 0x00013280
+    ComponentLookup[112].mask = 1
+    ComponentLookup[112].counts = 2
+    ComponentLookup[112].name = "CapsuleIntPartitionCurved01"
+    ComponentLookup[113].formid = 0x00013464
+    ComponentLookup[113].mask = 1
+    ComponentLookup[113].counts = 2
+    ComponentLookup[113].name = "CapsuleIntPartitionFlat01"
+    ComponentLookup[114].formid = 0x000521E5
+    ComponentLookup[114].mask = 1
+    ComponentLookup[114].counts = 2
+    ComponentLookup[114].name = "CapsuleIntWallExSmDbl01"
+    ComponentLookup[115].formid = 0x000521E0
+    ComponentLookup[115].mask = 1
+    ComponentLookup[115].counts = 4
+    ComponentLookup[115].name = "CapsuleIntWallExSmL01"
+    ComponentLookup[116].formid = 0x000521F3
+    ComponentLookup[116].mask = 1
+    ComponentLookup[116].counts = 4
+    ComponentLookup[116].name = "CapsuleIntWallExSmLCap01"
+    ComponentLookup[117].formid = 0x0001346E
+    ComponentLookup[117].mask = 1
+    ComponentLookup[117].counts = 2
+    ComponentLookup[117].name = "CapsuleIntWallExSmLDoor01"
+    ComponentLookup[118].formid = 0x000521E6
+    ComponentLookup[118].mask = 1
+    ComponentLookup[118].counts = 4
+    ComponentLookup[118].name = "CapsuleIntWallExSmR01"
+    ComponentLookup[119].formid = 0x000521F4
+    ComponentLookup[119].mask = 1
+    ComponentLookup[119].counts = 4
+    ComponentLookup[119].name = "CapsuleIntWallExSmRCap01"
+    ComponentLookup[120].formid = 0x0001346F
+    ComponentLookup[120].mask = 1
+    ComponentLookup[120].counts = 2
+    ComponentLookup[120].name = "CapsuleIntWallExSmRDoor01"
+    ComponentLookup[121].formid = 0x0004D23F
+    ComponentLookup[121].mask = 1
+    ComponentLookup[121].counts = 12
+    ComponentLookup[121].name = "CapsuleMain01"
+    ComponentLookup[122].formid = 0x000203E3
+    ComponentLookup[122].mask = 1
+    ComponentLookup[122].counts = 8
+    ComponentLookup[122].name = "CapsuleMain4Way01"
+    ComponentLookup[123].formid = 0x0002947C
+    ComponentLookup[123].mask = 1
+    ComponentLookup[123].counts = 12
+    ComponentLookup[123].name = "CapsuleMainNoSup01"
+    ComponentLookup[124].formid = 0x00013467
+    ComponentLookup[124].mask = 1
+    ComponentLookup[124].counts = 12
+    ComponentLookup[124].name = "CapsuleMainSunRoof01"
+    ComponentLookup[125].formid = 0x0010796F
+    ComponentLookup[125].mask = 1
+    ComponentLookup[125].counts = 12
+    ComponentLookup[125].name = "CapsuleMainSunRoof01a"
+    ComponentLookup[126].formid = 0x00013468
+    ComponentLookup[126].mask = 1
+    ComponentLookup[126].counts = 12
+    ComponentLookup[126].name = "CapsuleMainSunRoof02"
+    ComponentLookup[127].formid = 0x0010796D
+    ComponentLookup[127].mask = 1
+    ComponentLookup[127].counts = 12
+    ComponentLookup[127].name = "CapsuleMainSunRoof02a"
 	
-				
 EndFunction
 
 

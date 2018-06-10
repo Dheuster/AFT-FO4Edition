@@ -4,8 +4,10 @@ Scriptname AFT:Fragments:Terminals:TERM_TweakCooldownIdleActive_0100A368 Extends
 ;BEGIN FRAGMENT Fragment_Terminal_01
 Function Fragment_Terminal_01(ObjectReference akTerminalRef)
 ;BEGIN CODE
-pTweakIdleCooldownActiveMin.SetValue(120)
-pTweakIdleCooldownActiveMax.SetValue(180)
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+        pTweakPipBoyScript.UpdateIdleCoolDownActive(120,180)
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -13,8 +15,10 @@ EndFunction
 ;BEGIN FRAGMENT Fragment_Terminal_02
 Function Fragment_Terminal_02(ObjectReference akTerminalRef)
 ;BEGIN CODE
-pTweakIdleCooldownActiveMin.SetValue(240)
-pTweakIdleCooldownActiveMax.SetValue(300)
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+        pTweakPipBoyScript.UpdateIdleCoolDownActive(240,300)
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -22,8 +26,10 @@ EndFunction
 ;BEGIN FRAGMENT Fragment_Terminal_03
 Function Fragment_Terminal_03(ObjectReference akTerminalRef)
 ;BEGIN CODE
-pTweakIdleCooldownActiveMin.SetValue(480)
-pTweakIdleCooldownActiveMax.SetValue(600)
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+        pTweakPipBoyScript.UpdateIdleCoolDownActive(480,600)
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -31,8 +37,10 @@ EndFunction
 ;BEGIN FRAGMENT Fragment_Terminal_04
 Function Fragment_Terminal_04(ObjectReference akTerminalRef)
 ;BEGIN CODE
-pTweakIdleCooldownActiveMin.SetValue(600)
-pTweakIdleCooldownActiveMax.SetValue(780)
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+        pTweakPipBoyScript.UpdateIdleCoolDownActive(600,780)
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -40,8 +48,10 @@ EndFunction
 ;BEGIN FRAGMENT Fragment_Terminal_05
 Function Fragment_Terminal_05(ObjectReference akTerminalRef)
 ;BEGIN CODE
-pTweakIdleCooldownActiveMin.SetValue(780)
-pTweakIdleCooldownActiveMax.SetValue(960)
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+        pTweakPipBoyScript.UpdateIdleCoolDownActive(780,960)
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -49,8 +59,10 @@ EndFunction
 ;BEGIN FRAGMENT Fragment_Terminal_06
 Function Fragment_Terminal_06(ObjectReference akTerminalRef)
 ;BEGIN CODE
-pTweakIdleCooldownActiveMin.SetValue(960)
-pTweakIdleCooldownActiveMax.SetValue(1200)
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+        pTweakPipBoyScript.UpdateIdleCoolDownActive(960,1200)
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -60,3 +72,5 @@ EndFunction
 GlobalVariable Property pTweakIdleCooldownActiveMin Auto Const
 
 GlobalVariable Property pTweakIdleCooldownActiveMax Auto Const
+
+Quest Property pTweakPipBoy Auto Const

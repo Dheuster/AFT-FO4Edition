@@ -169,6 +169,38 @@ pTweakSettlementAsCity.SetValue(0)
 EndFunction
 ;END FRAGMENT
 
+;BEGIN FRAGMENT Fragment_Terminal_22
+Function Fragment_Terminal_22(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakCombatOutfitOnWeapDraw.SetValue(1.0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_23
+Function Fragment_Terminal_23(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakCombatOutfitOnWeapDraw.SetValue(0.0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_24
+Function Fragment_Terminal_24(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakShowAffinityProgress.SetValue(1.0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_25
+Function Fragment_Terminal_25(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakShowAffinityProgress.SetValue(0.0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 GlobalVariable Property pTweakAllowStealth Auto Const
@@ -190,3 +222,7 @@ GlobalVariable Property pTweakVertibirdLimitTwo Auto Const
 GlobalVariable Property pTweakRestoreAFTItems Auto Const
 
 GlobalVariable Property pTweakSettlementAsCity Auto Const
+
+GlobalVariable Property pTweakCombatOutfitOnWeapDraw Auto Const
+
+GlobalVariable Property pTweakShowAffinityProgress Auto Const

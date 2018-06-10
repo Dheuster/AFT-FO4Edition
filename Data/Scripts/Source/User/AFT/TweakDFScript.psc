@@ -11,6 +11,7 @@ ReferenceAlias	Property pDogmeatCompanion		Auto Const
 ReferenceAlias	Property pSleepCompanion		Auto Const
 ReferenceAlias	Property pSleepCompanion2		Auto Const
 ReferenceAlias	Property pSleepCompanionBed		Auto Const
+ReferenceAlias	Property pAffinityCompanion		Auto Const
 RefCollectionAlias Property pActiveCompanions	Auto Const
 spell 			Property LoversEmbracePerkSpell Auto Const
 
@@ -90,6 +91,19 @@ Message Property pFollowersCompanionDismissMessage                   Auto Const
 Message Property pFollowersDogmeatCompanionDismissMessage            Auto Const
 Message Property pFollowersDogmeatCompanionDismissMessageNameUnknown Auto Const
 
+
+Message Property TweakGenDislikeMsg          Auto Const 
+Message Property TweakGenLikeMsg             Auto Const 
+Message Property TweakGenLoveMsg             Auto Const 
+Message Property TweakGenHateMsg             Auto Const 
+Message Property TweakGenDislikeMsgStat      Auto Const 
+Message Property TweakGenLikeMsgStat         Auto Const 
+Message Property TweakGenLoveMsgStat         Auto Const 
+Message Property TweakGenHateMsgStat         Auto Const 
+ActorValue Property pCA_Affinity			 Auto Const
+GlobalVariable Property pTweakShowAffinityProgress Auto Const
+
+
 Message Property pTweakUpdateProgress10      Auto Const
 Message Property pTweakUpdateProgress20      Auto Const
 Message Property pTweakUpdateProgress30      Auto Const
@@ -121,6 +135,7 @@ Keyword	 Property CA_Event_LootCorpse		 Auto Const
 Keyword	 Property CA_Event_LootEpicItem		 Auto Const
 Keyword	 Property CA_Event_LootJunk			 Auto Const
 Keyword	 Property CA_Event_LootPrewarItem	 Auto Const
+Keyword  Property CA_Event_HealCompanion     Auto Const
 GlobalVariable Property pTweakLimitLootComments Auto Const
 
 FormList Property pTweakHumanoidKeywords     Auto Const
@@ -164,6 +179,12 @@ int   import_max_time        = 20
 int   TIMER_ROTATE_COMPANION = 1 const
 int   TIMER_MONITOR_IMPORT   = 2 const
 int   TIMER_PLAYER_WAKEUP    = 3 const
+
+int MSG_NOT_FOUND = 0 const
+int MSG_LIKE      = 1 const
+int MSG_DISLIKE   = 2 const
+int MSG_LOVE      = 3 const
+int MSG_HATE      = 4 const
 
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 	string logName = "TweakDFScript"
@@ -411,7 +432,7 @@ Function AftReset()
 	endIf
 	npc = pCompanion1.GetActorReference()	
 	if npc
-		RemoveKeywords(npc)
+		AddKeywords(npc)
 		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
 		CompanionDataToggle(pCompanion1, false, false)
 		npc.StopCombatAlarm()
@@ -424,7 +445,7 @@ Function AftReset()
 	endIf
 	npc = pCompanion2.GetActorReference()	
 	if npc
-		RemoveKeywords(npc)
+		AddKeywords(npc)
 		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
 		CompanionDataToggle(pCompanion2, false, false)
 		npc.StopCombatAlarm()
@@ -437,7 +458,7 @@ Function AftReset()
 	endIf
 	npc = pCompanion3.GetActorReference()	
 	if npc
-		RemoveKeywords(npc)
+		AddKeywords(npc)
 		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
 		CompanionDataToggle(pCompanion3, false, false)
 		npc.StopCombatAlarm()
@@ -450,7 +471,7 @@ Function AftReset()
 	endIf
 	npc = pCompanion4.GetActorReference()	
 	if npc
-		RemoveKeywords(npc)
+		AddKeywords(npc)
 		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
 		CompanionDataToggle(pCompanion4, false, false)
 		npc.StopCombatAlarm()
@@ -463,7 +484,7 @@ Function AftReset()
 	endIf
 	npc = pCompanion5.GetActorReference()	
 	if npc
-		RemoveKeywords(npc)
+		AddKeywords(npc)
 		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
 		CompanionDataToggle(pCompanion5, false, false)
 		npc.StopCombatAlarm()
@@ -476,6 +497,7 @@ Function AftReset()
 	endIf
 	npc = pDogmeatCompanion.GetActorReference()	
 	if npc
+		AddKeywords(npc)
 		; DAS.RemoveFromFaction(pTweakWaitingFaction)			
 		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
 
@@ -527,7 +549,7 @@ Event OnTimer(int aiTimerID)
 		;                 pCompanion4 |                 pCompanion4
 		;                 pCompanion5 |                 pCompanion5  etc...
 			
-		TryRotateCompanion()			
+		TryRotateCompanion()
 		StartTimer(15.0,aiTimerID)
 		return
 	endIf
@@ -963,7 +985,7 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 	LockSendAffinityEvent = true
 	if (0 == maxwait)
 		Trace("LocalSendAffinityEvent lock timed out (safety)")
-	endIf	
+	endIf
 	FollowersScript:AffinityEventData CurrentAffinityEventData
 	CurrentAffinityEventData = FollowersScript.GetAffinityEventData(EventKeyword)
 	if !CurrentAffinityEventData
@@ -971,12 +993,14 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 		LockSendAffinityEvent = false
 		RETURN false
 	endIf
-	if CurrentAffinityEventData.NextDayAllowed > Utility.GetCurrentGameTime()
-		Trace("NOT sending event as CheckAffinityEventCooldown() == False. NextDayAllowed: " + CurrentAffinityEventData.NextDayAllowed + ". Current GameDaysPassed:" + Utility.GetCurrentGameTime())
-		LockSendAffinityEvent = false
-		RETURN false
-	endIf
-	
+	if (EventKeyword != CA_Event_HealCompanion)
+		if CurrentAffinityEventData.NextDayAllowed > Utility.GetCurrentGameTime()
+			Trace("NOT sending event as CheckAffinityEventCooldown() == False. NextDayAllowed: " + CurrentAffinityEventData.NextDayAllowed + ". Current GameDaysPassed:" + Utility.GetCurrentGameTime())
+			LockSendAffinityEvent = false
+			RETURN false
+		endIf
+	endif
+		
 	GlobalVariable CoolDown = CurrentAffinityEventData.CoolDownDays
 	if CoolDown == CA_CoolDownDays_Immediate
 		CoolDown = pTweak_CoolDownDays_Immediate
@@ -1027,8 +1051,14 @@ Function AffinityTalkManager(keyword EventKeyword, GlobalVariable  EventSize, bo
                                actorvalue acupdate, keyword customTopic, Bool IsDialogueBump, \
                                float ResponseDelay, objectReference Target)
 	
-	Trace("AffinityTalkManager()")		
+	Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "]")		
 	Trace("Synchronous   : [" + CommentSynchronous_var + "]")
+	
+	if Target && (Target as Actor)
+		talkLimitTracker = 1
+		AffinityTalkHelper((Target as Actor), EventKeyword, EventSize, CheckCompanionProximity, acupdate, customTopic, IsDialogueBump, ResponseDelay, Target)		
+		return
+	endif
 	
 	; This code does two things.
 	;
@@ -1217,41 +1247,41 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 		if (adjusted_reaction < 0)
 			if ConvNegToPos
 				if NoApprove
-					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = false")
+					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = false [" + adjusted_reaction + "," + EventSize + "]")
 					TryToSetTraitValuesInverse(CAS, associatedActorValue, EventSize, ShouldAlsoSetAffinity = false)
 				else
-					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true")
+					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true [" + adjusted_reaction + "," + EventSize + "]")
 					TryToSetTraitValuesInverse(CAS, associatedActorValue, EventSize, ShouldAlsoSetAffinity = true)
 				endIf
 			else
 				if NoDisapprove
-					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = false")
+					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = false [" + adjusted_reaction + "," + EventSize + "]")
 					CAS.TryToSetTraitValues(associatedActorValue, EventSize, ShouldAlsoSetAffinity = false)
 				else
-					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true")
+					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true [" + adjusted_reaction + "," + EventSize + "]")
 					CAS.TryToSetTraitValues(associatedActorValue, EventSize, ShouldAlsoSetAffinity = true)
 				endIf
 			endIf
 		elseif (adjusted_reaction > 0)
 			if ConvPosToNeg
 				if NoDisapprove
-					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = false")
+					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = false [" + adjusted_reaction + "," + EventSize + "]")
 					TryToSetTraitValuesInverse(CAS, associatedActorValue, EventSize, ShouldAlsoSetAffinity = false)
 				else
-					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true")
+					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true [" + adjusted_reaction + "," + EventSize + "]")
 					TryToSetTraitValuesInverse(CAS, associatedActorValue, EventSize, ShouldAlsoSetAffinity = true)
 				endIf			
 			else
 				if NoApprove
-					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = false")
+					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = false [" + adjusted_reaction + "," + EventSize + "]")
 					CAS.TryToSetTraitValues(associatedActorValue, EventSize, ShouldAlsoSetAffinity = false)
 				else
-					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true")
+					Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true [" + adjusted_reaction + "," + EventSize + "]")
 					CAS.TryToSetTraitValues(associatedActorValue, EventSize, ShouldAlsoSetAffinity = true)
 				endIf
 			endIf
 		else ; 0 == adjusted_reaction
-			Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true")
+			Trace("Calling TryToSetTraitValues with ShouldAlsoSetAffinity = true [" + adjusted_reaction + "," + EventSize + "]")
 			CAS.TryToSetTraitValues(associatedActorValue, EventSize, ShouldAlsoSetAffinity = true)
 		endIf
 	else
@@ -1266,14 +1296,14 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 					if NoApprove
 						Trace("Appears to be positive (ConvNegToPos). Not allowing Affinity Change.")
 					else
-						Trace("Appears to be positive (ConvNegToPos). Allowing Affinity Change.")
+						Trace("Appears to be positive (ConvNegToPos). Allowing Affinity Change [" + adjusted_reaction + "," + EventSize + "]")
 						TryToModAffinityInverse(CAS, AffinityEventData, EventSize)
 					endIf
 				else ; ConvPosToNeg does not apply to adjusted_reaction < 0
 					if NoDisapprove
 						Trace("Appears to be negative. Not allowing Affinity Change.")
 					else
-						Trace("Appears to be negative. Allowing Affinity Change.")
+						Trace("Appears to be negative. Allowing Affinity Change. [" + adjusted_reaction + "," + EventSize + "]")
 						CAS.TryToModAffinity(AffinityEventData, EventSize)
 					endIf
 				endIf
@@ -1282,7 +1312,7 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 				if NoDisapprove
 					Trace("Appears to be negative (ConvPosToNeg). Not allowing Affinity Change.")
 				else
-					Trace("Appears to be negative (ConvPosToNeg). Allowing Affinity Change.")
+					Trace("Appears to be negative (ConvPosToNeg). Allowing Affinity Change. [" + adjusted_reaction + "," + EventSize + "]")
 					; We dont use inverse functions here because the keyword was changed. Thus
 					; the retrieved AffinityEventData should already have the correct settings
 					CAS.TryToModAffinity(AffinityEventData, EventSize)
@@ -1314,14 +1344,14 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 					if NoDisapprove
 						Trace("Appears to be negative (ConvPosToNeg). Not allowing Affinity Change.")
 					else
-						Trace("Appears to be negative (ConvPosToNeg). Allowing Affinity Change.")
+						Trace("Appears to be negative (ConvPosToNeg). Allowing Affinity Change. [" + adjusted_reaction + "," + EventSize + "]")
 						TryToModAffinityInverse(CAS, AffinityEventData, EventSize)
 					endIf				
 				else ; (!ConvPosToNeg && (ConvNegToPos || !ConvNegToPos)) = (!ConvPosToNeg && TRUE) = (!ConvPosToNeg)
 					if NoApprove
 						Trace("Appears to be positive. Not allowing Affinity Change.")
 					else
-						Trace("Appears to be positive. Allowing Affinity Change.")
+						Trace("Appears to be positive. Allowing Affinity Change. [" + adjusted_reaction + "," + EventSize + "]")
 						CAS.TryToModAffinity(AffinityEventData, EventSize)
 					endIf
 				endIf
@@ -1330,7 +1360,7 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 				if NoApprove
 					Trace("Appears to be positive (ConvNegToPos). Not allowing Affinity Change.")
 				else
-					Trace("Appears to be positive (ConvNegToPos). Allowing Affinity Change.")
+					Trace("Appears to be positive (ConvNegToPos). Allowing Affinity Change. [" + adjusted_reaction + "," + EventSize + "]")
 					; We dont use inverse functions here because the keyword was changed. Thus
 					; the retrieved AffinityEventData should already have the correct settings
 					CAS.TryToModAffinity(AffinityEventData, EventSize)
@@ -1361,7 +1391,7 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 			
 		else ; 0 == adjusted_reaction
 			original_reaction = adjusted_reaction
-			Trace("Appears to be neutral (comment?) Allowing Affinity change attempt (incase we are wrong)")
+			Trace("Appears to be neutral (comment?) Allowing Affinity change attempt (incase we are wrong) [" + adjusted_reaction + "," + EventSize + "]")
 			CAS.TryToModAffinity(AffinityEventData, EventSize)		
 		endIf
 		
@@ -1380,14 +1410,14 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 						Trace("Suppressing message as reaction is positive (ConvNegToPos)")
 					else
 						Trace("Showing positive (inverse negative) message (ConvNegToPos)")
-						TryToShowMessageInverse(AffinityEventData)
+						TryToShowMessageInverse(AffinityEventData, CAS, adjusted_reaction)
 					endIf
 				else
 					if NoDisapprove			
 						Trace("Suppressing message as reaction is negative")
 					else
 						Trace("Showing negative message.")
-						CAS.TryToShowMessage(AffinityEventData)
+						TryToShowMessage(AffinityEventData, CAS, adjusted_reaction)
 					endIf
 				endIf
 			else ; Implies ConvPosToNeg
@@ -1396,7 +1426,7 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 					Trace("Suppressing message as reaction is negative (ConvPosToNeg)")
 				else
 					Trace("Showing negative message (ConvPosToNeg + keyword change).")
-					CAS.TryToShowMessage(AffinityEventData)
+					TryToShowMessage(AffinityEventData, CAS, adjusted_reaction)
 				endIf
 			endIf
 		elseif (adjusted_reaction > 0)
@@ -1408,14 +1438,14 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 						Trace("Suppressing message as reaction is negative (ConvPosToNeg)")
 					else
 						Trace("Showing negative (inverse positive) message (ConvPosToNeg)")
-						TryToShowMessageInverse(AffinityEventData)
+						TryToShowMessageInverse(AffinityEventData, CAS, adjusted_reaction)
 					endIf	
 				else
 					if NoApprove			
 						Trace("Suppressing message as reaction is positive")
 					else
 						Trace("Showing positive message")
-						CAS.TryToShowMessage(AffinityEventData)
+						TryToShowMessage(AffinityEventData, CAS, adjusted_reaction)
 					endIf
 				endIf				
 			else ; implies ConvNegToPos
@@ -1424,13 +1454,13 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 					Trace("Suppressing message as reaction is positive (ConvNegToPos)")
 				else
 					Trace("Showing positive message (ConvNegToPos + keyword change).")
-					CAS.TryToShowMessage(AffinityEventData)
+					TryToShowMessage(AffinityEventData, CAS, adjusted_reaction)
 				endIf
 			endIf
 		else ; 0 == reaction
 			original_reaction = adjusted_reaction
 			Trace("Showing neutral message (Will this ever happen?)")
-			CAS.TryToShowMessage(AffinityEventData)			
+			TryToShowMessage(AffinityEventData, CAS, adjusted_reaction)			
 		endIf
 	endIf
 
@@ -1583,50 +1613,194 @@ Function TryToModAffinityInverse(CompanionActorScript CAS, CompanionActorScript:
 
 EndFunction
 
-Function TryToShowMessageInverse(CompanionActorScript:EventData EventDataToUse)
-	Trace("TryToShowMessageInverse()")
-
+Function TryToShowMessage(CompanionActorScript:EventData EventDataToUse, CompanionActorScript CAS, float adjusted_reaction)
+	Trace("TryToShowMessage()")
+	
 	Message RelatedMessage = EventDataToUse.Message_to_Display
-	Message InverseMessage = None
+	
+	if ((0.0 != adjusted_reaction) && (1.0 == pTweakShowAffinityProgress.GetValue()))
 		
+		Trace("pTweakShowAffinityProgress is true")
+		int showMessage   = MSG_NOT_FOUND
+		if RelatedMessage
+			int index = pTweakLikeMessages.Find(RelatedMessage)
+			if (index > -1)
+				showMessage = MSG_LIKE 
+			endIf
+			if (index < 0)
+				index = pTweakDislikeMessages.Find(RelatedMessage)
+				if (index > -1)
+					showMessage = MSG_DISLIKE
+				endIf
+			endIf
+			if (index < 0)
+				index = pTweakLoveMessages.Find(RelatedMessage)
+				if (index > -1)
+					showMessage = MSG_LOVE
+				endIf
+			endIf
+			if (index < 0)
+				index = pTweakHateMessages.Find(RelatedMessage)
+				if (index > -1)
+					showMessage = MSG_HATE 
+				endIf
+			endIf
+		endIf
+		
+		if MSG_NOT_FOUND == showMessage
+			Trace("RelatedMessage [" + RelatedMessage + "] not found in lookup. Guessing")		
+			; Guess
+			if adjusted_reaction > 0.0 && adjusted_reaction < 21 ; Like
+				Trace("Guessing MSG_LIKE based on adjusted_reaction [" + adjusted_reaction + "]")		
+				showMessage = MSG_LIKE 
+			elseIf adjusted_reaction < 0.0 && adjusted_reaction > -21.0 ; Dislike
+				Trace("Guessing MSG_DISLIKE based on adjusted_reaction [" + adjusted_reaction + "]")		
+				showMessage = MSG_DISLIKE
+			elseIf adjusted_reaction > 20 ; Love
+				Trace("Guessing MSG_LOVE based on adjusted_reaction [" + adjusted_reaction + "]")		
+				showMessage = MSG_LOVE 
+			elseIf adjusted_reaction < -20 ; Hate
+				Trace("Guessing MSG_HATE based on adjusted_reaction [" + adjusted_reaction + "]")		
+				showMessage = MSG_HATE
+			endIf		
+		endif
+
+		pAffinityCompanion.ForceRefTo(CAS)	
+		float progress  = (CAS.GetValue(pCA_Affinity)/10.0)
+		
+		if MSG_DISLIKE == showMessage
+			TweakGenDislikeMsgStat.Show(progress)
+		elseIf MSG_LIKE == showMessage
+			TweakGenLikeMsgStat.Show(progress)
+		elseIf MSG_HATE == showMessage
+			TweakGenHateMsgStat.Show(progress)
+		elseIf MSG_LOVE == showMessage
+			TweakGenLoveMsgStat.Show(progress)
+		endIf
+		
+		Utility.WaitMenuMode(0.1)
+		pAffinityCompanion.Clear()
+		if !Tutorial.GetStageDone(640)
+			Tutorial.SetStage(640)
+		endIf
+		return
+	endif
+	
+	Trace("pTweakShowAffinityProgress is false (Or adjusted_reaction is 0) [" + adjusted_reaction + "]")
+	
+	if RelatedMessage
+		Trace(self + "will call show() on: " + RelatedMessage)
+		RelatedMessage.show()
+
+		;If Companion Affinity Tutorial hasn't shown yet, show it
+		if !Tutorial.GetStageDone(640)
+			Tutorial.SetStage(640)
+		endIf
+
+	else
+		Trace(self + "No related Message in EventDataToUse:" + EventDataToUse)
+	endIf
+
+EndFunction
+
+
+Function TryToShowMessageInverse(CompanionActorScript:EventData EventDataToUse, CompanionActorScript CAS, float adjusted_reaction)
+	Trace("TryToShowMessageInverse()")
+	
+	Message RelatedMessage = EventDataToUse.Message_to_Display
+	
+	if (0.0 == adjusted_reaction)
+		if RelatedMessage
+			Trace(self + "will call show() on: " + RelatedMessage)
+			RelatedMessage.show()
+
+			;If Companion Affinity Tutorial hasn't shown yet, show it
+			if !Tutorial.GetStageDone(640)
+				Tutorial.SetStage(640)
+			endIf
+
+		else
+			Trace(self + "No related Message in EventDataToUse:" + EventDataToUse)
+		endIf
+		return
+	endIf
+	
+	int showMessage   = MSG_NOT_FOUND
+	
 	if RelatedMessage
 		int index = pTweakLikeMessages.Find(RelatedMessage)
 		if (index > -1)
-			InverseMessage = pTweakDislikeMessages.GetAt(index) as Message
+			showMessage = MSG_DISLIKE
 		endIf
 		if (index < 0)
 			index = pTweakDislikeMessages.Find(RelatedMessage)
 			if (index > -1)
-				InverseMessage = pTweakLikeMessages.GetAt(index) as Message
+				showMessage = MSG_LIKE
 			endIf
 		endIf
 		if (index < 0)
 			index = pTweakLoveMessages.Find(RelatedMessage)
 			if (index > -1)
-				InverseMessage = pTweakHateMessages.GetAt(index) as Message
+				showMessage = MSG_HATE
 			endIf
 		endIf
 		if (index < 0)
 			index = pTweakHateMessages.Find(RelatedMessage)
 			if (index > -1)
-				InverseMessage = pTweakLoveMessages.GetAt(index) as Message
+				showMessage = MSG_LOVE
 			endIf
 		endIf
-			
-		if InverseMessage
-			Trace("will call show() on: " + InverseMessage)
-			InverseMessage.show()
-				
-			;If Companion Affinity Tutorial hasn't shown yet, show it
-			; if !Tutorial.GetStageDone(640)
-			; 	Tutorial.SetStage(640)
-			; endIf				
-		else
-			Trace("Related message unsupported. No Inverse Found:" + EventDataToUse)
-		endIf			
-	else
-		Trace("No related Message in EventDataToUse:" + EventDataToUse)
 	endIf
+	
+	if MSG_NOT_FOUND == showMessage
+		; Guess
+		if adjusted_reaction > 0.0 && adjusted_reaction < 21 ; Like
+			showMessage = MSG_DISLIKE
+		elseIf adjusted_reaction < 0.0 && adjusted_reaction > -21.0 ; Dislike
+			showMessage = MSG_LIKE
+		elseIf adjusted_reaction > 20 ; Love
+			showMessage = MSG_HATE
+		elseIf adjusted_reaction < -20 ; Hate
+			showMessage = MSG_LOVE
+		endIf		
+	endIf
+
+	if MSG_NOT_FOUND != showMessage
+	
+		pAffinityCompanion.ForceRefTo(CAS)
+		
+		; Show Progress?
+		if (1.0 == pTweakShowAffinityProgress.GetValue())
+			float progress  = (CAS.GetValue(pCA_Affinity)/10.0)
+			if MSG_DISLIKE == showMessage
+				TweakGenDislikeMsgStat.Show(progress)
+			elseIf MSG_LIKE == showMessage
+				TweakGenLikeMsgStat.Show(progress)
+			elseIf MSG_HATE == showMessage
+				TweakGenHateMsgStat.Show(progress)
+			elseIf MSG_LOVE == showMessage
+				TweakGenLoveMsgStat.Show(progress)
+			endIf
+		else
+			if MSG_DISLIKE == showMessage
+				TweakGenDislikeMsg.Show()
+			elseIf MSG_LIKE == showMessage
+				TweakGenLikeMsg.Show()
+			elseIf MSG_HATE == showMessage
+				TweakGenHateMsg.Show()
+			elseIf MSG_LOVE == showMessage
+				TweakGenLoveMsg.Show()
+			endIf
+		endIf
+		
+		Utility.WaitMenuMode(0.1)
+		pAffinityCompanion.Clear()
+		if !Tutorial.GetStageDone(640)
+			Tutorial.SetStage(640)
+		endIf
+		
+	endIf
+		
 endFunction
 
 
@@ -2359,7 +2533,7 @@ Function TryToTeleportDogmeat(ObjectReference TeleportDestinationRef, bool Shoul
 EndFunction
 
 
-Function CompanionDataToggle(ReferenceAlias ref, bool toggleOn = true, bool canDoFavor = true, bool givePlayerXP = true, bool SetNotShowOnStealthMeter  = true)
+Function CompanionDataToggle(ReferenceAlias ref, bool toggleOn = true, bool canDoFavor = true, bool givePlayerXP = true, bool notShowOnStealthMeter  = true)
 	
 	Trace("CompanionDataToggle Called()")
 	
@@ -2382,7 +2556,7 @@ Function CompanionDataToggle(ReferenceAlias ref, bool toggleOn = true, bool canD
 
 	if toggleOn
 		Trace("CompanionDataToggle : ToggleOn")
-		if SetNotShowOnStealthMeter 
+		if notShowOnStealthMeter 
 			npc.SetNotShowOnStealthMeter(true)
 		endIf
 
@@ -2737,8 +2911,14 @@ Function RotateCompanion()
 	;             5 companions.
 	
 	if (!first_filled || !next_hit)
-		Trace("p? [None]")	
-		pCompanion.Clear()
+		Trace("p? [None]")
+		
+		; 1.17: There is a potential timing bug here as companions are put in pCompanion
+		; before they are copied into one of the slots. So we no longer clear
+		; pCompanion if they are unrecognized... We just return and let the 
+		; next rotation do its thing...
+		
+		; pCompanion.Clear()
 		return
 	endIf
 	
@@ -3456,6 +3636,110 @@ Function AllowCompanion(Actor ActorToAllow, bool MakeCompanionIfNoneCurrently = 
 		endIf
 	endIf
 EndFunction
+
+Function UpdateCoolDownDaysLong(float value)
+
+	pTweak_CoolDownDays_Long.SetValue(value)
+	FollowersScript:AffinityEventData[] affinityEvents
+	affinityEvents = ((self as Quest) as FollowersScript).AffinityEvents
+	GlobalVariable CoolDown
+
+	int i = 0
+	while (i < affinityEvents.length)
+		if CA_CoolDownDays_Long == affinityEvents[i].CoolDownDays
+			Trace("Resetting Cooldown for Event" +  affinityEvents[i].EventKeyword)
+			affinityEvents[i].NextDayAllowed = 0
+		endif
+		i += 1
+	endwhile
+		
+EndFunction
+
+Function UpdateCoolDownDaysMedium(float value)
+
+	pTweak_CoolDownDays_Medium.SetValue(value)
+	FollowersScript:AffinityEventData[] affinityEvents
+	affinityEvents = ((self as Quest) as FollowersScript).AffinityEvents
+	GlobalVariable CoolDown
+
+	int i = 0
+	while (i < affinityEvents.length)
+		if CA_CoolDownDays_Medium == affinityEvents[i].CoolDownDays
+			Trace("Resetting Cooldown for Event" +  affinityEvents[i].EventKeyword)
+			affinityEvents[i].NextDayAllowed = 0
+		endif
+		i += 1
+	endwhile
+	
+EndFunction
+
+Function UpdateCoolDownDaysShort (float value)
+
+	pTweak_CoolDownDays_Short.SetValue(value)
+	FollowersScript:AffinityEventData[] affinityEvents
+	affinityEvents = ((self as Quest) as FollowersScript).AffinityEvents
+	GlobalVariable CoolDown
+
+	int i = 0
+	while (i < affinityEvents.length)
+		if CA_CoolDownDays_Short == affinityEvents[i].CoolDownDays
+			Trace("Resetting Cooldown for Event" +  affinityEvents[i].EventKeyword)
+			affinityEvents[i].NextDayAllowed = 0
+		endif
+		i += 1
+	endwhile
+	
+EndFunction
+
+Function UpdateIdleCoolDownDismissed(float min, float max)
+
+	pTweakIdleCooldownDismissedMin.SetValue(min)
+	pTweakIdleCooldownDismissedMax.SetValue(max)
+
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower as AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+	
+		ActorValue IdleChatterTimeMin = Game.GetCommonProperties().IdleChatterTimeMin
+		ActorValue IdleChatterTimeMax = Game.GetCommonProperties().IdleChatterTimeMax
+
+		ReferenceAlias[] pManagedMap = pTweakFollowerScript.pManagedMap
+		int plength = pManagedMap.Length
+		int p = 1
+		while (p < plength)
+			ReferenceAlias rnpc = pManagedMap[p]
+			if rnpc
+				Actor anpc = rnpc.GetActorReference()
+				if anpc	&& !anpc.IsInFaction(pCurrentCompanionFaction)	
+					anpc.SetValue(IdleChatterTimeMin, min)
+					anpc.SetValue(IdleChatterTimeMax, max)
+				endIf
+			endIf
+			p += 1
+		endWhile
+	endIf
+	
+EndFunction
+
+Function UpdateIdleCoolDownActive(float min, float max)
+
+	pTweakIdleCooldownActiveMin.SetValue(min)
+	pTweakIdleCooldownActiveMax.SetValue(max)
+
+	ActorValue IdleChatterTimeMin = Game.GetCommonProperties().IdleChatterTimeMin
+	ActorValue IdleChatterTimeMax = Game.GetCommonProperties().IdleChatterTimeMax
+
+	ReferenceAlias[] followers = GetAllFollowers()
+	int flength = followers.Length
+	int f = 1
+	while (f < flength)
+		Actor npc = followers[f].GetActorReference()
+		npc.SetValue(IdleChatterTimeMin, min)
+		npc.SetValue(IdleChatterTimeMax, max)
+		f += 1
+	endWhile
+	
+EndFunction
+
 
 Int Function GetPluginID(int formid)
 	int fullid = formid

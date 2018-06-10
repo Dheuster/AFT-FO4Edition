@@ -121,6 +121,30 @@ endif
 EndFunction
 ;END FRAGMENT
 
+;BEGIN FRAGMENT Fragment_Terminal_12
+Function Fragment_Terminal_12(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakCampFoundationEnabled.SetValue(1.0)
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.RefreshCamp()
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_13
+Function Fragment_Terminal_13(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakCampFoundationEnabled.SetValue(0.0)
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.RefreshCamp()
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 GlobalVariable Property pTweakCampModule1Enabled Auto Const
@@ -134,3 +158,5 @@ GlobalVariable Property pTweakCampModule4Enabled Auto Const
 Quest Property pTweakPipBoy Auto Const
 
 GlobalVariable Property pTweakCampUFOEnabled Auto Const
+
+GlobalVariable Property pTweakCampFoundationEnabled Auto Const

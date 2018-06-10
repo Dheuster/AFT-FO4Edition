@@ -198,9 +198,13 @@ Bool OccupantsFresh  = true
 
 Event ObjectReference.OnLoad(ObjectReference akActor)
 	Trace("OnLoad [" + akActor + "]")
+	
 	UnRegisterForRemoteEvent(akActor, "OnLoad")
+	RegisterForRemoteEvent(akActor, "OnLoad")
+	
 	Actor MrAble = MQ102CryoCorpse01.GetUniqueActor()
 	if (MrAble && akActor == MrAble)
+		UnRegisterForRemoteEvent(akActor, "OnLoad")
 		Trace("Entered Vault 111. Updating Occupants")
 		Utility.Wait(4.0)
 		UpdateOccupants()
@@ -212,7 +216,6 @@ Event ObjectReference.OnLoad(ObjectReference akActor)
 			ExitVaultReaction()
 		else
 			Trace("Spouse Loaded, but not interior. Re-registering Load Event")
-			RegisterForRemoteEvent(Spouse, "OnLoad")
 		endif
 	endif	
 EndEvent
@@ -1443,7 +1446,7 @@ Function ExitVaultReaction()
 					maxwait -= 1
 				endwhile
 			endif
-			if !(Curie.Is3DLoaded() && pc.GetDistance(Curie) < 1000)
+			if !(Curie.Is3DLoaded() && pc.GetDistance(Curie) < 500)
 				Trace("Curie out of range")	
 				Curie = None
 			else
@@ -1462,7 +1465,7 @@ Function ExitVaultReaction()
 					maxwait -= 1
 				endwhile
 			endif
-			if !(Codsworth.Is3DLoaded() && pc.GetDistance(Codsworth) < 1000)
+			if !(Codsworth.Is3DLoaded() && pc.GetDistance(Codsworth) < 500)
 				Trace("Codsworth out of range")	
 				Codsworth = None
 			else
@@ -1471,12 +1474,12 @@ Function ExitVaultReaction()
 		endif
 	endif
 
-	if Curie
+	if Curie && Curie.IsInFaction(pCurrentCompanionFaction)
 		float[] posdata = TraceCircle(pc, 180, -100)     ;
 		Curie.SetPosition(posdata[0],posdata[1],(posdata[2]))
 		Curie.SetAngle(0.0,0.0, horizon)
 	endif
-	if Codsworth
+	if Codsworth && Codsworth.IsInFaction(pCurrentCompanionFaction)
 		float[] posdata = TraceCircle(pc, 180, 100)     ;
 		Codsworth.SetPosition(posdata[0],posdata[1],(posdata[2]))
 		Codsworth.SetAngle(0.0,0.0, horizon)
@@ -1514,6 +1517,8 @@ EndFunction
 Function ExitVaultReactionFinished()
 	Trace("ExitVaultReactionFinished()")
 	Actor theSpouse = pSpouse.GetActorReference()
+	
+	UnRegisterForRemoteEvent(theSpouse, "OnLoad")
 	
 	if IsStageDone(38)
 		theSpouse.SetAvailableToBeCompanion()

@@ -27,13 +27,15 @@ Bool			Property RelayEvent			Auto
 Bool			Property Initialized		Auto
 Bool			Property SentFirstLoaded	Auto
 float			Property version			Auto
-
+Armor 			Property pPipboy 			Auto Const
 Quest    		Property pMQ102             Auto Const
+
 keyword Property isPowerArmorFrame Auto Const
 Keyword Property pLinkPowerArmor         Auto Const
 Keyword Property FurnitureTypePowerArmor Auto Const
 GlobalVariable Property TweakDebugMode Auto Const
 Message	Property pTweakFullReset	Auto Const
+WorldSpace Property pCommonWealth             Auto Const
 
 int  maxwait    = 30
 bool allowdraw  = true
@@ -75,31 +77,29 @@ endEvent
 ; event is received. 
 
 Event OnQuestInit()
-	Trace("OnQuestInit() Receieved")
+	Trace("OnQuestInit() Received")
 	
 	Actor player = Game.GetPlayer()
 	RegisterForRemoteEvent(player,"OnPlayerLoadGame")           ; Startup...
-	if (pMQ102.GetCurrentStageID() < 10)
-		If pMQ102.IsRunning()
-			Trace("Registering For pMQ102.OnStageSet")
-			RegisterForRemoteEvent(pMQ102,"OnStageSet")
-		else
-			Trace("Registering For pMQ102.OnQuestInit")
-			RegisterForRemoteEvent(pMQ102, "OnQuestInit") 
-		endif
-	else
+	if ((player.GetWorldSpace() == pCommonWealth) && player.IsEquipped(pPipboy))
 		InitializeAft()
-	endif
+	else
+		UnRegisterForRemoteEvent(player,"OnLocationChange")
+		UnRegisterForRemoteEvent(pMQ102,"OnStageSet")
+		
+		; There is no LocationChangeEvent thrown when exiting Vault 111. But
+		; if it is the beginning of the game, there is still a quest stage
+		; transition event...
+		
+		if (pMQ102.GetCurrentStageID() < 10)
+			RegisterForRemoteEvent(pMQ102,"OnStageSet")
+		endif
+		
+		Trace("Registering For player OnLocationChange to detect CommonWealth arrival")
+		RegisterForRemoteEvent(player,"OnLocationChange")		
+		
+	endif	
 EndEvent
-
-Event Quest.OnQuestInit(Quest rQuest)
-	Trace("Quest.OnQuestInit [" + rQuest + "]")
-	if (rQuest == pMQ102)
-		Trace("Registering For OnStageSet")
-		UnRegisterForRemoteEvent(pMQ102, "OnQuestInit")
-		RegisterForRemoteEvent(pMQ102,"OnStageSet")
-	endif
-endEvent
 
 Event Quest.OnStageSet(Quest pMQ102, int auiStageID, int auiItemID)
 
@@ -130,22 +130,24 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
 	; made before emerging from Vault 111.
 	;
 	; Edge case : Auto Save happens when emerging
-	; from vault 111. So if loading Autodave, InitializeAft
-	; might be false but pMQ102's stage would be >= 10. 
-	; We check for edge case and immediatly initialize if
-	; detected...
+	; from vault 111. So if loading Autosave, InitializeAft
+	; might be false. That is why we check the worldspace
+	; and go ahead an intialize if we are in the commonwealth. 
 	
 	Actor player = Game.GetPlayer()
-	UnRegisterForRemoteEvent(player,"OnPlayerLoadGame")
-	RegisterForRemoteEvent(player,"OnPlayerLoadGame")
 	
 	if (!Initialized)
-		UnRegisterForRemoteEvent(pMQ102,"OnStageSet")
-		if (pMQ102.GetCurrentStageID() < 10)
-			RegisterForRemoteEvent(pMQ102,"OnStageSet")
-			return
+		if (player.GetWorldSpace() == pCommonWealth && player.IsEquipped(pPipboy))
+			Utility.wait(10)
+			InitializeAft()
+		else
+			UnRegisterForRemoteEvent(pMQ102,"OnStageSet")
+			UnRegisterForRemoteEvent(player,"OnLocationChange")
+			if (pMQ102.GetCurrentStageID() < 10)
+				RegisterForRemoteEvent(pMQ102,"OnStageSet")
+			endif
+			RegisterForRemoteEvent(player,"OnLocationChange")
 		endif
-		InitializeAft()
 		return
 	endif
 	
@@ -165,6 +167,9 @@ Function InitializeAft()
 	Initialized = true
 
 	Actor player = Game.GetPlayer()
+	
+	UnRegisterForRemoteEvent(pMQ102,"OnStageSet")
+	UnRegisterForRemoteEvent(player,"OnLocationChange")
 	
 	RegisterForRemoteEvent(player,"OnLocationChange")           ; Maintenance scripts...
 	RegisterForRemoteEvent(player,"OnLoad")                     ; Maintenance scripts...
@@ -786,8 +791,18 @@ Event Actor.OnSit(Actor player, ObjectReference akFurniture)
 endEvent
 
 Event Actor.OnLocationChange(Actor player, Location akOldLoc, Location akNewLoc)
-	StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
-	StartTimer(4.0,NO_ANIM_SHEATH_FLOOD)
+
+	if Initialized
+		StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
+		StartTimer(4.0,NO_ANIM_SHEATH_FLOOD)
+		return
+	endif
+	
+	if (!player.IsInInterior() && (player.GetWorldSpace() == pCommonWealth) && player.IsEquipped(pPipboy))
+		Utility.wait(10)
+		InitializeAft()
+	endif
+	
 endEvent
 
 Event ObjectReference.OnLoad(ObjectReference akRef)
