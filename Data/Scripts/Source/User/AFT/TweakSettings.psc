@@ -265,15 +265,17 @@ EndFunction
 Function EventTradeEnd()
 	Actor npc = self.GetActorRef()
 	float currentHealth = npc.GetValue(pHealth)
+	bool endDeferred = true
 	if (TradeHealth != currentHealth)
 		if (currentHealth < 0.0)
 			npc.RestoreValue(pHealth, 9999)
 			Utility.wait(0.1)
-			bool skip = npc.IsEssential()
+			bool wasEssential = npc.IsEssential()
 			npc.SetEssential(true)
 			npc.EndDeferredKill()
+			endDeferred = false
 			Utility.wait(0.1)
-			if !skip
+			if !wasEssential
 				npc.SetEssential(false)
 			endif
 		endif
@@ -291,6 +293,9 @@ Function EventTradeEnd()
 		npc.AddSpell(pAbMagLiveLoveCompanionPerks)	
 		Trace("Perks restored")
 	endif
+	if endDeferred
+		npc.EndDeferredKill()
+	endif		
 EndFunction
 
 ; ObjectReference Cache:
