@@ -1051,10 +1051,13 @@ Function AffinityTalkManager(keyword EventKeyword, GlobalVariable  EventSize, bo
                                actorvalue acupdate, keyword customTopic, Bool IsDialogueBump, \
                                float ResponseDelay, objectReference Target)
 	
-	Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "]")		
+	Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [" + (Target as Actor).GetActorBase().GetFormID() + "]")		
 	Trace("Synchronous   : [" + CommentSynchronous_var + "]")
 	
-	if Target && (Target as Actor)
+	; Bug 1.17 : If Target is CAS, then it is likely a heal event (you are targetting a companion to heal them). But if target is not CAS, then
+	; it is most likely a cannibal event (target is the corpse you are eating). So only assume we don't need to distribute the event if the 
+	; target is CAS/DAS
+	if Target && (Target as Actor) && ((Target as Actor) as CompanionActorScript)
 		talkLimitTracker = 1
 		AffinityTalkHelper((Target as Actor), EventKeyword, EventSize, CheckCompanionProximity, acupdate, customTopic, IsDialogueBump, ResponseDelay, Target)		
 		return

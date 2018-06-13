@@ -2747,6 +2747,10 @@ ObjectReference Function CreateBench(ObjectReference parentObj, ReferenceAlias b
 				newBench.SetPosition(spawnMarker.GetPositionX(), spawnMarker.GetPositionY(), spawnMarker.GetPositionZ())
 				newBench.SetAngle(0.0,0.0, spawnMarker.GetAngleZ())
 				newBench.Disable()
+				if linkToStorage
+					newBench.SetLinkedRef(pShelterStorage.GetReference(),WorkshopItemKeyword)
+					newBench.SetLinkedRef(pShelterStorage.GetReference(),WorkshopLinkContainer)	
+				endif				
 				newBench.Enable()
 				benchRef.ForceRefTo(newBench)
 				
