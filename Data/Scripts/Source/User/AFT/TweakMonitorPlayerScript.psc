@@ -1,3 +1,8 @@
+; TODO: 
+; - pSanctuaryHillsWorld <- Correct value
+; - pVault111Location    <- Correct value
+; - Confirm pTweakDLC01, etc.. .are properly injected...
+
 Scriptname AFT:TweakMonitorPlayerScript extends Quest
 
 ; NOTES: ANY ATTEMPT to edit the players inventory on a startgame enabled quest will break New Games
@@ -6,36 +11,39 @@ Scriptname AFT:TweakMonitorPlayerScript extends Quest
 ;
 ; The easiest thing to do is check if MQ102.GetCurrentStageID() < 10. If it is 10 or more, you
 ; are good. If it is less than 10, you can remotely register for the OnStageSet event so your
-; script gets informed when the player exits the vault. 
+; script gets informed when the player exits the vault. However, ALT start mods like StartMe up 
+; may skip that quest entirely. The next best thing is to check for PipBoy, but then there are
+; mods like PipPad that replace the Pipboy. You could check for the Common Wealth, but What if they
+; install your mod while in a DLC area. 
 
-; Dont use import. It only works when .pex files are local. Once you package them up into an 
-; release/final archive, the scripts wont be found and everything will break...
-; import AFT
+Quest		Property pFollowers				Auto Const
+Quest		Property pTweakFollower			Auto Const
+Quest		Property pTweakNames			Auto Const
+Quest		Property pTweakPipBoy			Auto Const
+Quest		Property pTweakVisualChoice		Auto Const
+Quest		Property pTweakSettlementLoader	Auto Const
+Quest		Property pTweakDLC01			Auto Const
+Quest		Property pTweakDLC03			Auto Const
+Quest		Property pTweakDLC04			Auto Const
+Quest		Property pTweakCOMSpouse    	Auto Const
 
-Quest			Property pFollowers     	Auto Const
-Quest			Property pTweakFollower		Auto Const
-Quest			Property pTweakNames		Auto Const
-Quest			Property pTweakPipBoy		Auto Const
-Quest			Property pTweakVisualChoice	Auto Const
-Quest			Property pTweakSettlementLoader	Auto Const
-Quest			Property pTweakDLC01		Auto Const
-Quest			Property pTweakDLC03		Auto Const
-Quest			Property pTweakDLC04		Auto Const
+Bool		Property IsInDialogue			Auto
+Bool		Property RelayEvent				Auto
+Bool		Property Initialized			Auto
+Bool		Property SentFirstLoaded		Auto
+float		Property version				Auto
+Armor		Property pPipboy				Auto Const
+Quest		Property pMQ102					Auto Const
 
-Bool			Property IsInDialogue		Auto
-Bool			Property RelayEvent			Auto
-Bool			Property Initialized		Auto
-Bool			Property SentFirstLoaded	Auto
-float			Property version			Auto
-Armor 			Property pPipboy 			Auto Const
-Quest    		Property pMQ102             Auto Const
+keyword		Property isPowerArmorFrame			Auto Const
+Keyword		Property pLinkPowerArmor			Auto Const
+Keyword		Property FurnitureTypePowerArmor	Auto Const
+Message		Property pTweakFullReset			Auto Const
 
-keyword Property isPowerArmorFrame Auto Const
-Keyword Property pLinkPowerArmor         Auto Const
-Keyword Property FurnitureTypePowerArmor Auto Const
-GlobalVariable Property TweakDebugMode Auto Const
-Message	Property pTweakFullReset	Auto Const
-WorldSpace Property pCommonWealth             Auto Const
+GlobalVariable	Property TweakDebugMode			Auto Const
+WorldSpace		Property pCommonWealth			Auto Const
+WorldSpace		Property pSanctuaryHillsWorld	Auto Const
+Location        Property pVault111Location		Auto Const
 
 int  maxwait    = 30
 bool allowdraw  = true
@@ -56,15 +64,15 @@ EndFunction
 
 ; Do things here you only want to do once.
 Event OnInit()
-	version                  = 1.0
-	Initialized				 = false
-	IsInDialogue             = false
-	SentFirstLoaded			 = false
-	RelayEvent               = true ; Set this to false if Uninstalled
-	allowdraw				 = true
-	allowsneak               = true
-	currentSwimmingState     = false
-	desiredSwimmingState     = false
+	version					= 1.0
+	Initialized				= false
+	IsInDialogue			= false
+	SentFirstLoaded			= false
+	RelayEvent				= true ; Set this to false if Uninstalled
+	allowdraw				= true
+	allowsneak				= true
+	currentSwimmingState	= false
+	desiredSwimmingState	= false
 endEvent
 
 ; BUGS: I'm not sure why, but we get 2 weapondraw events everytime the
@@ -81,89 +89,91 @@ Event OnQuestInit()
 	
 	Actor player = Game.GetPlayer()
 	RegisterForRemoteEvent(player,"OnPlayerLoadGame")           ; Startup...
-	if ((player.GetWorldSpace() == pCommonWealth) && player.IsEquipped(pPipboy))
-		InitializeAft()
-	else
-		UnRegisterForRemoteEvent(player,"OnLocationChange")
-		UnRegisterForRemoteEvent(pMQ102,"OnStageSet")
-		
-		; There is no LocationChangeEvent thrown when exiting Vault 111. But
-		; if it is the beginning of the game, there is still a quest stage
-		; transition event...
-		
-		if (pMQ102.GetCurrentStageID() < 10)
-			RegisterForRemoteEvent(pMQ102,"OnStageSet")
-		endif
-		
-		Trace("Registering For player OnLocationChange to detect CommonWealth arrival")
-		RegisterForRemoteEvent(player,"OnLocationChange")		
-		
-	endif	
-EndEvent
-
-Event Quest.OnStageSet(Quest pMQ102, int auiStageID, int auiItemID)
-
-	; Scenario : Would only be called post-startup if the player
-	;            started a new game or loaded a save game made before
-	;            emerging from Vaule 111... and then emerged during
-	;            gameplay. 
-
-	Trace("Quest.OnStageSet() Receieved [" + auiStageID + "]")
-	if auiStageID < 10
-		Trace("Ignored")
-		return
+	if !Initialized
+		InitializationCheck()
 	endif
-	UnregisterForRemoteEvent(pMQ102,"OnStageSet")
 	
-	; Give the world time to come into view
-	Utility.wait(10)
-	InitializeAft()
 EndEvent
 
 Event Actor.OnPlayerLoadGame(Actor akSender)
 	Trace("OnPlayerLoadGame Receieved")
-	
-	; This gets called when loading a save game, whether
-	; the game was previously modded or not. (Does not
-	; get called when starting a new game). The only
-	; way Initialized would be false is if the save was
-	; made before emerging from Vault 111.
-	;
-	; Edge case : Auto Save happens when emerging
-	; from vault 111. So if loading Autosave, InitializeAft
-	; might be false. That is why we check the worldspace
-	; and go ahead an intialize if we are in the commonwealth. 
-	
-	Actor player = Game.GetPlayer()
-	
+	RelayEvent  = true		
 	if (!Initialized)
-		if (player.GetWorldSpace() == pCommonWealth && player.IsEquipped(pPipboy))
-			Utility.wait(10)
-			InitializeAft()
-		else
-			UnRegisterForRemoteEvent(pMQ102,"OnStageSet")
-			UnRegisterForRemoteEvent(player,"OnLocationChange")
-			if (pMQ102.GetCurrentStageID() < 10)
-				RegisterForRemoteEvent(pMQ102,"OnStageSet")
-			endif
-			RegisterForRemoteEvent(player,"OnLocationChange")
-		endif
+		InitializationCheck()
 		return
 	endif
-	
 	StartTimer(4,NO_LG_FLOOD_INIT)	
 EndEvent
 
-Function InitializeAft()
 
-	; This is called one time. Either when the player emerges
-	; from Vault 111 OR when the mod is initialized (if the
-	; quest stages indicate they are already well into the game). 
+Function InitializationCheck()
+	Trace("InitializationCheck Receieved")
+	; Assume Initialized is false
+	bool timetoinit = false
 	
-	Trace("InitializeAft()")
-	if Initialized
+	if (pMQ102.GetCurrentStageID() > 9)
+		timetoinit = true
+	endif	
+	if (!timetoinit)
+		Actor player = Game.GetPlayer()
+
+		; timetoinit override for ALT START MODS:
+		;
+		;  1 Not in Preware prologue worldspace
+		;  2 Not within interior area of Vault111
+		;  3 Player has inventory available
+	
+		timetoinit = ((player.GetWorldSpace() != pSanctuaryHillsWorld) && !(player.GetCurrentLocation() == pVault111Location && player.IsInInterior()) && (player.GetItemCount() != 0))
+	
+	endif
+	
+	if timetoinit
+		Utility.wait(10)
+		InitializeAft()
 		return
 	endif
+	
+	; If the trump condition fails, we still need to register for 
+	; some events so we can initialize as soon as the conditions 
+	; above are met:
+		
+	RegisterForRemoteEvent(Game.GetPlayer(),"OnLocationChange")
+	RegisterForRemoteEvent(pMQ102,"OnStageSet")
+	
+EndFunction
+
+Event Quest.OnStageSet(Quest pMQ102, int auiStageID, int auiItemID)
+
+	Trace("Quest.OnStageSet() Receieved [" + auiStageID + "]")	
+	if auiStageID < 10
+		Trace("Ignored")
+		return
+	endif
+	if (!Initialized)
+		InitializationCheck()
+	else
+		UnRegisterForRemoteEvent(pMQ102,"OnStageSet")		
+	endif
+	
+EndEvent
+
+Event Actor.OnLocationChange(Actor player, Location akOldLoc, Location akNewLoc)
+
+	if !Initialized
+		InitializationCheck()
+		return
+	endif
+	
+	StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
+	StartTimer(4.0,NO_ANIM_SHEATH_FLOOD)
+	
+endEvent
+
+Function InitializeAft()
+
+	; This is called one time. See InitializationCheck() above for conditions.
+	
+	Trace("InitializeAft()")
 	Initialized = true
 
 	Actor player = Game.GetPlayer()
@@ -180,31 +190,10 @@ Function InitializeAft()
 	RegisterForRemoteEvent(player,"OnItemEquipped")             ; Detect PowerArmor State
 	RegisterForRemoteEvent(player,"OnItemUnequipped")           ; Detect PowerArmor State
 	RegisterForRemoteEvent(player,"OnPlayerEnterVertibird")     ; Hide all but 1 companion	
-		
-
-		
-	; RegisterForRemoteEvent(player,"OnItemAdded")                ; Quest detection?
-	; RegisterForRemoteEvent(player,"OnCombatStateChanged")       ; Possible custom Combat AI (Dont attack until Player does...)
-	; RegisterForRemoteEvent(player,"OnPlayerFireWeapon")       ; Possible custom Combat AI (Dont attack until Player does...)
-	; RegisterForRemoteEvent(player,"OnPlayerUseWorkBench")     ; ???		
-	; RegisterForHitEvent(player)                               ; ???
-	; RegisterForRemoteEvent(player,"OnHit")                    ; ???
-	; RegisterForRemoteEvent(player,"OnPlayerFallLongDistance") ; ???
-	; RegisterForRemoteEvent(player,"OnPlayerHealTeammate")     ; ??? 
-	; RegisterForRemoteEvent(player,"OnPlayerSwimming")         ; ???
-	; RegisterForRadiationDamageEvent(player)                   ; ???
-	; RegisterForRemoteEvent(player,"OnRadiationDamage")        ; ???		
-    ; RegisterForRemoteEvent(player,"OnPlayerModArmorWeapon")
-	; RegisterForPlayerSleep()                                  ; ???
-    ; RegisterForRemoteEvent(player,"OnPlayerSleepStart")       ; ???	
-    ; RegisterForRemoteEvent(player,"OnPlayerSleepStop")        ; ???
-	; RegisterForMagicEffectApplyEvent(Player, CasterFilter = none, EffectFilter = none)
-	; RegisterForRemoteEvent(player,"OnMagicEffectApply")       ; Possibly Enter Shelter?
-	; RegisterForPlayerTeleport()                               ; Possibly disable AFT for certain areas?
-	; RegisterForRemoteEvent(player,"OnPlayerTeleport")         ; Possibly disable AFT for certain areas?
-	; RegisterForTrackedStatsEvent("Main Quests Completed", 1)
-	; RegisterForTrackedStatsEvent("Locations Discovered",  1)
 	
+	; RegisterForPlayerSleep()                                  ; ???
+	; RegisterForRemoteEvent(player,"OnPlayerSleepStart")       ; ???	
+	; RegisterForRemoteEvent(player,"OnPlayerSleepStop")        ; ???
 	
 	Quest PowerArmorRecallQuest = Game.GetForm(0x00187605) as Quest
 	if PowerArmorRecallQuest
@@ -239,21 +228,24 @@ Function InitializeAft()
 	StartTimer(4,NO_LG_FLOOD_INIT)
 EndFunction
 
-int NO_ANIM_DRAW_FLOOD		 = 999 const
-int NO_ANIM_SHEATH_FLOOD	 = 998 const
-; int NO_ANIM_SNEAKENTER_FLOOD = 997 const
-int NO_ANIM_SNEAKEXIT_FLOOD	 = 996 const
-int NO_LG_FLOOD_INIT		 = 995 const
-int NO_LG_FLOOD_CONT		 = 994 const
-int ALLOW_DRAW_TIMER         = 993 const
-int ALLOW_SNEAK_TIMER        = 991 const
-int MONITOR_FLIGHT           = 990 const
-int EVALUATE_SWIMMING        = 989 const
+int NO_ANIM_DRAW_FLOOD		= 999 const
+int NO_ANIM_SHEATH_FLOOD	= 998 const
+int NO_ANIM_SNEAKEXIT_FLOOD	= 996 const
+int NO_LG_FLOOD_INIT		= 995 const
+int NO_LG_FLOOD_CONT		= 994 const
+int ALLOW_DRAW_TIMER		= 993 const
+int ALLOW_SNEAK_TIMER		= 991 const
+int MONITOR_FLIGHT			= 990 const
+int EVALUATE_SWIMMING		= 989 const
 
 Event OnTimer(int aiTimerID)
 
 	CancelTimer(aiTimerID)
 	
+	if (!RelayEvent)
+		return
+	endif
+		
 	if (ALLOW_DRAW_TIMER == aiTimerID)
 		allowdraw = true
 		return
@@ -279,7 +271,7 @@ Event OnTimer(int aiTimerID)
 					pTweakFollowerScript.CallFunctionNoWait("OnPlayerStopSwim", new Var[0])
 				endIf
 			else
-				Trace("Unable to Call TweakFollowerScript.OnGameLoaded()")
+				Trace("Unable to Call TweakFollowerScript.OnPlayerStartSwim()")
 			endIf
 		endIf
 		return
@@ -288,10 +280,6 @@ Event OnTimer(int aiTimerID)
 	; aiTimerID == 1 set by OnPlayerLoadGame()
 	if (NO_LG_FLOOD_INIT == aiTimerID || NO_LG_FLOOD_CONT == aiTimerID)
 			
-		if (!RelayEvent)
-			return
-		endif
-				
 		; Check running States before kicking off OnGameLoaded() events...
 		if (NO_LG_FLOOD_INIT == aiTimerID)
 			maxwait = 30
@@ -320,7 +308,7 @@ Event OnTimer(int aiTimerID)
 				return
 			endif
 		endif
-		OnGameLoaded() ; <========== 
+		OnGameLoaded()
 		return
 	endif
 	
@@ -333,11 +321,6 @@ Event OnTimer(int aiTimerID)
 		RequestSheathAnimationEvent()
 		return
 	endif
-
-	; if (NO_ANIM_SNEAKENTER_FLOOD == aiTimerID)
-	;	RequestSneakEnterAnimationEvent()
-	;	return
-	; endif
 
 	if (NO_ANIM_SNEAKEXIT_FLOOD == aiTimerID)
 		RequestSneakExitAnimationEvent()
@@ -352,15 +335,12 @@ Event OnTimer(int aiTimerID)
 		endif
 		return
 	endif
-	; Check for Dialogue Target...
-	; StartTimer(3,0)
 	
 EndEvent
 
 Function OnGameLoaded()
 
 	Trace("OnGameLoad()")
-	RelayEvent  = true
 	
 	bool firstcall = false
 	if !SentFirstLoaded
@@ -397,10 +377,7 @@ Function OnGameLoaded()
 	else
 		Trace("Unable to Call AFT:pTweakDLC04Script.OnGameLoaded()")
 	endif
-	
-	; NOTE : All OnGameLoaded() Methods assume the game is passed MQ102:Stage9 (Fortunately a Tracked Stat happens
-	; to increment as it completes, so we dont have to be too quest specific here...
-		
+			
 	AFT:TweakDFScript pTweakDFScript = (pFollowers as AFT:TweakDFScript)
 	if (pTweakDFScript)
 		Trace("Calling AFT:TweakDFScript.OnGameLoaded()")
@@ -455,7 +432,7 @@ Function OnGameLoaded()
 		; Trace("AFT:TweakMonitorPlayer : Calling TweakPipBoyScript.OnGameLoaded()")
 		pTweakVisualChoiceScript.OnGameLoaded(firstcall)
 	else
-		Trace("Unable to Call TweakPipBoyScript.OnGameLoaded()")
+		Trace("Unable to Call pTweakVisualChoiceScript.OnGameLoaded()")
 	endif
 	
 	AFT:TweakChangeAppearance pTweakChangeAppearance = pTweakFollower As AFT:TweakChangeAppearance
@@ -465,36 +442,29 @@ Function OnGameLoaded()
 	else
 		Trace("Unable to Call pTweakChangeAppearance.OnGameLoaded()")
 	endif
-		
+	
+	AFT:TweakCOMSpouseScript pTweakSpouse = pTweakCOMSpouse As AFT:TweakCOMSpouseScript	
+	if (pTweakSpouse)
+		; Trace("AFT:TweakMonitorPlayer : Calling TweakPipBoyScript.OnGameLoaded()")
+		pTweakSpouse.OnGameLoaded(firstcall)
+	else
+		Trace("Unable to Call pTweakSpouse.OnGameLoaded()")
+	endif
+
 	allowdraw  = true
 	StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
 	StartTimer(4.0,NO_ANIM_SHEATH_FLOOD)
 
 	allowsneak = true
-	; StartTimer(4.0,NO_ANIM_SNEAKENTER_FLOOD)
 	StartTimer(4.0,NO_ANIM_SNEAKEXIT_FLOOD)
 	
 	; Use This global to enable/disable certain menu options...
 	TweakDebugMode.SetValue(0.0)
 	UpdateTweakDebugMode()
 
-	; Check for dialogue...
-	; StartTimer(3,0)
-		
 	Trace("OnGameLoad() Finished")
 	
 EndFunction
-
-; Function RequestSneakEnterAnimationEvent()
-	; Trace("RequestSneakEnterAnimationEvent()")
-	; Actor pc = Game.GetPlayer()
-	; UnregisterForAnimationEvent(pc, "sneakStateEnter")
-	; Utility.wait(0.5)
-	; Bool succ = RegisterForAnimationEvent(pc, "sneakStateEnter")
-	; if !succ
-		; StartTimer(4.0,NO_ANIM_SNEAKENTER_FLOOD)
-	; EndIf
-; EndFunction
 
 Function RequestSneakExitAnimationEvent()
 	Trace("RequestSneakEnterAnimationEvent()")
@@ -533,22 +503,6 @@ Function RequestSheathAnimationEvent()
 
 EndFunction
 
-; Called From OnTimer Checks (Eventually?)
-; Function OnDialogueBegin(ObjectReference ActorRef)
-; 	AFT:TweakDFScript pTweakDFScript = ((pFollowers As Quest) as AFT:TweakDFScript)
-; 	if pTweakDFScript
-; 		pTweakDFScript.OnDialogueBegin(ActorRef)
-; 	endif
-; EndFunction
-
-; Called From OnTimer Checks (Eventually?)
-; Function OnDialogueEnd(ObjectReference ActorRef = None)
-;	AFT:TweakDFScript pTweakDFScript = ((pFollowers As Quest) as AFT:TweakDFScript)
-;	if pTweakDFScript
-;		pTweakDFScript.OnDialogueEnd(ActorRef)
-;	endif
-; EndFunction
-
 Function AftReset()
 	RelayEvent  = false
 	
@@ -556,7 +510,6 @@ Function AftReset()
 
 	CancelTimer(NO_ANIM_DRAW_FLOOD)
 	CancelTimer(NO_ANIM_SHEATH_FLOOD)
-	; CancelTimer(NO_ANIM_SNEAKENTER_FLOOD)
 	CancelTimer(NO_ANIM_SNEAKEXIT_FLOOD)
 	CancelTimer(NO_LG_FLOOD_INIT)
 	CancelTimer(NO_LG_FLOOD_CONT)
@@ -613,11 +566,11 @@ Function AftReset()
 	UnregisterForAnimationEvent(player, "sneakStateEnter")
 	UnregisterForAnimationEvent(player, "sneakStateExit")
 
-	Initialized				 = false
-	IsInDialogue             = false
-	SentFirstLoaded			 = false
-	allowdraw				 = true
-	allowsneak               = true
+	Initialized				= false
+	IsInDialogue			= false
+	SentFirstLoaded		= false
+	allowdraw					= true
+	allowsneak				= true
 	
 	pTweakFullReset.show()
 endFunction
@@ -641,32 +594,6 @@ Function OnPlayerStopSwim()
 		StartTimer(5.0,EVALUATE_SWIMMING)
 	endif
 EndFunction
-
-
-; ====================================
-; Monitored Player Events:
-; ====================================
-; Event OnTrackedStatsEvent(string asStat, int aiStatValue)
-
-	; if ("Main Quests Completed" == asStat)
-		; Trace("Receieved Event for Main Quests Completed : [" + aiStatValue + "]")
-		; RegisterForTrackedStatsEvent("Main Quests Completed", aiStatValue + 1)
-	; endif
-	
-	;; This could be useful if actor values current companions were incremented
-	;; each time this fired. It would be a way to track progress and time spent
-	;; with NPC...
-	
-	; if ("Locations Discovered" == asStat)
-		; Trace("Receieved Event for Locations Discovered : [" + aiStatValue + "]")
-		;; The old way of tracking when Player left Vault.... 
-		;; if (1 == aiStatValue)
-		;;   OnGameLoaded()
-		;; endif
-		; Trace("Current Location [" + Game.GetPlayer().GetCurrentLocation() + "]")		
-		; RegisterForTrackedStatsEvent("Locations Discovered", aiStatValue + 1)
-	; endif
-; EndEvent
 
 Event OnAnimationEvent(ObjectReference akSource, string asEventName)
 	; Trace("Animation Event [" + asEventName + "]")
@@ -695,19 +622,6 @@ Event OnAnimationEvent(ObjectReference akSource, string asEventName)
 			pTweakFollowerScript.CallFunctionNoWait("EventPlayerWeaponSheath",params)
 			; pTweakFollowerScript.EventPlayerWeaponSheath()
 		endif
-	; elseif ("sneakStateEnter" == asEventName)
-		; if (allowsneak)
-			; allowsneak = false
-			; StartTimer(3,ALLOW_SNEAK_TIMER)
-			
-			; AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower as AFT:TweakFollowerScript)
-			; if pTweakFollowerScript
-				; Var[] params = new Var[0]
-				; pTweakFollowerScript.CallFunctionNoWait("EventPlayerSneakStart",params)
-				;; pTweakFollowerScript.EventPlayerSneakStart()
-			; endif
-			
-		; endif
 	elseif ("sneakStateExit" == asEventName)
 		Trace("Animation Event [" + asEventName + "]")
 		CancelTimer(ALLOW_SNEAK_TIMER)
@@ -732,7 +646,6 @@ Event Actor.OnEnterSneaking(Actor sneaker)
 		if pTweakFollowerScript
 			Var[] params = new Var[0]
 			pTweakFollowerScript.CallFunctionNoWait("EventPlayerSneakStart",params)
-			;pTweakFollowerScript.EventPlayerSneakStart()
 		endif		
 	endif
 EndEvent
@@ -790,21 +703,6 @@ Event Actor.OnSit(Actor player, ObjectReference akFurniture)
 	endif	
 endEvent
 
-Event Actor.OnLocationChange(Actor player, Location akOldLoc, Location akNewLoc)
-
-	if Initialized
-		StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
-		StartTimer(4.0,NO_ANIM_SHEATH_FLOOD)
-		return
-	endif
-	
-	if (!player.IsInInterior() && (player.GetWorldSpace() == pCommonWealth) && player.IsEquipped(pPipboy))
-		Utility.wait(10)
-		InitializeAft()
-	endif
-	
-endEvent
-
 Event ObjectReference.OnLoad(ObjectReference akRef)
 	Trace("OnLoad")
 	StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
@@ -844,63 +742,3 @@ EndEvent
 	    ; Trace("OnPlayerSleepStop")
 	; endIf
 ; endEvent	
-
-
-; Event ScriptObject.OnHit(ScriptObject akSenderRef, ObjectReference akTarget, ObjectReference akAggressor, Form akSource, Projectile akProjectile, bool abPowerAttack, bool abSneakAttack, bool abBashAttack, bool abHitBlocked, string apMaterial)
-	;; RegisterForHitEvent(playerRef)  - Must be registered to use
-	; Trace("OnHit")
-	;; Does not renew. Must be re-registered.
-; EndEvent
-
-; Event Actor.OnCombatStateChanged(Actor player, Actor akTarget, int aeCombatState)
-;	Trace("OnCombatStateChanged")
-; endEvent
-
-; Event Actor.OnPlayerFireWeapon(Actor player, Form akBaseObject)
-;	Trace("OnPlayerFireWeapon")
-; EndEvent
-
-; Event Actor.OnPlayerFallLongDistance(Actor player, float afDamage)
-	; Trace("OnPlayerFallLongDistance")
-; EndEvent
-
-; Event Actor.OnPlayerHealTeammate(Actor player, Actor akTeammate)
-	; Trace("OnPlayerHealTeammate")
-; EndEvent
-
-
-; Event ObjectReference.OnItemAdded(ObjectReference akSenderRef, Form akBaseItem, int aiItemCount, ObjectReference akItemReference, ObjectReference akSourceContainer)
-	; Trace("OnItemAdded BASE [" + akBaseItem + "] Count [" + aiItemCount + "] OBJ [" + akItemReference + "] SRC [" + akSourceContainer + "]")
-; EndEvent
-
-; Event Actor.OnPlayerUseWorkBench(Actor player, ObjectReference akWorkBench)
-; 	Trace("OnPlayerUseWorkBench")
-; EndEvent
-
-; Event Actor.OnPlayerSwimming(Actor player)
-; 	Trace("OnPlayerSwimming")
-; EndEvent
-
-; Event ScriptObject.OnRadiationDamage(ScriptObject akSenderRef, ObjectReference akTarget, bool abIngested)
-	;; Script Event. Needs to be re-registered after fire?
-	;; RegisterForRadiationDamageEvent(PlayerRef)
-	; Trace("OnRadiationDamage")
-; EndEvent
-
-; Event Actor.OnPlayerModArmorWeapon(Actor player, Form akBaseObject, ObjectMod akModBaseObject)
-	; Trace("OnPlayerModArmorWeapon")
-; EndEvent
-
-
-; Event ScriptObject.OnMagicEffectApply(ScriptObject akSenderRef, ObjectReference akTarget, ObjectReference akCaster, MagicEffect akEffect)
-	;; RegisterForMagicEffectApplyEvent(PlayerRef, akCasterFilter = none, akEffectFilter = CA_AddictionEffect)
-	;; You must re-register with each event or it will not renew....
-	; Trace("OnMagicEffectApply")
-; EndEvent
-
-; Event ScriptObject.OnPlayerTeleport(ScriptObject skSenderRef)
-	;; RegisterForPlayerTeleport() ; Before we can use OnPlayerTeleport we must register.
-	;Trace("OnPlayerTeleport()")
-; endEvent	
-
-
