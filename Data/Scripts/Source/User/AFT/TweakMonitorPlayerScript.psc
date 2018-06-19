@@ -40,10 +40,12 @@ Keyword		Property pLinkPowerArmor			Auto Const
 Keyword		Property FurnitureTypePowerArmor	Auto Const
 Message		Property pTweakFullReset			Auto Const
 
-GlobalVariable	Property TweakDebugMode			Auto Const
-WorldSpace		Property pCommonWealth			Auto Const
-WorldSpace		Property pSanctuaryHillsWorld	Auto Const
-Location        Property pVault111Location		Auto Const
+GlobalVariable	Property TweakDebugMode				Auto Const
+WorldSpace		Property pCommonWealth				Auto Const
+WorldSpace		Property pSanctuaryHillsWorld		Auto Const
+Location        Property pVault111Location			Auto Const
+Location		Property pPrewarVault111Location	Auto Const
+Location		Property pMQ203Location				Auto Const
 
 int  maxwait    = 30
 bool allowdraw  = true
@@ -111,9 +113,11 @@ Function InitializationCheck()
 	; Assume Initialized is false
 	bool timetoinit = false
 	
+	; The trump condition:
 	if (pMQ102.GetCurrentStageID() > 9)
 		timetoinit = true
 	endif	
+	
 	if (!timetoinit)
 		Actor player = Game.GetPlayer()
 
@@ -123,8 +127,38 @@ Function InitializationCheck()
 		;  2 Not within interior area of Vault111
 		;  3 Player has inventory available
 	
-		timetoinit = ((player.GetWorldSpace() != pSanctuaryHillsWorld) && !(player.GetCurrentLocation() == pVault111Location && player.IsInInterior()) && (player.GetItemCount() != 0))
-	
+		if (player.GetWorldSpace() != pSanctuaryHillsWorld)
+		
+			Location currentLocation = player.GetCurrentLocation()
+			trace("GetWorldSpace = [" + player.GetWorldSpace() + "] Location = [" + currentLocation + "]")
+			
+			; There are no less than 3 Vault 111's....
+			; 1) The clean vault from the games intro (pPrewarVault111Location : 0x000CA853)
+			; 2) The Kellog scene Cryo room specifically for the shooting event and the memory lounger. (pMQ203Location : 0x000D41A4)
+			; 3) The post-prologue version you can revisit with companions : (0x0001F3FE)
+		
+			if (pPrewarVault111Location != currentLocation)
+				if (pMQ203Location != currentLocation)
+					if !(pVault111Location == currentLocation && player.IsInInterior())
+						trace("IsInInterior = [" + player.IsInInterior() + "]")
+						if player.GetItemCount() != 0
+							trace("Player has [" + player.GetItemCount() + "] inventory items")	
+							timetoinit = true
+						else
+							trace("Player has no inventory")						
+						endif
+					else
+						trace("inVault111 (pVault111Location)")
+					endif
+				else
+					trace("inVault111 (pMQ203Location)")
+				endif
+			else
+				trace("inVault111 (pPrewarVault111Location)")
+			endif
+		else
+			trace("isSanctuaryHillsWorld")
+		endif	
 	endif
 	
 	if timetoinit
@@ -159,6 +193,7 @@ EndEvent
 
 Event Actor.OnLocationChange(Actor player, Location akOldLoc, Location akNewLoc)
 
+	Trace("Actor.OnLocationChange() Receieved old [" + akOldLoc + "] new [" + akNewLoc + "]")	
 	if !Initialized
 		InitializationCheck()
 		return
