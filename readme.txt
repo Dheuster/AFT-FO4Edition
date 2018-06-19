@@ -7,12 +7,12 @@
                               [Fallout 4 Edition]
                    ___________________________________________
 
-                                 June 10, 2018
-                                 Version: 1.17
+                                 June 19, 2018
+                                 Version: 1.18b
 
                         Written by:  Dheu
                              Email:  Dheuster@gmail.com
-                       Use subject:  AFT FO4 Version 1.17
+                       Use subject:  AFT FO4 Version 1.18b
 
 
                                  QUICK SUMMARY
@@ -566,7 +566,7 @@ III. > > > >  Installation
      mod conflict (possibly baked into your save game).
 
      cqf Followers GetStandardLoiterCoolDownTime
-     cqf Followers GetNearbyInfatuatedRomanticCompanions
+     cqf Followers GetInfatuatedFollowers
 
      Users can attempt to force initialize AFT with the following command:
      Some users have reported this command can correct a rare issue where
@@ -5412,6 +5412,15 @@ X. > > > >  Version History
   - Fixed bug where Codsworth could interrupt/break spouse rescue
   - Fixed bug where factions (AI) could be lost during uninstall/unamanage
   
+  1.18 : ( Compiled against FO4 version 1.10.89.0.0 )
+  - Fixed bug where initialization would fail outside the commonwealth.
+  - Fixed bug where initialization could fail if user was using PipPad.
+  - Fixed bug where radio could stop working after interjection or rescuing spouse.
+  - Fixed bug where AFT Camp firepit wasn't linked to storage until next Camp Setup.
+  - Fixed bug where Cannibal Events were ignored by Affinity System
+  - Fixed bug where followers often became immortal after trading with them.
+  
+
 -------------------------------------------------------------------------------
 XI. Credits
 -------------------------------------------------------------------------------         
