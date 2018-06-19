@@ -114,6 +114,13 @@ Event OnQuestInit()
 	
 EndEvent
 
+; Each Time a Save Game is Loaded 
+Function OnGameLoaded(bool firstTime=false)
+	if (pSpouse.GetActorReference())
+		TweakCSRescue.Remove()
+	endif
+EndFunction	
+	
 Event Actor.OnLocationChange(Actor akPlayer, Location oldLocation, Location newLocation)
 
 	if (pSpouse.GetActorReference() == akPlayer)
@@ -816,15 +823,38 @@ Function RescueSpouse()
 		Utility.wait(0.72)
 	endif
 	
-	MQ102SpouseCorpseMaleREF.Disable()
-	MQ102SpouseCorpseFemaleREF.Disable()
+	int spouseGender = 1
+	if MQ102SpouseCorpseMaleREF && MQ102SpouseCorpseMaleREF.IsEnabled()
+		spouseGender = 0
+		if (MQ102SpouseCorpseMaleREF as Actor)
+			if !(MQ102SpouseCorpseMaleREF as Actor).IsInFaction(pCurrentCompanionFaction)
+				MQ102SpouseCorpseMaleREF.Disable()
+			endif
+		else
+			MQ102SpouseCorpseMaleREF.Disable()
+		endif
+	elseif MQ102SpouseCorpseFemaleREF && MQ102SpouseCorpseFemaleREF.IsEnabled()
+		spouseGender = 1
+		if (MQ102SpouseCorpseFemaleREF as Actor)
+			if !(MQ102SpouseCorpseFemaleREF as Actor).IsInFaction(pCurrentCompanionFaction)
+				MQ102SpouseCorpseFemaleREF.Disable()
+			endif			
+		else
+			MQ102SpouseCorpseFemaleREF.Disable()
+		endif
+	elseif (1 == (pc.GetBaseObject() as ActorBase).GetSex())
+		; The PLAYER is female, so assume MALE Spouse
+		spouseGender = 0
+	else
+		; If all else fails, assume female spouse...
+		spouseGender = 1
+	endif
+	
 
 	Actor theSpouse
-	; GetSex : 0 = male, 1 = female, -1 = None
-	if (1 == (pc.GetBaseObject() as ActorBase).GetSex())
+	; Gender : 0 = male, 1 = female, -1 = None
+	if (0 == spouseGender)
 	
-		; The PLAYER is female, so we want to spawn a MALE Spouse
-		
 		Actor Nate = pTweakCompanionNate.GetUniqueActor()
 		if !Nate
 			; We create the spouse on the fly because if we hard code
@@ -841,9 +871,7 @@ Function RescueSpouse()
 			Trace("Nate Creation Failure")
 		endif
 	else
-	
-		; The PLAYER is male, so we want to spawn a FEMALE Spouse
-		
+			
 		Actor Nora = pTweakCompanionNora.GetUniqueActor()
 		if !Nora
 			Trace("Creating Nora")		
@@ -926,7 +954,6 @@ Function RescueSpouse()
 	ILayer = None
 	
 	if (theSpouse)
-	
 		theSpouse.BlockActivation(false,false)
 		TweakCOMSpouseRescueHelperBootstrap.Start()
 	endif

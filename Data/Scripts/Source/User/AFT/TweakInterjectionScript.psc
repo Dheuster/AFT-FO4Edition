@@ -808,6 +808,7 @@ Function UnRegisterInterjections()
 	endwhile
 	
 	Persisted.Clear()
+	TweakCSInterjection.Remove()
 	
 EndFunction
 
