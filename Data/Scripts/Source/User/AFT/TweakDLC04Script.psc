@@ -127,12 +127,19 @@ bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 EndFunction
 
 Event OnInit()
+	trace("OnInit() Called")
 	resourceID          = -4
 	version				= 1.0
-	AllToNone()
 endEvent
 
+Event OnQuestInit()
+	trace("OnQuestInit() Called")
+	AllToNone()
+EndEvent
+
+
 Function AllToNone()
+	trace("AllToNone() Called")
 
 	Installed = false
 	PorterGage = None
@@ -189,6 +196,7 @@ Function AllToNone()
 endFunction
 
 Function OnGameLoaded(bool firstcall)
+	trace("OnGameLoaded() Called")
 	
 	if (Game.IsPluginInstalled(PluginName))	
 	
@@ -203,21 +211,7 @@ Function OnGameLoaded(bool firstcall)
 		DLC04MQ03 = Game.GetFormFromFile(0x01000803,PluginName) As Quest
 		DLC04MQ04 = Game.GetFormFromFile(0x01000804,PluginName) As Quest
 		DLC04MQ05 = Game.GetFormFromFile(0x01000805,PluginName) As Quest
-		
-		if DLC04MQ00
-			resourceID = GetPluginID(DLC04MQ00.GetFormID())
-		elseif DLC04MQ01
-			resourceID = GetPluginID(DLC04MQ01.GetFormID())
-		elseif DLC04MQ02
-			resourceID = GetPluginID(DLC04MQ02.GetFormID())
-		elseif DLC04MQ03
-			resourceID = GetPluginID(DLC04MQ03.GetFormID())
-		elseif DLC04MQ04
-			resourceID = GetPluginID(DLC04MQ04.GetFormID())
-		elseif DLC04MQ05
-			resourceID = GetPluginID(DLC04MQ05.GetFormID())
-		endif
-					
+							
 		if (!DLC04MQ00 || !DLC04MQ01 || !DLC04MQ02 || !DLC04MQ03)
 			trace("Unable To Load DLC04MQ00 or DLC04MQ01 or DLC04MQ02 or DLC04MQ03")
 			issue = True
@@ -522,14 +516,20 @@ Function OnGameLoaded(bool firstcall)
 				ReferenceAlias DLC04MQ02OverlookGageMarkerREF = DLC04MQ02.GetAlias(5) As ReferenceAlias
 				if DLC04MQ02OverlookGageMarkerREF
 					DLC04MQ02OverlookGageMarker = DLC04MQ02OverlookGageMarkerREF.GetReference()
+					if !DLC04MQ02OverlookGageMarker
+						trace("Unable To Load DLC04MQ02OverlookGageMarker: ReferenceAlias unfilled. (Has Quest Started?)")
+					endif
+				else
+					trace("Unable To Load DLC04MQ02OverlookGageMarker: DLC04MQ02.GetAlias(5) did not cast to ReferenceAlias")
 				endif
+			else
+				trace("Unable To Load DLC04MQ02OverlookGageMarker (DLC04MQ02 unavailable)")
 			endif
 		endif
 		
 		if !DLC04MQ02OverlookGageMarker
 			issue = True
 		endif
-		
 		
 		if (issue)
 			Trace("AFT Message : Some DLC04 (Nuka World) Resources Failed to Import. Compatibility issues likely.")
@@ -540,10 +540,14 @@ Function OnGameLoaded(bool firstcall)
 			Installed = true
 		endif
 				
-	elseIf (Installed)
-		Trace("AFT Message : AFT Unloading DLC04 (Nuka World) resources...")
-		AllToNone()
-	endIf
+	else
+		Trace("DLC04 (Nuka World) Not Detected")	
+		If (Installed)
+			Trace("AFT Message : AFT Unloading DLC04 (Nuka World) resources...")
+			AllToNone()
+		endIf
+	endif
+	center = None
 	
 endFunction
 
@@ -561,6 +565,7 @@ EndFunction
 ; ==========================================================
 
 Int Function FindLocation(int lid)
+	Trace("FindLocation Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 		if (0 == SettlementLookup.length)
@@ -580,6 +585,7 @@ Int Function FindLocation(int lid)
 EndFunction
 
 string Function GetLocationName(int lookupindex)
+	Trace("GetLocationName Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -587,6 +593,7 @@ string Function GetLocationName(int lookupindex)
 EndFunction
 
 float Function GetLocationRadius(int lookupindex)
+	Trace("GetLocationRadius Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -594,6 +601,7 @@ float Function GetLocationRadius(int lookupindex)
 EndFunction
 
 float Function GetLocationCenterX(int lookupindex)
+	Trace("GetLocationCenterX Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -601,6 +609,7 @@ float Function GetLocationCenterX(int lookupindex)
 EndFunction
 
 float Function GetLocationCenterY(int lookupindex)
+	Trace("GetLocationCenterY Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -608,6 +617,7 @@ float Function GetLocationCenterY(int lookupindex)
 EndFunction
 
 float Function GetLocationCenterZ(int lookupindex)
+	Trace("GetLocationCenterZ Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -616,6 +626,8 @@ EndFunction
 
 Function initialize_SettlementData()
 
+	Trace("initialize_SettlementData Called")
+	
 	; Data pulled from WOrldObjects/Static/DLC/Workshop/*Border
 	; (Provides map coordinates of border objects) (Use Info, Dbl click 
 	; on instance, Edit to get coordinate values from map editor)
@@ -655,8 +667,11 @@ EndFunction
 
 Function Scan(ObjectReference p_center, float p_radius)
 	Trace("Scan Called")
+	
+	bool snapshot            = (pTweakSettlementSnap.GetValue() == 1.0)
+
 	; Early Bail if current location is not part of DLC:	
-	if (GetPluginID(p_center.GetCurrentLocation().GetFormID()) != resourceID)
+	if (snapshot && GetPluginID(p_center.GetCurrentLocation().GetFormID()) != resourceID)
 		trace("Area does not belong to [" + PluginName + "]. Bailing.")
 		pTweakScanThreadsDone.mod(-1.0)
 		return
