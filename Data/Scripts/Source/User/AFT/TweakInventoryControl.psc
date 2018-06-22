@@ -38,6 +38,9 @@ Group Injected
 
 	Outfit   Property pTweakNoOutfit					Auto Const
 	Armor    Property pTweakRefreshRing					Auto Const
+	Armor	 Property pTweakArmor_MacCready_Raider_Underarmor Auto Const
+	Armor	 Property pArmor_MacCready_Raider_Underarmor	Auto Const
+	
 	Weapon   Property pTweakWeap						Auto Const
 
 	Location Property pSanctuaryHillsLocation			Auto Const
@@ -59,10 +62,17 @@ Group Injected
 	ReferenceAlias	Property pShelterMapMarker			Auto Const
 	MiscObject		Property pBobbyPin					Auto Const
 	ActorValue		Property pTweakInPowerArmor			Auto Const
-	Quest			Property pWorkshopParent				Auto Const
+	Quest			Property pWorkshopParent			Auto Const
+	Quest			Property pTweakDLC03				Auto Const
+	Quest			Property pTweakDLC04				Auto Const
+	
 	GlobalVariable	Property pTweakSettlementAsCity		Auto Const
 	GlobalVariable	Property pTweakCombatOutfitOnWeapDraw Auto Const
+	FormList		Property pTweakScrapComponents		Auto Const ; ScrapList
 
+	ActorBase		Property pTweakCompanionNate		Auto Const
+	ActorBase		Property pTweakCompanionNora		Auto Const
+	
 EndGroup
 
 Group LocalPersistance
@@ -487,13 +497,11 @@ Function UnManageOutfits()
 	elseif (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
 		SetOutfitFix(npc, Game.GetForm(0x0010B6C0) as Outfit)
 	elseif (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
-		Armor Armor_MacCready_Raider_Underarmor = Game.GetForm(0x0004A53B) as Armor
-		Armor TweakArmor_MacCready_Raider_Underarmor = Game.GetFormFromFile(0x0100367F,"AmazingFollowerTweaks.esp") as Armor
-		if (0 != npc.GetItemCount(TweakArmor_MacCready_Raider_Underarmor))
-			npc.RemoveItem(TweakArmor_MacCready_Raider_Underarmor)
+		if (0 != npc.GetItemCount(pTweakArmor_MacCready_Raider_Underarmor))
+			npc.RemoveItem(pTweakArmor_MacCready_Raider_Underarmor)
 		endif
-		if (0 == npc.GetItemCount(Armor_MacCready_Raider_Underarmor))
-			npc.AddItem(Armor_MacCready_Raider_Underarmor)
+		if (0 == npc.GetItemCount(pArmor_MacCready_Raider_Underarmor))
+			npc.AddItem(pArmor_MacCready_Raider_Underarmor)
 		endIf
 		SetOutfitFix(npc, Game.GetForm(0x00171858) as Outfit)
 	elseif (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
@@ -507,8 +515,8 @@ Function UnManageOutfits()
 	elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
 		SetOutfitFix(npc, Game.GetForm(0x001275C0) as Outfit)
 	else
-		AFT:TweakDLC03Script pTweakDLC03Script = (Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest) as AFT:TweakDLC03Script
-		AFT:TweakDLC04Script pTweakDLC04Script = (Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest) as AFT:TweakDLC04Script
+		AFT:TweakDLC03Script pTweakDLC03Script = pTweakDLC03 as AFT:TweakDLC03Script
+		AFT:TweakDLC04Script pTweakDLC04Script = pTweakDLC04 as AFT:TweakDLC04Script
 		if (pTweakDLC03Script && pTweakDLC03Script.Installed && base == pTweakDLC03Script.OldLongfellowBase)
 			SetOutfitFix(npc, pTweakDLC03Script.DLC03OldLongfellowOutfit)
 		elseif (pTweakDLC04Script && pTweakDLC04Script.Installed && base == pTweakDLC04Script.PorterGageBase)
@@ -1015,13 +1023,11 @@ Function UnequipAllGear(bool InvokedFromFurniture=false)
 		; MacCready Check....		
 		if (npc.GetActorBase() == Game.GetForm(0x0002740E) as ActorBase)
 			; ClothesDeaconWig
-			Armor Armor_MacCready_Raider_Underarmor = Game.GetForm(0x0004A53B) as Armor
-			Armor TweakArmor_MacCready_Raider_Underarmor = Game.GetFormFromFile(0x0100367F,"AmazingFollowerTweaks.esp") as Armor
-			if (0 != npc.GetItemCount(Armor_MacCready_Raider_Underarmor))
-				npc.RemoveItem(Armor_MacCready_Raider_Underarmor)
+			if (0 != npc.GetItemCount(pArmor_MacCready_Raider_Underarmor))
+				npc.RemoveItem(pArmor_MacCready_Raider_Underarmor)
 			endif	
-			if (0 == npc.GetItemCount(TweakArmor_MacCready_Raider_Underarmor))
-				npc.AddItem(TweakArmor_MacCready_Raider_Underarmor)
+			if (0 == npc.GetItemCount(pTweakArmor_MacCready_Raider_Underarmor))
+				npc.AddItem(pTweakArmor_MacCready_Raider_Underarmor)
 			endIf			
 		endif
 	endif
@@ -1735,10 +1741,9 @@ Function GivePlayerScrap()
 	Trace("GivePlayerScrap()")
 	Actor npc = self.GetActorReference()	
 	Actor pc  = Game.GetPlayer()
-	FormList ScrapList = Game.GetFormFromFile(0x0100B02D,"AmazingFollowerTweaks.esp") as FormList; TweakScrapComponents
 	
 	int prevCount = npc.GetItemCount()
-	npc.RemoveItem(ScrapList,-1,true,pc)
+	npc.RemoveItem(pTweakScrapComponents,-1,true,pc)
 	if (prevCount != npc.GetItemCount())
 		Sound takeAll = Game.GetForm(0x000802A6) as Sound
 		if takeAll
@@ -2077,13 +2082,11 @@ Function GivePlayerAll()
 		endIf
 		; MacCready check
 		if (npc.GetActorBase() == Game.GetForm(0x0002740E) as ActorBase)
-			Armor Armor_MacCready_Raider_Underarmor = Game.GetForm(0x0004A53B) as Armor
-			Armor TweakArmor_MacCready_Raider_Underarmor = Game.GetFormFromFile(0x0100367F,"AmazingFollowerTweaks.esp") as Armor
-			if (0 != npc.GetItemCount(Armor_MacCready_Raider_Underarmor))
-				npc.RemoveItem(Armor_MacCready_Raider_Underarmor)
+			if (0 != npc.GetItemCount(pArmor_MacCready_Raider_Underarmor))
+				npc.RemoveItem(pArmor_MacCready_Raider_Underarmor)
 			endif	
-			if (0 == npc.GetItemCount(TweakArmor_MacCready_Raider_Underarmor))
-				npc.AddItem(TweakArmor_MacCready_Raider_Underarmor)
+			if (0 == npc.GetItemCount(pTweakArmor_MacCready_Raider_Underarmor))
+				npc.AddItem(pTweakArmor_MacCready_Raider_Underarmor)
 			endIf			
 		endif
 		
@@ -2859,10 +2862,10 @@ Function RemoveDefaultWeapon()
 	elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---		
 		Trace("X6-88 Detected.")
 		npc.RemoveItem(Game.GetForm(0x00215CE4) as Weapon)
-	elseif (base == Game.GetFormFromFile(0x01048098,"AmazingFollowerTweaks.esp") as ActorBase) ; ---=== Nate ===---		
+	elseif (base ==pTweakCompanionNate)	
 		Trace("Nate Detected")	
 		npc.RemoveItem(CompPiper10mm)
-	elseif (base == Game.GetFormFromFile(0x01043410,"AmazingFollowerTweaks.esp") as ActorBase) ; ---=== Nora ===---		
+	elseif (base == pTweakCompanionNora) ; ---=== Nora ===---		
 		Trace("Nora Detected")
 		npc.RemoveItem(CompPiper10mm)
 	else	
@@ -2946,10 +2949,10 @@ Function RestoreDefaultWeapon()
 	elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---		
 		Trace("X6-88 Detected.")
 		npc.AddItem(Game.GetForm(0x00215CE4) as Weapon)
-	elseif (base == Game.GetFormFromFile(0x01048098,"AmazingFollowerTweaks.esp") as ActorBase) ; ---=== Nate ===---		
+	elseif (base == pTweakCompanionNate)	
 		Trace("Nate Detected")	
 		npc.AddItem(CompPiper10mm)
-	elseif (base == Game.GetFormFromFile(0x01043410,"AmazingFollowerTweaks.esp") as ActorBase) ; ---=== Nora ===---		
+	elseif (base == pTweakCompanionNora)
 		Trace("Nora Detected")
 		npc.AddItem(CompPiper10mm)
 	else	

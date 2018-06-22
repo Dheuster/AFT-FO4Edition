@@ -170,7 +170,9 @@ Bool        Property pShownTeleportHint   Auto hidden
 
 ; Turret Support (Needed Custom Turrets)
 ActorBase		Property pTweakTurret1	  		Auto Const
-
+ActorBase		Property pTweakTurret2	  		Auto Const
+ActorBase		Property pTweakTurret3	  		Auto Const
+ActorBase		Property pTweakTurret4	  		Auto Const
 
 GlobalVariable Property TweakCampModule1Enabled    Auto Const
 GlobalVariable Property TweakCampModule1Light  	   Auto Const
@@ -226,8 +228,14 @@ Activator Property TweakLightSwitchC Auto Const
 Activator Property TweakLightSwitchD Auto Const
 Activator Property TweakWorkshopCampDock Auto Const
 
-TweakDLC03Script Property pTweakDLC03Script Auto Const
-TweakDLC04Script Property pTweakDLC04Script Auto Const
+Container Property pTweakCryoFridge Auto Const
+Door 	  Property pTweakCryoLever  Auto Const
+Furniture Property pTweakFurnBar    Auto Const
+Furniture Property pTweakFurnShower Auto Const
+Furniture Property pTweakFurnToilet Auto Const
+
+Quest Property pTweakDLC03 Auto Const
+Quest Property pTweakDLC04 Auto Const
 
 Event OnQuestInit()
 	inSettlement = false
@@ -499,16 +507,18 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			bool allowBuild = false
 			Location currentLocation = player.GetCurrentLocation()
 			if currentLocation
-				int currentLocID = GetPluginID(currentLocation.GetFormID())				
-				if pTweakDLC03Script.Installed
-					Trace("Testing [" + currentLocID + "] == [" + pTweakDLC03Script.resourceID + "]?")			
-					if currentLocID == pTweakDLC03Script.resourceID
+				int currentLocID = GetPluginID(currentLocation.GetFormID())	
+				AFT:TweakDLC03Script pTweakDLC03Proxy = pTweakDLC03 as AFT:TweakDLC03Script
+				if pTweakDLC03Proxy.Installed
+					Trace("Testing [" + currentLocID + "] == [" + pTweakDLC03Proxy.resourceID + "]?")			
+					if currentLocID == pTweakDLC03Proxy.resourceID
 						allowBuild = true
 					endIf
 				endIf
-				if !allowBuild && pTweakDLC04Script.Installed
-					Trace("Testing [" + currentLocID + "] == [" + pTweakDLC04Script.resourceID + "]?")			
-					if currentLocID == pTweakDLC04Script.resourceID
+				AFT:TweakDLC04Script pTweakDLC04Proxy = pTweakDLC04 as AFT:TweakDLC04Script
+				if !allowBuild && pTweakDLC04Proxy.Installed
+					Trace("Testing [" + currentLocID + "] == [" + pTweakDLC04Proxy.resourceID + "]?")			
+					if currentLocID == pTweakDLC04Proxy.resourceID
 						allowBuild = true
 					endIf				
 				endif	
@@ -2186,21 +2196,17 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				CreateDecoration(myCenterMarker, pTweakMisc1ID, Dogmeat_Doghouse, 410, -170, 0.0, -180, spawnMarker, true, !hasFoundation)				
 			elseif (3 == misc1Global) ; CryoPod
 				; Fridge is a special case and a bit of a pain since it needs to be persisted..
-				Form TweakCryoFridge = Game.GetFormFromFile(0x0102DCA3,"AmazingFollowerTweaks.esp")
-				thePod = CreateBench(myCenterMarker, pShelterFridge, TweakCryoFridge, 390, -170, 0, -180, spawnMarker, true, !hasFoundation, false)
+				thePod = CreateBench(myCenterMarker, pShelterFridge, pTweakCryoFridge, 390, -170, 0, -180, spawnMarker, true, !hasFoundation, false)
 				thePod.SetScale(0.75)
-				Form TweakCryoLever = Game.GetFormFromFile(0x0102DCA5,"AmazingFollowerTweaks.esp")
-				ObjectReference thePodLever = CreateDecoration(myCenterMarker, pTweakMisc1ID, TweakCryoLever, 412, -167.43, -25, -180, spawnMarker, true, !hasFoundation)
+				ObjectReference thePodLever = CreateDecoration(myCenterMarker, pTweakMisc1ID, pTweakCryoLever, 412, -167.43, -25, -180, spawnMarker, true, !hasFoundation)
 				thePodLever.SetScale(0.75)
 				RegisterForRemoteEvent(thePodLever,"OnActivate")				
 			elseif (6 == misc1Global) ; Mini-CryoPod w/Bar
 			
-				Form TweakFurnBar = Game.GetFormFromFile(0x0102CD6F,"AmazingFollowerTweaks.esp")				
-				ObjectReference theBar = CreateDecoration(myCenterMarker, pTweakMisc1ID, TweakFurnBar, 360, -164.5, 0.0, -180, spawnMarker, true, !hasFoundation)
+				ObjectReference theBar = CreateDecoration(myCenterMarker, pTweakMisc1ID, pTweakFurnBar, 360, -164.5, 0.0, -180, spawnMarker, true, !hasFoundation)
 				myObjectCache[pTweakMisc1ID] = None ; Ensure next call to CreateDecoration doesn't delete the Bar...				
 				; Fridge is a special case and a bit of a pain since it needs to be persisted..
-				Form TweakCryoFridge = Game.GetFormFromFile(0x0102DCA3,"AmazingFollowerTweaks.esp")
-				thePod = CreateBench(theBar, pShelterFridge, TweakCryoFridge, 110, -112, 78, 130, spawnMarker, true, false, false)
+				thePod = CreateBench(theBar, pShelterFridge, pTweakCryoFridge, 110, -112, 78, 130, spawnMarker, true, false, false)
 				thePod.SetScale(0.20)
 				thePod.Disable()
 				;Utility.wait(0.5)
@@ -2208,8 +2214,7 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				;Utility.wait(0.5)
 				;thePod.Enable()
 				
-				Form TweakCryoLever = Game.GetFormFromFile(0x0102DCA5,"AmazingFollowerTweaks.esp")
-				ObjectReference thePodLever = CreateDecoration(theBar, pTweakMisc1ID, TweakCryoLever, 110, -112, 78, 130, spawnMarker, true, false)
+				ObjectReference thePodLever = CreateDecoration(theBar, pTweakMisc1ID, pTweakCryoLever, 110, -112, 78, 130, spawnMarker, true, false)
 				thePodLever.SetScale(0.20)
 				thePodLever.Disable()
 				Utility.wait(1.0)
@@ -2323,15 +2328,9 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 				RegisterForRemoteEvent(theMemoryLounger,"OnActivate")
 			elseif (5 == misc2Global) ; Bathroom
 				Trace("Creating misc 2 [" + misc2Global + "]")
-				; TweakFurnShower spawns/manages 2 child Objects under the linkedref LinkCustom08 and LinkCustom09				
-				Form TweakFurnShower = Game.GetFormFromFile(0x0102AF07,"AmazingFollowerTweaks.esp")
-				CreateDecoration(myCenterMarker, pTweakMisc2ID, TweakFurnShower, 578, 50, 0.0, 90, spawnMarker, true, !hasFoundation)				
-				Form TweakFurnToilet = Game.GetFormFromFile(0x0102C5D3,"AmazingFollowerTweaks.esp")
-				CreateDecoration(myCenterMarker, pTweakMisc2HelperID, TweakFurnToilet, 575, 38, 0.0, 0, spawnMarker, true, !hasFoundation)
-			; elseif (7 == misc2Global) ; NPCNukaMachine or Trophy stand...
-				; Trace("Creating misc 2 [" + misc2Global + "]")
-				; Form NPCNukaMachine = Game.GetForm(0x0018DFDC)
-				; CreateDecoration(myCenterMarker, pTweakMisc2ID, NPCNukaMachine, 578, 48, 0.0, 90, spawnMarker, true)
+				; pTweakFurnShower spawns/manages 2 child Objects under the linkedref LinkCustom08 and LinkCustom09				
+				CreateDecoration(myCenterMarker, pTweakMisc2ID, pTweakFurnShower, 578, 50, 0.0, 90, spawnMarker, true, !hasFoundation)
+				CreateDecoration(myCenterMarker, pTweakMisc2HelperID, pTweakFurnToilet, 575, 38, 0.0, 0, spawnMarker, true, !hasFoundation)
 			endif
 		endif
 	endif
@@ -2360,16 +2359,16 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 			; CreateDecoration performs Delete automatically....
 			if (2 == turretsGlobal) ; Mark I
 				Trace("Using Mark I") ; < Level 7
-				theTurret = Game.GetFormFromFile(0x01025B3A,"AmazingFollowerTweaks.esp")
+				theTurret = pTweakTurret1
 			elseif (3 == turretsGlobal) ; Mark III
 				Trace("Using Mark II") ; < Level 17
-				theTurret = Game.GetFormFromFile(0x010337E2,"AmazingFollowerTweaks.esp")
+				theTurret = pTweakTurret2
 			elseif (4 == turretsGlobal) ; Mark V 
 				Trace("Using Mark III") ; < Level 29
-				theTurret = Game.GetFormFromFile(0x010337E3,"AmazingFollowerTweaks.esp")
+				theTurret = pTweakTurret3
 			elseif (5 == turretsGlobal) ; Mark VII
 				Trace("Using Mark IV")  ; < Level 41
-				theTurret = Game.GetFormFromFile(0x010337E4,"AmazingFollowerTweaks.esp")
+				theTurret = pTweakTurret4
 			endif
 			
 			; -------------------------------------
@@ -3990,3 +3989,8 @@ Int Function GetPluginID(int formid)
 	int lastsix = fullid % 0x01000000
 	return (((formid - lastsix)/0x01000000) as Int)
 EndFunction 
+
+
+; Deprecated
+TweakDLC03Script Property pTweakDLC03Script Auto Const
+TweakDLC04Script Property pTweakDLC04Script Auto Const

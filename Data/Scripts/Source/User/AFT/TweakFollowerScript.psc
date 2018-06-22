@@ -126,12 +126,12 @@ ReferenceAlias	Property pInfoNPC			Auto Const
 Quest			Property pTweakInfo			Auto Const
 Quest 			Property pTweakDedupeMaster Auto Const
 Quest			Property pDN136_Attack		Auto Const
+Quest 			Property pTweakScanNonConstructed_BtoC	Auto Const
 
 Quest			Property BoSKickOut			Auto Const
 Quest			Property BoSKickOutSoft 	Auto Const
 Quest			Property InstKickOut		Auto Const
 Quest			Property RRKickOut 			Auto Const
-
 
 ReferenceAlias[] Property pFollowerMap Auto
 ReferenceAlias[] Property pManagedMap  Auto
@@ -140,6 +140,8 @@ Faction property pTweakFollowerFaction       Auto Const
 Faction property pTweakNamesFaction          Auto Const
 Faction property pDisallowedCompanionFaction Auto Const
 Faction property pDanversFaction             Auto Const
+Faction property pTweakRangedFaction		 Auto Const
+Faction property pPlayerFaction 			 Auto Const
 
 ; Items to Add to Inventory (Dont due it to fast or it breaks New Game...)
 Potion   Property pTweakActivateAFT        Auto Const
@@ -716,24 +718,16 @@ Event OnTimer(int aiTimerID)
 			
 			if (ov != 0.0)
 				; Updated the pref/scrap scanner with camp items
-				Quest pTweakScanNonConstructed_BtoC = Game.GetFormFromFile(0x0105B53D,"AmazingFollowerTweaks.esp") as Quest
-				if pTweakScanNonConstructed_BtoC
-					AFT:TweakScanNCBtoCScript pTweakScanNCBtoCScript = pTweakScanNonConstructed_BtoC as AFT:TweakScanNCBtoCScript
-					if pTweakScanNCBtoCScript
-						pTweakScanNCBtoCScript.initialize_ComponentData()
-					else
-						trace("Upgrade Failure. Unable To cast pTweakScanNonConstructed_BtoC to pTweakScanNCBtoCScript")
-					endif
+				AFT:TweakScanNCBtoCScript pTweakScanNCBtoCScript = pTweakScanNonConstructed_BtoC as AFT:TweakScanNCBtoCScript
+				if pTweakScanNCBtoCScript
+					pTweakScanNCBtoCScript.initialize_ComponentData()
 				else
-					trace("Upgrade Failure. Unable To load pTweakScanNonConstructed_BtoC. ")
-				endIf
+					trace("Upgrade Failure. Unable To cast pTweakScanNonConstructed_BtoC to pTweakScanNCBtoCScript")
+				endif
 				
 				Actor dmeat = Dogmeat.GetUniqueActor()
 				if dmeat && dmeat.IsInFaction(pTweakFollowerFaction)
-					Faction TweakRangedFaction = Game.GetFormFromFile(0x0101AEC5,"AmazingFollowerTweaks.esp") as Faction
-					if TweakRangedFaction
-						dmeat.AddToFaction(TweakRangedFaction)
-					endif
+					dmeat.AddToFaction(pTweakRangedFaction)
 				endif
 			endif
 						
@@ -741,8 +735,6 @@ Event OnTimer(int aiTimerID)
 			
 		if (ov != 0.0)
 					
-			Faction PlayerFaction = Game.GetForm(0x0001C21C) as Faction
-			Faction pTweakManagedOutfit = Game.GetFormFromFile(0x0101F312,"AmazingFollowerTweaks.esp") as Faction
 			Perk crNoFallDamage = Game.GetForm(0x0002A6FC) as Perk
 			int plength = pManagedMap.Length
 			int p = 1
@@ -752,8 +744,8 @@ Event OnTimer(int aiTimerID)
 					Actor afix = rfix.GetActorReference()
 					if afix
 						; 1.03
-						if !afix.IsInFaction(PlayerFaction)
-							afix.AddToFaction(PlayerFaction)
+						if !afix.IsInFaction(pPlayerFaction)
+							afix.AddToFaction(pPlayerFaction)
 						endif
 						; 1.04
 						if !afix.HasPerk(crNoFallDamage)
@@ -849,31 +841,25 @@ Function AftReset()
 		pTweakScrapScanMaster.Stop()
 	endif
 
-	ActorBase TweakCompanionNateBase = Game.GetFormFromFile(0x01048098, "AmazingFollowerTweaks.esp") as ActorBase
-	if TweakCompanionNateBase
-		Actor Nate = TweakCompanionNateBase.GetUniqueActor()
-		if Nate && Nate.IsEnabled()
-			Nate.RemoveAllItems(player,true)
-			Nate.Disable()
-			; Long shot, but give it a try....
-			AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
-			if TweakCOMSpouseScript
-				TweakCOMSpouseScript.MQ102SpouseCorpseMaleREF.Enable()
-			endif
+	Actor Nate = TweakCompanionNate.GetUniqueActor()
+	if Nate && Nate.IsEnabled()
+		Nate.RemoveAllItems(player,true)
+		Nate.Disable()
+		; Long shot, but give it a try....
+		AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
+		if TweakCOMSpouseScript
+			TweakCOMSpouseScript.MQ102SpouseCorpseMaleREF.Enable()
 		endif
 	endif
 	
-	ActorBase TweakCompanionNoraBase = Game.GetFormFromFile(0x01043410, "AmazingFollowerTweaks.esp") as ActorBase
-	if TweakCompanionNoraBase
-		Actor Nora = TweakCompanionNoraBase.GetUniqueActor()
-		if Nora && Nora.IsEnabled()
-			Nora.RemoveAllItems(player,true)
-			Nora.Disable()
-			; Long shot, but give it a try....
-			AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
-			if TweakCOMSpouseScript
-				TweakCOMSpouseScript.MQ102SpouseCorpseFemaleREF.Enable()
-			endif
+	Actor Nora = TweakCompanionNora.GetUniqueActor()
+	if Nora && Nora.IsEnabled()
+		Nora.RemoveAllItems(player,true)
+		Nora.Disable()
+		; Long shot, but give it a try....
+		AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
+		if TweakCOMSpouseScript
+			TweakCOMSpouseScript.MQ102SpouseCorpseFemaleREF.Enable()
 		endif
 	endif
 	

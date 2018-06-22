@@ -16,10 +16,17 @@ Group Injected
 	Faction         Property pTweakReadyWeaponFaction		Auto Const ;
 	Faction         Property pTweakSyncPAFaction			Auto Const ;
 	Faction			Property pTweakTrackKills				Auto Const ;
+	Faction			Property pTweakRangedFaction			Auto Const
+	Faction			Property pTweakSkipGoHomeFaction		Auto Const
+	Faction			Property pTweakCampHomeFaction			Auto Const
+	Faction			Property pTweakNoHomeFaction			Auto Const
+	Faction			Property pTweakAutoStanceFaction		Auto Const
+
 	
 	Faction			Property pPlayerFaction					Auto Const ; 0001C21C 
 	
 	Quest           Property pTweakNames					Auto Const ; 010035B1
+	Quest			Property pTweakDismiss					Auto Const
 	
 	Formlist        Property pTweakCommonFactions			Auto Const ; 0101BB21
 	
@@ -117,6 +124,10 @@ Group Injected
 	ActorValue      Property pTweakOriginalRace				Auto Const	
 
 	ActorValue      Property pTweakLastHitBy				Auto Const
+	
+	
+	ActorBase      Property pTweakCompanionNora				Auto Const
+	ActorBase      Property pTweakCompanionNate				Auto Const
 	
 	Perk  Property pTweakHealthBoost			Auto Const 
 	Perk  Property pTweakDmgResistBoost			Auto Const 
@@ -460,11 +471,14 @@ Function initialize()
 
 	; BUG 1.17: We don't rely on the proxy here as auto-import on an existing
 	; save may beat the proxy initialization....
-	if (Game.IsPluginInstalled("DLCRobot.esm"))	
+	if (Game.IsPluginInstalled("DLCRobot.esm") || (pTweakDLC01 && pTweakDLC01.Installed))	
 		Faction pDLC01WorkshopRobotFaction = Game.GetFormFromFile(0x0100F47A,"DLCRobot.esm") As Faction
 		if pDLC01WorkshopRobotFaction && npc.IsInFaction(pDLC01WorkshopRobotFaction)
 			originalFactions.Add(pDLC01WorkshopRobotFaction)
 			wasDLCRobot = true
+		elseif pTweakDLC01.DLC01WorkshopRobotFaction && npc.IsInFaction(pTweakDLC01.DLC01WorkshopRobotFaction)
+			originalFactions.Add(pTweakDLC01.DLC01WorkshopRobotFaction)
+			wasDLCRobot = true		
 		endif
 	endif
 	
@@ -791,7 +805,7 @@ Function initialize()
 			Trace("Failure to cast 0x00083B31 to Faction SynthFaction")
 		endIf
 		
-	elseif (base == Game.GetFormFromFile(0x01048098,"AmazingFollowerTweaks.esp") as ActorBase) ; ---=== Nate ===---	
+	elseif (base == pTweakCompanionNate) ; ---=== Nate ===---	
 	
 		Trace("Nate Detected")
 		
@@ -817,7 +831,7 @@ Function initialize()
 			Trace("Failure to cast 0x000337F3 to Faction WorkshopNPCFaction")
 		endIf
 	
-	elseif (base == Game.GetFormFromFile(0x01043410,"AmazingFollowerTweaks.esp") as ActorBase) ; ---=== Nora ===---	
+	elseif (base == pTweakCompanionNora) ; ---=== Nora ===---	
 	
 		Trace("Nora Detected")
 		
@@ -978,16 +992,14 @@ Function initialize()
 	
 	Trace("originalHome    : [" + originalHome + "]")
 	Trace("originalHomeRef : [" + originalHomeRef + "]")
-	
-	Faction TweakSkipGoHomeFaction   = Game.GetFormFromFile(0x0105AD9A,"AmazingFollowerTweaks.esp") As Faction
-		
+			
 	if (WNS)
 		WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 		int workshopID = npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
 		if (workshopID > -1 && "assigned"  == WNS.getState())
 			assignedHome    = WorkShopIDToLocation(workshopID)
 			assignedHomeRef = LocationToWorkShopRef(assignedHome)
-			npc.AddToFaction(TweakSkipGoHomeFaction)
+			npc.AddToFaction(pTweakSkipGoHomeFaction)
 		endif
 	endif
 	
@@ -1032,12 +1044,8 @@ Function initialize()
 	npc.AddToFaction(pTweakEssentialFaction)
 
 	if (base == Game.GetForm(0x0001D15C) as ActorBase) ; 6 ---=== Dogmeat ===---
-		Faction TweakRangedFaction = Game.GetFormFromFile(0x0101AEC5,"AmazingFollowerTweaks.esp") as Faction
-		if (TweakRangedFaction)
-			npc.AddToFaction(f)
-		else
-			Trace("Failure to cast 0x0101AEC5 to Faction TweakRangedFaction")
-		endIf
+		Trace("Adding Dogmeat to TweakRangedFaction")
+		npc.AddToFaction(pTweakRangedFaction)
 	endif
 	
 	combatInProgress = false
@@ -1166,9 +1174,9 @@ Function UnManage()
 		corecompanion = true
 	elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
 		corecompanion = true
-	elseif (base == Game.GetFormFromFile(0x01048098,"AmazingFollowerTweaks.esp") as ActorBase) ; ---=== Nate ===---	
+	elseif (base == pTweakCompanionNate)	
 		corecompanion = true
-	elseif (base == Game.GetFormFromFile(0x01043410,"AmazingFollowerTweaks.esp") as ActorBase) ; ---=== Nora ===---	
+	elseif (base == pTweakCompanionNora)	
 		corecompanion = true
 	else
 		if (ActorBaseID > 0x00ffffff)
@@ -1234,11 +1242,8 @@ Function UnManage()
 			endif
 		else
 			; Remove all the TweakFactions....
-			Faction TweakAllowFriendlyFire    = Game.GetFormFromFile(0x01065CA4,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakAutoStanceFaction    = Game.GetFormFromFile(0x0101AE9A,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakBoomstickFaction     = Game.GetFormFromFile(0x01010E6D,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakBruiserFaction       = Game.GetFormFromFile(0x01010E6E,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakCampHomeFaction      = Game.GetFormFromFile(0x0103C8C9,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakCampOutFitFaction    = Game.GetFormFromFile(0x01035657,"AmazingFollowerTweaks.esp") as Faction			
 			Faction TweakCityOutFitFaction    = Game.GetFormFromFile(0x01035658,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakCombatOutFitFaction  = Game.GetFormFromFile(0x01035656,"AmazingFollowerTweaks.esp") as Faction
@@ -1248,14 +1253,11 @@ Function UnManage()
 			Faction TweakCrimeFaction_Ignored = Game.GetFormFromFile(0x0101BB22,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakEnhancedFaction      = Game.GetFormFromFile(0x01010E83,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakEnterPAFaction       = Game.GetFormFromFile(0x01025B22,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakEssentialFaction     = Game.GetFormFromFile(0x0101BB23,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakFollowerFaction      = Game.GetFormFromFile(0x01000F9B,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakGunslingerFaction    = Game.GetFormFromFile(0x01010E70,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakHangoutFaction       = Game.GetFormFromFile(0x01013451,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakHomeOutFitFaction    = Game.GetFormFromFile(0x0101FAAE,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakIgnoredFaction       = Game.GetFormFromFile(0x01068A47,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakManagedOutfit        = Game.GetFormFromFile(0x0101F312,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNamesFaction         = Game.GetFormFromFile(0x01002E16,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakNinjaFaction         = Game.GetFormFromFile(0x01010E71,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakNoApprove            = Game.GetFormFromFile(0x01041592,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakNoCommentActivator   = Game.GetFormFromFile(0x01041596,"AmazingFollowerTweaks.esp") as Faction
@@ -1263,28 +1265,22 @@ Function UnManage()
 			Faction TweakNoCommentDisapprove  = Game.GetFormFromFile(0x01041595,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakNoCommentGeneral     = Game.GetFormFromFile(0x01041593,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakNoDisapprove         = Game.GetFormFromFile(0x0103FEBC,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoHomeFaction        = Game.GetFormFromFile(0x0103EF6E,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakNoIdleChatter        = Game.GetFormFromFile(0x0104FB5C,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakNoCasFaction         = Game.GetFormFromFile(0x0103F70B,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakNoRelaxFaction       = Game.GetFormFromFile(0x0103FEBE,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakPackMuleFaction      = Game.GetFormFromFile(0x0106550A,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakPAHelmetCombatToggleFaction = Game.GetFormFromFile(0x0103FEBA,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakPosedFaction         = Game.GetFormFromFile(0x0101FF8F,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakRangedFaction        = Game.GetFormFromFile(0x0101AEC5,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakReadyWeaponFaction   = Game.GetFormFromFile(0x0106643E,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakRotateLockFollowerFaction= Game.GetFormFromFile(0x0100C1FB,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakSkipGoHomeFaction    = Game.GetFormFromFile(0x0105AD9A,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakSniperFaction        = Game.GetFormFromFile(0x01010E72,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakStandardOutfitFaction= Game.GetFormFromFile(0x0103658C,"AmazingFollowerTweaks.esp") as Faction
 			Faction TweakSwimOutfitFaction    = Game.GetFormFromFile(0x010106DC,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakSyncPAFaction        = Game.GetFormFromFile(0x0103FEBD,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakTrackKills           = Game.GetFormFromFile(0x010124F4,"AmazingFollowerTweaks.esp") as Faction
 			
-			if npc.IsInFaction(TweakAllowFriendlyFire)
-				npc.RemoveFromFaction(TweakAllowFriendlyFire)
+			if npc.IsInFaction(pTweakAllowFriendlyFire)
+				npc.RemoveFromFaction(pTweakAllowFriendlyFire)
 			endif
-			if npc.IsInFaction(TweakAutoStanceFaction)
-				npc.RemoveFromFaction(TweakAutoStanceFaction)
+			if npc.IsInFaction(pTweakAutoStanceFaction)
+				npc.RemoveFromFaction(pTweakAutoStanceFaction)
 			endif
 			if npc.IsInFaction(TweakBoomstickFaction)
 				npc.RemoveFromFaction(TweakBoomstickFaction)
@@ -1292,8 +1288,8 @@ Function UnManage()
 			if npc.IsInFaction(TweakBruiserFaction)
 				npc.RemoveFromFaction(TweakBruiserFaction)
 			endif
-			if npc.IsInFaction(TweakCampHomeFaction)
-				npc.RemoveFromFaction(TweakCampHomeFaction)
+			if npc.IsInFaction(pTweakCampHomeFaction)
+				npc.RemoveFromFaction(pTweakCampHomeFaction)
 			endif
 			if npc.IsInFaction(TweakCampOutFitFaction)
 				npc.RemoveFromFaction(TweakCampOutFitFaction)
@@ -1322,11 +1318,11 @@ Function UnManage()
 			if npc.IsInFaction(TweakEnterPAFaction)
 				npc.RemoveFromFaction(TweakEnterPAFaction)
 			endif
-			if npc.IsInFaction(TweakEssentialFaction)
-				npc.RemoveFromFaction(TweakEssentialFaction)
+			if npc.IsInFaction(pTweakEssentialFaction)
+				npc.RemoveFromFaction(pTweakEssentialFaction)
 			endif
-			if npc.IsInFaction(TweakFollowerFaction)
-				npc.RemoveFromFaction(TweakFollowerFaction)
+			if npc.IsInFaction(pTweakFollowerFaction)
+				npc.RemoveFromFaction(pTweakFollowerFaction)
 			endif
 			if npc.IsInFaction(TweakGunslingerFaction)
 				npc.RemoveFromFaction(TweakGunslingerFaction)
@@ -1343,8 +1339,8 @@ Function UnManage()
 			if npc.IsInFaction(TweakManagedOutfit)
 				npc.RemoveFromFaction(TweakManagedOutfit)
 			endif
-			if npc.IsInFaction(TweakNamesFaction)
-				npc.RemoveFromFaction(TweakNamesFaction)
+			if npc.IsInFaction(pTweakNamesFaction)
+				npc.RemoveFromFaction(pTweakNamesFaction)
 			endif
 			if npc.IsInFaction(TweakNinjaFaction)
 				npc.RemoveFromFaction(TweakNinjaFaction)
@@ -1367,8 +1363,8 @@ Function UnManage()
 			if npc.IsInFaction(TweakNoDisapprove)
 				npc.RemoveFromFaction(TweakNoDisapprove)
 			endif
-			if npc.IsInFaction(TweakNoHomeFaction)
-				npc.RemoveFromFaction(TweakNoHomeFaction)
+			if npc.IsInFaction(pTweakNoHomeFaction)
+				npc.RemoveFromFaction(pTweakNoHomeFaction)
 			endif
 			if npc.IsInFaction(TweakNoIdleChatter)
 				npc.RemoveFromFaction(TweakNoIdleChatter)
@@ -1388,17 +1384,17 @@ Function UnManage()
 			if npc.IsInFaction(TweakPosedFaction)
 				npc.RemoveFromFaction(TweakPosedFaction)
 			endif
-			if npc.IsInFaction(TweakRangedFaction)
-				npc.RemoveFromFaction(TweakRangedFaction)
+			if npc.IsInFaction(pTweakRangedFaction)
+				npc.RemoveFromFaction(pTweakRangedFaction)
 			endif
-			if npc.IsInFaction(TweakReadyWeaponFaction)
-				npc.RemoveFromFaction(TweakReadyWeaponFaction)
+			if npc.IsInFaction(pTweakReadyWeaponFaction)
+				npc.RemoveFromFaction(pTweakReadyWeaponFaction)
 			endif
 			if npc.IsInFaction(TweakRotateLockFollowerFaction)
 				npc.RemoveFromFaction(TweakRotateLockFollowerFaction)
 			endif
-			if npc.IsInFaction(TweakSkipGoHomeFaction)
-				npc.RemoveFromFaction(TweakSkipGoHomeFaction)
+			if npc.IsInFaction(pTweakSkipGoHomeFaction)
+				npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
 			endif
 			if npc.IsInFaction(TweakSniperFaction)
 				npc.RemoveFromFaction(TweakSniperFaction)
@@ -1409,11 +1405,11 @@ Function UnManage()
 			if npc.IsInFaction(TweakSwimOutfitFaction)
 				npc.RemoveFromFaction(TweakSwimOutfitFaction)
 			endif
-			if npc.IsInFaction(TweakSyncPAFaction)
-				npc.RemoveFromFaction(TweakSyncPAFaction)
+			if npc.IsInFaction(pTweakSyncPAFaction)
+				npc.RemoveFromFaction(pTweakSyncPAFaction)
 			endif
-			if npc.IsInFaction(TweakTrackKills)
-				npc.RemoveFromFaction(TweakTrackKills)
+			if npc.IsInFaction(pTweakTrackKills)
+				npc.RemoveFromFaction(pTweakTrackKills)
 			endif
 		endif
 	endif
@@ -1757,33 +1753,24 @@ Function EventFollowerWait()
 EndFunction
 
 Function SetFollowerStanceAuto()
-	Faction TweakAutoStanceFaction = Game.GetFormFromFile(0x0101AE9A,"AmazingFollowerTweaks.esp") as Faction
-	if TweakAutoStanceFaction
-		self.GetActorRef().AddToFaction(TweakAutoStanceFaction)
-	endif
+	self.GetActorRef().AddToFaction(pTweakAutoStanceFaction)
 	enforceAggression = 2
 EndFunction
 
 Function SetFollowerStanceAggressive()
 	Actor npc = self.GetActorRef()
-	Faction TweakAutoStanceFaction = Game.GetFormFromFile(0x0101AE9A,"AmazingFollowerTweaks.esp") as Faction
-	if TweakAutoStanceFaction
-		if npc.IsInFaction(TweakAutoStanceFaction)
-			npc.RemoveFromFaction(TweakAutoStanceFaction)
-		endIf			
-	endif
+	if npc.IsInFaction(pTweakAutoStanceFaction)
+		npc.RemoveFromFaction(pTweakAutoStanceFaction)
+	endIf			
 	enforceAggression = 1
 	enforceSettings()
 EndFunction
 
 Function SetFollowerStanceDefensive()
 	Actor npc = self.GetActorRef()
-	Faction TweakAutoStanceFaction = Game.GetFormFromFile(0x0101AE9A,"AmazingFollowerTweaks.esp") as Faction
-	if TweakAutoStanceFaction
-		if npc.IsInFaction(TweakAutoStanceFaction)
-			npc.RemoveFromFaction(TweakAutoStanceFaction)
-		endIf			
-	endif
+	if npc.IsInFaction(pTweakAutoStanceFaction)
+		npc.RemoveFromFaction(pTweakAutoStanceFaction)
+	endIf
 	npc.SetValue(pFollowerStance, iFollower_Stance_Defensive.GetValue())
 	enforceAggression = 0
 	enforceSettings()
@@ -1847,12 +1834,8 @@ Function AssignHome()
 	
 	; Tweak Dismiss has some aliases on it so we can make a nice Message Box
 	; with filled in text. 
-	Quest   TweakDismiss         = Game.GetFormFromFile(0x0103EF6C,"AmazingFollowerTweaks.esp") as Quest
-	AFT:TweakDismissScript pTweakDismissScript = TweakDismiss as AFT:TweakDismissScript
+	AFT:TweakDismissScript pTweakDismissScript = pTweakDismiss as AFT:TweakDismissScript
 	
-	Faction TweakCampHomeFaction = Game.GetFormFromFile(0x0103C8C9,"AmazingFollowerTweaks.esp") As Faction
-	Faction TweakNoHomeFaction   = Game.GetFormFromFile(0x0103EF6E,"AmazingFollowerTweaks.esp") As Faction
-	Faction TweakSkipGoHomeFaction   = Game.GetFormFromFile(0x0105AD9A,"AmazingFollowerTweaks.esp") As Faction
 	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 	Keyword WorkshopLinkHome    = Game.GetForm(0x0002058F) as Keyword
 
@@ -1875,7 +1858,7 @@ Function AssignHome()
 	if (0 == choice)  ; Original
 	
 		; Cleanup
-		npc.RemoveFromFaction(TweakSkipGoHomeFaction)
+		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
 		if (dynamicAssignment) ; Needs Cleanup...
 			dynamicAssignment = false
 			if assignedHomeRef
@@ -1941,7 +1924,7 @@ Function AssignHome()
 	elseif (1 == choice) ; Current Location
 	
 		; Cleanup
-		npc.RemoveFromFaction(TweakSkipGoHomeFaction)
+		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
 		if (dynamicAssignment) ; Needs Cleanup...
 			dynamicAssignment = false
 			if assignedHomeRef
@@ -1990,7 +1973,7 @@ Function AssignHome()
 						pWorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
 					endIf
 					
-					npc.AddToFaction(TweakSkipGoHomeFaction)
+					npc.AddToFaction(pTweakSkipGoHomeFaction)
 				elseif !(CAS || DAS)
 					nohomeFaction = true
 				endif
@@ -2035,7 +2018,7 @@ Function AssignHome()
 	elseif (2 == choice) ; AFT CAMP 
 	
 		; Cleanup
-		npc.RemoveFromFaction(TweakSkipGoHomeFaction)
+		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
 		if (dynamicAssignment) ; Needs Cleanup...
 			dynamicAssignment = false
 			if assignedHomeRef
@@ -2108,7 +2091,7 @@ Function AssignHome()
 		if (selection)
 					
 			; Cleanup
-			npc.RemoveFromFaction(TweakSkipGoHomeFaction)
+			npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
 			if (dynamicAssignment) ; Needs Cleanup...
 				dynamicAssignment = false
 				if assignedHomeRef
@@ -2133,7 +2116,7 @@ Function AssignHome()
 			if (workshopRef)
 				if (WNS)
 					pWorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)					
-					npc.AddToFaction(TweakSkipGoHomeFaction)
+					npc.AddToFaction(pTweakSkipGoHomeFaction)
 				elseif !(CAS || DAS)
 					nohomeFaction = true
 				endif
@@ -2178,16 +2161,16 @@ Function AssignHome()
 	endif
 	
 	; Update Factions to ensure correct AI behaviors....
-	if (!camphomeFaction && npc.IsInFaction(TweakCampHomeFaction))
-		npc.RemoveFromFaction(TweakCampHomeFaction)
-	elseif (camphomeFaction && !npc.IsInFaction(TweakCampHomeFaction))
-		npc.AddToFaction(TweakCampHomeFaction)
+	if (!camphomeFaction && npc.IsInFaction(pTweakCampHomeFaction))
+		npc.RemoveFromFaction(pTweakCampHomeFaction)
+	elseif (camphomeFaction && !npc.IsInFaction(pTweakCampHomeFaction))
+		npc.AddToFaction(pTweakCampHomeFaction)
 	endif
-	if (!nohomeFaction && npc.IsInFaction(TweakNoHomeFaction))
-		npc.RemoveFromFaction(TweakNoHomeFaction)
-	elseif (nohomeFaction && !npc.IsInFaction(TweakNoHomeFaction))
-		npc.RemoveFromFaction(TweakSkipGoHomeFaction)
-		npc.AddToFaction(TweakNoHomeFaction)
+	if (!nohomeFaction && npc.IsInFaction(pTweakNoHomeFaction))
+		npc.RemoveFromFaction(pTweakNoHomeFaction)
+	elseif (nohomeFaction && !npc.IsInFaction(pTweakNoHomeFaction))
+		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
+		npc.AddToFaction(pTweakNoHomeFaction)
 	endif
 	
 EndFunction

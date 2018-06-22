@@ -19,6 +19,12 @@ Group Injected
 	FormList  Property pTweakSynthGen1Setup			Auto Const
 	FormList  Property pTweakSynthGen2Setup			Auto Const
 	
+	FormList  Property pTweakHeadParts 				Auto Const
+	FormList  Property pTweakEyeChildParts 			Auto Const
+	FormList  Property pTweakEyeParts  				Auto Const
+	FormList  Property pTweakHairParts				Auto Const
+	FormList  Property pTweakBeardParts 			Auto Const
+	
 	; Hancock, Nick
 	FormList  Property pTweakEmptyList				Auto Const
 
@@ -188,7 +194,7 @@ Function initialize()
 	OriginalBeardForm = None
 	restoreOnNextLoad = false
 
-	; HeadIDs (TweakHeadParts)
+	; HeadIDs (pTweakHeadParts)
 	;0: Human Female
 	;1: Ghoul Female
 	;2: Synth Gen 1
@@ -667,41 +673,29 @@ Function UnManage()
 		; future. 
 		
 		if (CurrentHeadId != OriginalHeadId)
-			FormList TweakHeadParts = Game.GetFormFromFile(0x01016765, "AmazingFollowerTweaks.esp") as Formlist
-			if TweakHeadParts
-				ChangePart(TweakHeadParts, CurrentHeadId, true)
-				ChangePart(TweakHeadParts, OriginalHeadId)
-			endif
+			ChangePart(pTweakHeadParts, CurrentHeadId, true)
+			ChangePart(pTweakHeadParts, OriginalHeadId)
 		endif
 	
 		if (CurrentEyesId != OriginalEyesId)
-			FormList TweakEyeParts;
 			if (4 ==OriginalHeadId || 5 == OriginalHeadId || 6 == OriginalHeadId)
 				; Child Eyes
-				TweakEyeParts = Game.GetFormFromFile(0x010176AD, "AmazingFollowerTweaks.esp") as Formlist
+				ChangePart(pTweakEyeChildParts, CurrentEyesId, true)
+				ChangePart(pTweakEyeChildParts, OriginalEyesId)
 			else
-				TweakEyeParts = Game.GetFormFromFile(0x01016766, "AmazingFollowerTweaks.esp") as Formlist
-			endif
-			if TweakEyeParts
-				ChangePart(TweakEyeParts, CurrentEyesId, true)
-				ChangePart(TweakEyeParts, OriginalEyesId)
+				ChangePart(pTweakEyeParts, CurrentEyesId, true)
+				ChangePart(pTweakEyeParts, OriginalEyesId)
 			endif
 		endif
 
 		if (CurrentHairId != OriginalHairId)
-			FormList TweakHairParts = Game.GetFormFromFile(0x01016F0C, "AmazingFollowerTweaks.esp") as Formlist
-			if TweakHairParts
-				ChangePart(TweakHairParts, CurrentHairId, true)
-				ChangePart(TweakHairParts, OriginalHairId)			
-			endif
+			ChangePart(pTweakHairParts, CurrentHairId, true)
+			ChangePart(pTweakHairParts, OriginalHairId)			
 		endif
 	
 		if (CurrentBeardId != OriginalBeardId)
-			FormList TweakBeardParts = Game.GetFormFromFile(0x01016F12, "AmazingFollowerTweaks.esp") as Formlist
-			if TweakBeardParts
-				ChangePart(TweakBeardParts, CurrentBeardId, true)
-				ChangePart(TweakBeardParts, OriginalBeardId)
-			endif
+			ChangePart(pTweakBeardParts, CurrentBeardId, true)
+			ChangePart(pTweakBeardParts, OriginalBeardId)
 		endif
 
 		npc.ChangeAnimFaceArchetype(None)

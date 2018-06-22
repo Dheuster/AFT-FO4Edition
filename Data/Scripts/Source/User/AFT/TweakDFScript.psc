@@ -145,6 +145,9 @@ Faction    Property pTweakCampOutFitFaction   	Auto Const
 Faction    Property pTweakCityOutFaction      	Auto Const
 Faction    Property pTweakStandardOutFitFaction	Auto Const
 Faction    Property pTweakHangoutFaction		Auto Const
+Faction    Property pTweakNoIdleChatter			Auto Const
+
+Quest      Property pTweakCOMSpouse				Auto Const
 
 ActorBase  Property CompanionDeacon				Auto Const
 ActorBase  Property BoSPaladinDanse				Auto Const
@@ -3469,36 +3472,33 @@ Function FlagCompanionChatEventOverride(actorvalue ActorValueRepresentingEvent) 
 					Utility.wait(0.1)
 				endIf
 				
-				Quest TweakCOMSpouse = Game.GetFormFromFile(0x0104529E,"AmazingFollowerTweaks.esp") as Quest
-				if TweakCOMSpouse
-					ReferenceAlias Spouse = (TweakCOMSpouse.GetAlias(8) as ReferenceAlias)
-					if Spouse
-						Actor theSpouse = Spouse.GetActorReference()
-						if theSpouse && !theSpouse.IsDead()
-							ReferenceAlias SpouseRef = this.FindAliasByActorBase(theSpouse.GetActorBase())
-							if (SpouseRef)
-								; Have them speak line:
-								if (1 == theSpouse.GetActorBase().GetSex())
-									; Female
-									Topic theTopic = Game.GetForm(0x001364BF) as Topic
-									if theTopic
-										Utility.wait(2.5)
-										trace_("Saying: Good Riddance")
-										theSpouse.Say(theTopic, theSpouse, false, None)
-									else
-										trace_("Topic Cast failure for Good Riddance Line")
-									endIf
+				ReferenceAlias Spouse = (this.pTweakCOMSpouse.GetAlias(8) as ReferenceAlias)
+				if Spouse
+					Actor theSpouse = Spouse.GetActorReference()
+					if theSpouse && !theSpouse.IsDead()
+						ReferenceAlias SpouseRef = this.FindAliasByActorBase(theSpouse.GetActorBase())
+						if (SpouseRef)
+							; Have them speak line:
+							if (1 == theSpouse.GetActorBase().GetSex())
+								; Female
+								Topic theTopic = Game.GetForm(0x001364BF) as Topic
+								if theTopic
+									Utility.wait(2.5)
+									trace_("Saying: Good Riddance")
+									theSpouse.Say(theTopic, theSpouse, false, None)
 								else
-									; Male
-									Topic theTopic = Game.GetForm(0x00136475) as Topic
-									if theTopic
-										Utility.wait(2.5)
-										trace_("Saying: Good Riddance")
-										theSpouse.Say(theTopic, theSpouse, false, None)
-									else
-										trace_("Topic Cast failure for Good Riddance Line")
-									endIf									
+									trace_("Topic Cast failure for Good Riddance Line")
 								endIf
+							else
+								; Male
+								Topic theTopic = Game.GetForm(0x00136475) as Topic
+								if theTopic
+									Utility.wait(2.5)
+									trace_("Saying: Good Riddance")
+									theSpouse.Say(theTopic, theSpouse, false, None)
+								else
+									trace_("Topic Cast failure for Good Riddance Line")
+								endIf									
 							endIf
 						endIf
 					endIf
@@ -3556,10 +3556,7 @@ Function FlagCompanionChatEventOverride(actorvalue ActorValueRepresentingEvent) 
 				Actor Danse = DanseBase.GetUniqueActor()
 				if Danse
 					; Fix Him
-					Faction TweakNoIdleChatter = Game.GetFormFromFile(0x0104FB5C,"AmazingFollowerTweaks.esp") as Faction
-					if TweakNoIdleChatter
-						Danse.AddToFaction(TweakNoIdleChatter)
-					endIf
+					Danse.AddToFaction(this.pTweakNoIdleChatter)
 					; Faction TweakNoCommentGeneral = Game.GetFormFromFile(0x01041593,"AmazingFollowerTweaks.esp") as Faction
 					; if TweakNoCommentGeneral
 					; 	Danse.AddToFaction(TweakNoCommentGeneral)

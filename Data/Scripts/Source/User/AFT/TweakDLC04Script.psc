@@ -69,7 +69,7 @@ LocationAlias	Property	DLC04TheParlorLocation              Auto Const
 LocationAlias	Property	DLC04NukaTownUSALocation            Auto Const
 
 ; --=== Prefab Support ===--
-Quest			Property TweakScrapScanMaster			Auto Const
+;Quest			Property TweakScrapScanMaster			Auto Const
 GlobalVariable	Property pTweakScanThreadsDone			Auto Const
 GlobalVariable	Property pTweakScanObjectsFound			Auto Const
 FormList		Property TweakScrapScan_DLC04			Auto Const
@@ -534,10 +534,6 @@ Function OnGameLoaded(bool firstcall)
 		if (issue)
 			Trace("AFT Message : Some DLC04 (Nuka World) Resources Failed to Import. Compatibility issues likely.")
 		endif
-
-		if (0 == SettlementLookup.length)
-			initialize_SettlementData()
-		endif
 		
 		if (!Installed)
 			Trace("AFT Message : Performing 1st time install tasks...")
@@ -566,8 +562,12 @@ EndFunction
 
 Int Function FindLocation(int lid)
 	if (0 == SettlementLookup.length)
-		return -1
+		initialize_SettlementData()
+		if (0 == SettlementLookup.length)
+			return -1
+		endif
 	endif
+
 	int maskedlid = lid
 	if (maskedlid > 0x00ffffff)	
 		int lidadjusted = maskedlid
@@ -580,22 +580,37 @@ Int Function FindLocation(int lid)
 EndFunction
 
 string Function GetLocationName(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].name
 EndFunction
 
 float Function GetLocationRadius(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].bs_radius
 EndFunction
 
 float Function GetLocationCenterX(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].bs_x
 EndFunction
 
 float Function GetLocationCenterY(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].bs_y
 EndFunction
 
 float Function GetLocationCenterZ(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].bs_z
 EndFunction
 
@@ -682,6 +697,13 @@ Function ScanHelper()
 		center = None	
 		return
 	endif
+	Quest pTweakScrapScanMaster = Game.GetFormFromFile(0x0100919A,"AmazingFolloweTweaks.esp") as Quest
+	if !pTweakScrapScanMaster
+		pTweakScanThreadsDone.mod(-1.0)
+		center = None	
+		return
+	endIf
+
 	
 	; common conditions
 	bool scrapall            = (pTweakScrapAll.GetValue()       == 1.0)
@@ -721,7 +743,7 @@ Function ScanHelper()
 	bool	keepgoing = true
 	Var[]	params = new Var[10]	
 	params[9] = -1
-	AFT:TweakScrapScanScript ScrapScanMaster = TweakScrapScanMaster as AFT:TweakScrapScanScript
+	AFT:TweakScrapScanScript ScrapScanMaster = pTweakScrapScanMaster as AFT:TweakScrapScanScript
 	
 	int i = 0
 	int nextcheck = 30
