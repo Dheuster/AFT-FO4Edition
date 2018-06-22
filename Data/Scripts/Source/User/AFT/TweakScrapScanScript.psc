@@ -32,9 +32,9 @@ Quest Property pTweakScanNonConstructed_Trees Auto Const
 Quest Property pTweakScanNonConstructed_Food  Auto Const
 Quest Property pTweakScanNonConstructed_Extra Auto Const
 
-Quest Property pTweakDLC01	Auto Const
-Quest Property pTweakDLC03	Auto Const
-Quest Property pTweakDLC04	Auto Const
+;Quest Property pTweakDLC01	Auto Const
+;Quest Property pTweakDLC03	Auto Const
+;Quest Property pTweakDLC04	Auto Const
 
 Keyword Property LocTypeWorkshopSettlement    Auto Const
 Keyword Property WorkshopLinkCenter           Auto Const
@@ -251,52 +251,67 @@ Function ScanHelper()
 		cleanup_center = true
 	endif
 	
-	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
-	AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
-	AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+	; Potential Bug : 1.17 The pTweakDLC01 take so long to initialize that they are
+	; not ready when this quest starts up. Because of that fact, if they are injected,
+	; the script is skipped and not loaded. So, we look them up at runtime to ensure
+	; injection doesn't prevent the script from working. This is an unconfirmed
+	; theory.
 	
+	Quest pTweakDLC01 = Game.GetFormFromFile(0x0100BA5B,"AmazingFollowerTweaks.esp") as Quest
+	Quest pTweakDLC03 = Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest
+	Quest pTweakDLC04 = Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest
+		
 	; DLC 01 Support (Automatron)
-	if (lookupindex < 0 && pTweakDLC01Script && pTweakDLC01Script.Installed)
-		lookupindex = pTweakDLC01Script.FindLocation(lid)
-		if (lookupindex > -1)
-			wsname   = pTweakDLC01Script.GetLocationName(lookupindex)
-			radius   = pTweakDLC01Script.GetLocationRadius(lookupindex)
-			float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
-			float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
-			float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
-			center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
-			center.SetPosition(center_x, center_y, center_z)
-			Utility.wait(0.5)
+	if (lookupindex < 0 && pTweakDLC01)
+		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+        if (pTweakDLC01Script && pTweakDLC01Script.Installed)
+			lookupindex = pTweakDLC01Script.FindLocation(lid)
+			if (lookupindex > -1)
+				wsname   = pTweakDLC01Script.GetLocationName(lookupindex)
+				radius   = pTweakDLC01Script.GetLocationRadius(lookupindex)
+				float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
+				float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
+				float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
+				center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+				center.SetPosition(center_x, center_y, center_z)
+				Utility.wait(0.5)
+			endif
 		endif
 	endif
 
 	; DLC 03 Support (Far Harbor)
-	if (lookupindex < 0 && pTweakDLC03Script && pTweakDLC03Script.Installed)	
-		lookupindex = pTweakDLC03Script.FindLocation(lid)
-		if (lookupindex > -1)
-			wsname   = pTweakDLC03Script.GetLocationName(lookupindex)
-			radius   = pTweakDLC03Script.GetLocationRadius(lookupindex)
-			float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
-			float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
-			float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
-			center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
-			center.SetPosition(center_x, center_y, center_z)
-			Utility.wait(0.5)
-		endif	
+	if (lookupindex < 0 && pTweakDLC03)
+		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+		if (pTweakDLC03Script && pTweakDLC03Script.Installed)
+			lookupindex = pTweakDLC03Script.FindLocation(lid)
+			if (lookupindex > -1)
+				wsname   = pTweakDLC03Script.GetLocationName(lookupindex)
+				radius   = pTweakDLC03Script.GetLocationRadius(lookupindex)
+				float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
+				float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
+				float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
+				center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+				center.SetPosition(center_x, center_y, center_z)
+				Utility.wait(0.5)
+			endif
+		endif
 	endif
 	
 	; DLC 04 Support (Nuka World)
-	if (lookupindex < 0 && pTweakDLC04Script && pTweakDLC04Script.Installed)
-		lookupindex = pTweakDLC04Script.FindLocation(lid)
-		if (lookupindex > -1)
-			wsname   = pTweakDLC04Script.GetLocationName(lookupindex)
-			radius   = pTweakDLC04Script.GetLocationRadius(lookupindex)
-			float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
-			float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
-			float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
-			center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
-			center.SetPosition(center_x, center_y, center_z)
-			Utility.wait(0.5)
+	if (lookupindex < 0 && pTweakDLC04)
+		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+		if (pTweakDLC04Script && pTweakDLC04Script.Installed)
+			lookupindex = pTweakDLC04Script.FindLocation(lid)
+			if (lookupindex > -1)
+				wsname   = pTweakDLC04Script.GetLocationName(lookupindex)
+				radius   = pTweakDLC04Script.GetLocationRadius(lookupindex)
+				float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
+				float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
+				float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
+				center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+				center.SetPosition(center_x, center_y, center_z)
+				Utility.wait(0.5)
+			endif
 		endif
 	endif
 
@@ -702,19 +717,26 @@ Function ScanHelper()
 			endif
 		endif	
 	endif
-	
-	if pTweakDLC01Script && pTweakDLC01Script.installed
-		expected += 1
-	endif
-	
-	if pTweakDLC03Script && pTweakDLC03Script.installed
-		expected += 1
-	endif
 
-	if pTweakDLC04Script && pTweakDLC04Script.installed
-		expected += 1
+	if pTweakDLC01
+		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+		if pTweakDLC01Script && pTweakDLC01Script.Installed
+			expected += 1
+		endif
 	endif
-	
+	if pTweakDLC03
+		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+		if pTweakDLC03Script && pTweakDLC03Script.Installed
+			expected += 1
+		endif
+	endif
+	if pTweakDLC04
+		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+		if pTweakDLC04Script && pTweakDLC04Script.Installed
+			expected += 1
+		endif
+	endif
+		
 	if (unassignsettlers && !scrapAll && !snapshot)
 		ObjectReference[] WorkshopActors = WorkshopParent.GetWorkshopActors(workshopRef)						
 		int wa = 0
@@ -1086,21 +1108,28 @@ Function ScanHelper()
 		endif
 	endif
 	
-	if pTweakDLC01Script && pTweakDLC01Script.installed
-		Trace("Calling pTweakDLC01Script.Scan()")
-		pTweakDLC01Script.Scan(center, radius) ; Asynchronous
+	if pTweakDLC01
+		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+		if pTweakDLC01Script && pTweakDLC01Script.Installed
+			Trace("Calling pTweakDLC01Script.Scan()")
+			pTweakDLC01Script.Scan(center, radius) ; Asynchronous
+		endif
+	endif
+	if pTweakDLC03
+		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+		if pTweakDLC03Script && pTweakDLC03Script.Installed
+			Trace("Calling pTweakDLC03Script.Scan()")
+			pTweakDLC03Script.Scan(center, radius) ; Asynchronous
+		endif
+	endif
+	if pTweakDLC04
+		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+		if pTweakDLC04Script && pTweakDLC04Script.Installed
+			Trace("Calling pTweakDLC04Script.Scan()")
+			pTweakDLC04Script.Scan(center, radius) ; Asynchronous
+		endif
 	endif
 	
-	if pTweakDLC03Script && pTweakDLC03Script.installed
-		Trace("Calling pTweakDLC03Script.Scan()")
-		pTweakDLC03Script.Scan(center, radius) ; Asynchronous
-	endif
-
-	if pTweakDLC04Script && pTweakDLC04Script.installed
-		Trace("Calling pTweakDLC04Script.Scan()")
-		pTweakDLC04Script.Scan(center, radius) ; Asynchronous
-	endif
-
 	
     int timeout
 	if snapshot || scrapAll
@@ -1276,7 +1305,7 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
     ;      when values are positive. So we can check for them by doing a polarity switch.
 	
 	if (posx < 0)
-		float checkv = Math.abs(posx)
+		float checkv = (posx * -1)
 		if checkv <= 0.000010
 			if checkv < 0.000006
 				posx = -0.000000
@@ -1288,7 +1317,7 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		endif
 	endif
 	if (posy < 0)
-		float checkv = Math.abs(posy)
+		float checkv = (posy * -1)
 		if checkv <= 0.000010
 			if checkv < 0.000006
 				posy = -0.000000
@@ -1300,7 +1329,7 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		endif
 	endif
 	if (posz < 0)
-		float checkv = Math.abs(posz)
+		float checkv = (posz * -1)
 		if checkv <= 0.000010
 			if checkv < 0.000006
 				posz = -0.000000
@@ -1312,7 +1341,7 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		endif
 	endif
 	if (anglex < 0)
-		float checkv = Math.abs(anglex)
+		float checkv = (anglex * -1)
 		if checkv <= 0.000010
 			if checkv < 0.000006
 				anglex = -0.000000
@@ -1324,7 +1353,7 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		endif
 	endif
 	if (angley < 0)
-		float checkv = Math.abs(angley)
+		float checkv = (angley * -1)
 		if checkv <= 0.000010
 			if checkv < 0.000006
 				angley = -0.000000
@@ -1336,7 +1365,7 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 		endif
 	endif
 	if (anglez < 0)
-		float checkv = Math.abs(anglez)
+		float checkv = (anglez * -1)
 		if checkv <= 0.000010
 			if checkv < 0.000006
 				anglez = -0.000000
@@ -1674,13 +1703,22 @@ Function allocate_SettlementLookup(int len)
 	endWhile
 EndFunction
 
-
+; Called From TweakBuildScript
 ObjectReference Function getCenter(int lid)
 
-	WorkshopParentScript WorkshopParent = pWorkshopParent as WorkshopParentScript
+	WorkshopParentScript wshopParent
+	
+    ; ts = Thread Safe
+	Quest pWorkshopParent_ts = Game.GetForm(0x0002058E) as Quest
+	if (pWorkshopParent_ts)
+		wshopParent = pWorkshopParent_ts as WorkshopParentScript
+	else
+		wshopParent = pWorkshopParent as WorkshopParentScript
+	endif
+	
 	ObjectReference 	spawnTarget     = None
-	if WorkshopParent
-		spawnTarget    = WorkshopParent.GetWorkshopFromLocation(Game.GetPlayer().GetCurrentLocation())
+	if wshopParent
+		spawnTarget    = wshopParent.GetWorkshopFromLocation(Game.GetPlayer().GetCurrentLocation())
 	endif
 	if !spawnTarget
 		spawnTarget = Game.GetPlayer()
@@ -1695,50 +1733,59 @@ ObjectReference Function getCenter(int lid)
 		return result
 	endif
 	
-	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
-	if (pTweakDLC01Script && pTweakDLC01Script.Installed)
-		lookupindex = pTweakDLC01Script.FindLocation(lid)
-		if (lookupindex > -1)
-			Trace("Lookup of [" + lid + "] Succeeded!")
-			float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
-			float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
-			float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
-			ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
-			result.SetPosition(center_x, center_y, center_z)
-			Utility.wait(0.5)
-			return result
+	Quest pTweakDLC01 = Game.GetFormFromFile(0x0100BA5B,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC01
+		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+		if (pTweakDLC01Script && pTweakDLC01Script.Installed)
+			lookupindex = pTweakDLC01Script.FindLocation(lid)
+			if (lookupindex > -1)
+				Trace("Lookup of [" + lid + "] Succeeded!")
+				float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
+				float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
+				float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
+				ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+				result.SetPosition(center_x, center_y, center_z)
+				Utility.wait(0.5)
+				return result
+			endif
 		endif
 	endif
+		
+	Quest pTweakDLC03 = Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC03
+		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+		if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
+			lookupindex = pTweakDLC03Script.FindLocation(lid)
+			if (lookupindex > -1)
+				Trace("Lookup of [" + lid + "] Succeeded!")
+				float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
+				float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
+				float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
+				ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+				result.SetPosition(center_x, center_y, center_z)
+				Utility.wait(0.5)
+				return result
+			endif
+		endif	
+	endif
 
-	AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
-	if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
-		lookupindex = pTweakDLC03Script.FindLocation(lid)
-		if (lookupindex > -1)
-			Trace("Lookup of [" + lid + "] Succeeded!")
-			float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
-			float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
-			float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
-			ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
-			result.SetPosition(center_x, center_y, center_z)
-			Utility.wait(0.5)
-			return result
-		endif
+	Quest pTweakDLC04 = Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC04
+		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+		if (pTweakDLC04Script && pTweakDLC04Script.Installed)
+			lookupindex = pTweakDLC04Script.FindLocation(lid)
+			if (lookupindex > -1)
+				float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
+				float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
+				float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
+				ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+				result.SetPosition(center_x, center_y, center_z)
+				Utility.wait(0.5)
+				return result
+			endif
+		endif	
 	endif
 	
-	AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-	if (pTweakDLC04Script && pTweakDLC04Script.Installed)
-		lookupindex = pTweakDLC04Script.FindLocation(lid)
-		if (lookupindex > -1)
-			float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
-			float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
-			float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
-			ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
-			result.SetPosition(center_x, center_y, center_z)
-			Utility.wait(0.5)
-			return result
-		endif
-	endif
-
 	Trace("Lookup of [" + lid + "] Failed.")
 	return None
 	
@@ -1752,30 +1799,38 @@ float Function getRadius(int lid)
 		return SettlementLookup[lookupindex].bs_radius
 	endif
 	
-	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)	
-	if (pTweakDLC01Script && pTweakDLC01Script.Installed)
-		lookupindex = pTweakDLC01Script.FindLocation(lid)
-		if (lookupindex > -1)
-			return pTweakDLC01Script.GetLocationRadius(lookupindex)
+	Quest pTweakDLC01 = Game.GetFormFromFile(0x0100BA5B,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC01	
+		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)	
+		if (pTweakDLC01Script && pTweakDLC01Script.Installed)
+			lookupindex = pTweakDLC01Script.FindLocation(lid)
+			if (lookupindex > -1)
+				return pTweakDLC01Script.GetLocationRadius(lookupindex)
+			endif
 		endif
 	endif
 
-	AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)	
-	if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
-		lookupindex = pTweakDLC03Script.FindLocation(lid)
-		if (lookupindex > -1)
-			return pTweakDLC03Script.GetLocationRadius(lookupindex)
-		endif	
-	endif
-
-	AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-	if (pTweakDLC04Script && pTweakDLC04Script.Installed)
-		lookupindex = pTweakDLC04Script.FindLocation(lid)
-		if (lookupindex > -1)
-			return pTweakDLC04Script.GetLocationRadius(lookupindex)
+	Quest pTweakDLC03 = Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC03	
+		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)	
+		if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
+			lookupindex = pTweakDLC03Script.FindLocation(lid)
+			if (lookupindex > -1)
+				return pTweakDLC03Script.GetLocationRadius(lookupindex)
+			endif	
 		endif
 	endif
 
+	Quest pTweakDLC04 = Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC04	
+		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+		if (pTweakDLC04Script && pTweakDLC04Script.Installed)
+			lookupindex = pTweakDLC04Script.FindLocation(lid)
+			if (lookupindex > -1)
+				return pTweakDLC04Script.GetLocationRadius(lookupindex)
+			endif
+		endif
+	endif
 	
 	Trace("Lookup of [" + lid + "] Failed. Using Default.")
 	return 8000.0
@@ -1789,30 +1844,39 @@ String Function getName(int lid)
 		return SettlementLookup[lookupindex].name
 	endif
 	
-	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
-	if (pTweakDLC01Script && pTweakDLC01Script.Installed)
-		lookupindex = pTweakDLC01Script.FindLocation(lid)
-		if (lookupindex > -1)
-			Trace("Lookup of [" + lid + "] Succeeded!")
-			return pTweakDLC01Script.GetLocationName(lookupindex)
+	Quest pTweakDLC01 = Game.GetFormFromFile(0x0100BA5B,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC01	
+		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+		if (pTweakDLC01Script && pTweakDLC01Script.Installed)
+			lookupindex = pTweakDLC01Script.FindLocation(lid)
+			if (lookupindex > -1)
+				Trace("Lookup of [" + lid + "] Succeeded!")
+				return pTweakDLC01Script.GetLocationName(lookupindex)
+			endif
 		endif
 	endif
 		
-	AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
-	if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
-		lookupindex = pTweakDLC03Script.FindLocation(lid)
-		if (lookupindex > -1)
-			Trace("Lookup of [" + lid + "] Succeeded!")
-			return pTweakDLC03Script.GetLocationName(lookupindex)
+	Quest pTweakDLC03 = Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC03	
+		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+		if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
+			lookupindex = pTweakDLC03Script.FindLocation(lid)
+			if (lookupindex > -1)
+				Trace("Lookup of [" + lid + "] Succeeded!")
+				return pTweakDLC03Script.GetLocationName(lookupindex)
+			endif
 		endif
 	endif
 		
-	AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-	if (pTweakDLC04Script && pTweakDLC04Script.Installed)
-		lookupindex = pTweakDLC04Script.FindLocation(lid)
-		if (lookupindex > -1)
-			Trace("Lookup of [" + lid + "] Succeeded!")
-			return pTweakDLC04Script.GetLocationName(lookupindex)
+	Quest pTweakDLC04 = Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest
+	if pTweakDLC04	
+		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+		if (pTweakDLC04Script && pTweakDLC04Script.Installed)
+			lookupindex = pTweakDLC04Script.FindLocation(lid)
+			if (lookupindex > -1)
+				Trace("Lookup of [" + lid + "] Succeeded!")
+				return pTweakDLC04Script.GetLocationName(lookupindex)
+			endif
 		endif
 	endif
 	

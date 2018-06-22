@@ -52,7 +52,7 @@ LocationAlias	Property	DLC01LairRoboStoreLocation			Auto Const
 Faction			Property	DLC01WorkshopRobotFaction			Auto
 
 ; --=== Prefab Support ===--
-Quest			Property TweakScrapScanMaster			Auto Const
+; Quest			Property TweakScrapScanMaster			Auto Const ; Possibly creates a circular dependency. Lookup at runtime....
 GlobalVariable	Property pTweakScanThreadsDone			Auto Const
 GlobalVariable	Property pTweakScanObjectsFound			Auto Const
 FormList		Property TweakScrapScan_DLC01			Auto Const
@@ -316,10 +316,6 @@ Function OnGameLoaded(bool firstcall)
 			Trace("AFT Message : Some DLC01 (Automatron) Resources Failed to Import. Compatibility issues likely.")
 		endif
 		
-		if (0 == SettlementLookup.length)
-			initialize_SettlementData()
-		endif
-
 		if (!Installed)
 			Trace("AFT Message : Performing 1st time install tasks...")			
 			Installed = true
@@ -347,7 +343,10 @@ EndFunction
 ; ==========================================================
 Int Function FindLocation(int lid)
 	if (0 == SettlementLookup.length)
-		return -1
+		initialize_SettlementData()
+		if (0 == SettlementLookup.length)
+			return -1
+		endif
 	endif
 	int maskedlid = lid
 	if (maskedlid > 0x00ffffff)	
@@ -361,22 +360,37 @@ Int Function FindLocation(int lid)
 EndFunction
 
 string Function GetLocationName(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].name
 EndFunction
 
 float Function GetLocationRadius(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].bs_radius
 EndFunction
 
 float Function GetLocationCenterX(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].bs_x
 EndFunction
 
 float Function GetLocationCenterY(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].bs_y
 EndFunction
 
 float Function GetLocationCenterZ(int lookupindex)
+	if (0 == SettlementLookup.length)
+		initialize_SettlementData()
+	endif
 	return SettlementLookup[lookupindex].bs_z
 EndFunction
 
@@ -462,8 +476,16 @@ Function ScanHelper()
 	int len = ScrapData.length
 	if 0 == len
 		pTweakScanThreadsDone.mod(-1.0)
+		center = None	
 		return
 	endif
+
+	Quest pTweakScrapScanMaster = Game.GetFormFromFile(0x0100919A,"AmazingFolloweTweaks.esp") as Quest
+	if !pTweakScrapScanMaster
+		pTweakScanThreadsDone.mod(-1.0)
+		center = None	
+		return
+	endIf
 	
 	trace("Updating TweakScrapScan_DLC01")
 	
@@ -545,7 +567,7 @@ Function ScanHelper()
 	
 	Var[]	params = new Var[10]
 	params[9] = -1
-	AFT:TweakScrapScanScript ScrapScanMaster = TweakScrapScanMaster as AFT:TweakScrapScanScript
+	AFT:TweakScrapScanScript ScrapScanMaster = pTweakScrapScanMaster as AFT:TweakScrapScanScript
 
 	bool scrapall            = (pTweakScrapAll.GetValue()       == 1.0)
 	bool snapshot            = (pTweakSettlementSnap.GetValue() == 1.0)
