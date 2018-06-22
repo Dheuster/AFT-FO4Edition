@@ -109,12 +109,18 @@ bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 EndFunction
 
 Event OnInit()
+	trace("OnInit() Called")
 	resourceID          = -1
 	version				= 1.0
-	AllToNone()
 endEvent
 
+Event OnQuestInit()
+	trace("OnQuestInit() Called")
+	AllToNone()
+EndEvent
+
 Function AllToNone()
+	trace("AllToNone() Called")
 
 	Installed			= false
 	Ada = None
@@ -148,8 +154,8 @@ Function AllToNone()
 	
 endFunction
 
-
 Function OnGameLoaded(bool firstcall)
+	trace("OnGameLoaded() Called")
 	
 	if (Game.IsPluginInstalled(PluginName))	
 	
@@ -321,10 +327,13 @@ Function OnGameLoaded(bool firstcall)
 			Installed = true
 		endif
 				
-	elseIf (Installed)
-		Trace("AFT Message : AFT Unloading DLC01 (Automatron) resources...")
-		AllToNone()
-		Installed = false
+	else
+		Trace("DLC01 (Automatron) Not Detected")	
+		If (Installed)
+			Trace("AFT Message : AFT Unloading DLC01 (Automatron) resources...")
+			AllToNone()
+			Installed = false
+		endif
 	endIf
 	
 endFunction
@@ -342,6 +351,7 @@ EndFunction
 ; PreFab Support
 ; ==========================================================
 Int Function FindLocation(int lid)
+	Trace("FindLocation Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 		if (0 == SettlementLookup.length)
@@ -360,6 +370,7 @@ Int Function FindLocation(int lid)
 EndFunction
 
 string Function GetLocationName(int lookupindex)
+	Trace("GetLocationName Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -367,6 +378,7 @@ string Function GetLocationName(int lookupindex)
 EndFunction
 
 float Function GetLocationRadius(int lookupindex)
+	Trace("GetLocationRadius Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -374,6 +386,7 @@ float Function GetLocationRadius(int lookupindex)
 EndFunction
 
 float Function GetLocationCenterX(int lookupindex)
+	Trace("GetLocationCenterX Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -381,6 +394,7 @@ float Function GetLocationCenterX(int lookupindex)
 EndFunction
 
 float Function GetLocationCenterY(int lookupindex)
+	Trace("GetLocationCenterY Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -388,6 +402,7 @@ float Function GetLocationCenterY(int lookupindex)
 EndFunction
 
 float Function GetLocationCenterZ(int lookupindex)
+	Trace("GetLocationCenterZ Called")	
 	if (0 == SettlementLookup.length)
 		initialize_SettlementData()
 	endif
@@ -395,6 +410,8 @@ float Function GetLocationCenterZ(int lookupindex)
 EndFunction
 
 Function initialize_SettlementData()
+
+	Trace("initialize_SettlementData Called")	
 
 	; Data pulled from WOrldObjects/Static/DLC/Workshop/*Border
 	; (Provides map coordinates of border objects) (Use Info, Dbl click 
@@ -437,13 +454,21 @@ Function Scan(ObjectReference p_center, float p_radius)
 	Trace("Scan Called")
 	; Early Bail if current location is not part of DLC:
 	
-	if (GetPluginID(p_center.GetCurrentLocation().GetFormID()) != resourceID)
+	bool snapshot            = (pTweakSettlementSnap.GetValue() == 1.0)
+	if (snapshot && GetPluginID(p_center.GetCurrentLocation().GetFormID()) != resourceID)
 		trace("Area does not belong to [" + PluginName + "]. Bailing.")
 		pTweakScanThreadsDone.mod(-1.0)
 		return
 	endif
 
+	; Only 1 scan at a time...
+	if (None != center)
+		Trace("Scan already in progress. Aborting...")
+		pTweakScanThreadsDone.mod(-1.0)
+		return
+	endif
 	center = p_center
+	
 	radius = p_radius 
 	Trace("Starting Timer")
 	startTimer(0.0, SCAN_OBJECTS) ; Basically this is the same thing as FORK....

@@ -242,7 +242,7 @@ Function ScanHelper()
 	int    lookupindex = SettlementLookup.FindStruct("locid",lid)
 		
 	if (lookupindex > -1)
-		Trace("Lookup of [" + lid + "] Succeeded!")
+		Trace("Lookup of [" + lid + "] in Standard Lookup Succeeded!")
 		wsname = SettlementLookup[lookupindex].name
 		radius = SettlementLookup[lookupindex].bs_radius
 		center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
@@ -262,57 +262,102 @@ Function ScanHelper()
 	Quest pTweakDLC04 = Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest
 		
 	; DLC 01 Support (Automatron)
-	if (lookupindex < 0 && pTweakDLC01)
-		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
-        if (pTweakDLC01Script && pTweakDLC01Script.Installed)
-			lookupindex = pTweakDLC01Script.FindLocation(lid)
-			if (lookupindex > -1)
-				wsname   = pTweakDLC01Script.GetLocationName(lookupindex)
-				radius   = pTweakDLC01Script.GetLocationRadius(lookupindex)
-				float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
-				float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
-				float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
-				center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
-				center.SetPosition(center_x, center_y, center_z)
-				Utility.wait(0.5)
+	if (lookupindex < 0)
+		if (pTweakDLC01)
+			AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
+			if (pTweakDLC01Script)
+				if (pTweakDLC01Script.Installed)
+					lookupindex = pTweakDLC01Script.FindLocation(lid)
+					if (lookupindex > -1)
+						trace("TweakDLC01Script.FindLocation(" +  lid + ") FOUND!")								
+						wsname   = pTweakDLC01Script.GetLocationName(lookupindex)
+						radius   = pTweakDLC01Script.GetLocationRadius(lookupindex)
+						float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
+						float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
+						float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
+						center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+						center.SetPosition(center_x, center_y, center_z)
+						Utility.wait(0.5)
+					else
+						trace("TweakDLC01Script.FindLocation(" +  lid + ") returned -1")								
+					endif
+				else
+					trace("TweakDLC01Script reporting DLC01 (automatron) not installed")			
+				endif
+			else
+				trace("Cast of pTweakDLC01 to AFT:TweakDLC01Script Failed")			
 			endif
+		else
+			trace("pTweakDLC01 Not Found")
 		endif
+	else
+		trace("Skipping DLC01")
 	endif
 
 	; DLC 03 Support (Far Harbor)
-	if (lookupindex < 0 && pTweakDLC03)
-		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
-		if (pTweakDLC03Script && pTweakDLC03Script.Installed)
-			lookupindex = pTweakDLC03Script.FindLocation(lid)
-			if (lookupindex > -1)
-				wsname   = pTweakDLC03Script.GetLocationName(lookupindex)
-				radius   = pTweakDLC03Script.GetLocationRadius(lookupindex)
-				float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
-				float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
-				float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
-				center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
-				center.SetPosition(center_x, center_y, center_z)
-				Utility.wait(0.5)
+	if (lookupindex < 0)
+		if (pTweakDLC03)
+			AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
+			if (pTweakDLC03Script)
+				if (pTweakDLC03Script.Installed)
+					lookupindex = pTweakDLC03Script.FindLocation(lid)
+					if (lookupindex > -1)
+						trace("TweakDLC03Script.FindLocation(" +  lid + ") FOUND!")								
+						wsname   = pTweakDLC03Script.GetLocationName(lookupindex)
+						radius   = pTweakDLC03Script.GetLocationRadius(lookupindex)
+						float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
+						float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
+						float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
+						center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+						center.SetPosition(center_x, center_y, center_z)
+						Utility.wait(0.5)
+					else
+						trace("TweakDLC03Script.FindLocation(" +  lid + ") returned -1")								
+					endif
+				else
+					trace("TweakDLC03Script reporting DLC03 (far harbor) not installed")			
+				endif
+			else
+				trace("Cast of pTweakDLC03 to AFT:TweakDLC03Script Failed")			
 			endif
+		else
+			trace("pTweakDLC03 Not Found")
 		endif
+	else
+		trace("Skipping DLC03")
 	endif
 	
 	; DLC 04 Support (Nuka World)
-	if (lookupindex < 0 && pTweakDLC04)
-		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-		if (pTweakDLC04Script && pTweakDLC04Script.Installed)
-			lookupindex = pTweakDLC04Script.FindLocation(lid)
-			if (lookupindex > -1)
-				wsname   = pTweakDLC04Script.GetLocationName(lookupindex)
-				radius   = pTweakDLC04Script.GetLocationRadius(lookupindex)
-				float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
-				float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
-				float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
-				center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
-				center.SetPosition(center_x, center_y, center_z)
-				Utility.wait(0.5)
+	if (lookupindex < 0)
+		if (pTweakDLC04)
+			AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
+			if (pTweakDLC04Script)
+				if (pTweakDLC04Script.Installed)
+					lookupindex = pTweakDLC04Script.FindLocation(lid)
+					if (lookupindex > -1)
+						trace("TweakDLC04Script.FindLocation(" +  lid + ") FOUND!")								
+						wsname   = pTweakDLC04Script.GetLocationName(lookupindex)
+						radius   = pTweakDLC04Script.GetLocationRadius(lookupindex)
+						float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
+						float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
+						float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
+						center = WorkshopRef.PlaceAtMe(Game.GetForm(0x00024571))
+						center.SetPosition(center_x, center_y, center_z)
+						Utility.wait(0.5)
+					else
+						trace("TweakDLC04Script.FindLocation(" +  lid + ") returned -1")								
+					endif
+				else
+					trace("TweakDLC04Script reporting DLC04 (Nuka World) not installed")			
+				endif
+			else
+				trace("Cast of pTweakDLC04 to AFT:TweakDLC04Script Failed")			
 			endif
+		else
+			trace("pTweakDLC04 Not Found")
 		endif
+	else
+		trace("Skipping DLC04")
 	endif
 
 	if (lookupindex < 0)
@@ -720,21 +765,50 @@ Function ScanHelper()
 
 	if pTweakDLC01
 		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
-		if pTweakDLC01Script && pTweakDLC01Script.Installed
-			expected += 1
+		if pTweakDLC01Script
+			if pTweakDLC01Script.Installed
+				trace("pTweakDLC01Script installed. Expecting 1 extra")
+				expected += 1
+			else
+				trace("pTweakDLC01Script reporting that it is not installed")
+			endif
+		else
+			trace("pTweakDLC01 failed to cast to pTweakDLC01Script")
 		endif
+	else
+		trace("pTweakDLC01 not found")
 	endif
+	
 	if pTweakDLC03
 		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
-		if pTweakDLC03Script && pTweakDLC03Script.Installed
-			expected += 1
+		if pTweakDLC03Script
+			if pTweakDLC03Script.Installed
+				trace("pTweakDLC03Script installed. Expecting 1 extra")
+				expected += 1
+			else
+				trace("pTweakDLC03Script reporting that it is not installed")
+			endif
+		else
+			trace("pTweakDLC03 failed to cast to pTweakDLC03Script")
 		endif
+	else
+		trace("pTweakDLC03 not found")
 	endif
+	
 	if pTweakDLC04
 		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-		if pTweakDLC04Script && pTweakDLC04Script.Installed
-			expected += 1
+		if pTweakDLC04Script
+			if pTweakDLC04Script.Installed
+				trace("pTweakDLC04Script installed. Expecting 1 extra")
+				expected += 1
+			else
+				trace("pTweakDLC04Script reporting that it is not installed")
+			endif
+		else
+			trace("pTweakDLC04 failed to cast to pTweakDLC03Script")
 		endif
+	else
+		trace("pTweakDLC04 not found")
 	endif
 		
 	if (unassignsettlers && !scrapAll && !snapshot)
@@ -1110,27 +1184,50 @@ Function ScanHelper()
 	
 	if pTweakDLC01
 		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
-		if pTweakDLC01Script && pTweakDLC01Script.Installed
-			Trace("Calling pTweakDLC01Script.Scan()")
-			pTweakDLC01Script.Scan(center, radius) ; Asynchronous
+		if pTweakDLC01Script
+			if pTweakDLC01Script.Installed
+				Trace("Calling pTweakDLC01Script.Scan()")
+				pTweakDLC01Script.Scan(center, radius) ; Asynchronous
+			else
+				trace("pTweakDLC01Script reporting not installed")				
+			endif
+		else
+			trace("pTweakDLC01 failed to cast to pTweakDLC01Script")
 		endif
+	else
+		trace("pTweakDLC01 not found. Skipping")
 	endif
 	if pTweakDLC03
 		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
-		if pTweakDLC03Script && pTweakDLC03Script.Installed
-			Trace("Calling pTweakDLC03Script.Scan()")
-			pTweakDLC03Script.Scan(center, radius) ; Asynchronous
+		if pTweakDLC03Script
+			if pTweakDLC03Script.Installed
+				Trace("Calling pTweakDLC03Script.Scan()")
+				pTweakDLC03Script.Scan(center, radius) ; Asynchronous
+			else
+				trace("pTweakDLC03Script reporting not installed")				
+			endif
+		else
+			trace("pTweakDLC03 failed to cast to pTweakDLC03Script")
 		endif
+	else
+		trace("pTweakDLC03 not found. Skipping")
 	endif
 	if pTweakDLC04
 		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-		if pTweakDLC04Script && pTweakDLC04Script.Installed
-			Trace("Calling pTweakDLC04Script.Scan()")
-			pTweakDLC04Script.Scan(center, radius) ; Asynchronous
+		if pTweakDLC04Script
+			if pTweakDLC04Script.Installed
+				Trace("Calling pTweakDLC04Script.Scan()")
+				pTweakDLC04Script.Scan(center, radius) ; Asynchronous
+			else
+				trace("pTweakDLC04Script reporting not installed")				
+			endif
+		else
+			trace("pTweakDLC04 failed to cast to pTweakDLC04Script")
 		endif
+	else
+		trace("pTweakDLC04 not found. Skipping")
 	endif
-	
-	
+		
     int timeout
 	if snapshot || scrapAll
 		timeout = 300
@@ -1736,54 +1833,85 @@ ObjectReference Function getCenter(int lid)
 	Quest pTweakDLC01 = Game.GetFormFromFile(0x0100BA5B,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC01
 		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
-		if (pTweakDLC01Script && pTweakDLC01Script.Installed)
-			lookupindex = pTweakDLC01Script.FindLocation(lid)
-			if (lookupindex > -1)
-				Trace("Lookup of [" + lid + "] Succeeded!")
-				float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
-				float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
-				float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
-				ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
-				result.SetPosition(center_x, center_y, center_z)
-				Utility.wait(0.5)
-				return result
+		if (pTweakDLC01Script)
+			if pTweakDLC01Script.Installed
+				lookupindex = pTweakDLC01Script.FindLocation(lid)
+				if (lookupindex > -1)
+					Trace("pTweakDLC01Script.FindLocation(" + lid + ") Succeeded!")
+					float center_x = pTweakDLC01Script.GetLocationCenterX(lookupindex)
+					float center_y = pTweakDLC01Script.GetLocationCenterY(lookupindex)
+					float center_z = pTweakDLC01Script.GetLocationCenterZ(lookupindex)
+					ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+					result.SetPosition(center_x, center_y, center_z)
+					Utility.wait(0.5)
+					return result
+				else
+					trace("pTweakDLC01Script.FindLocation(" + lid + ") returned -1")
+				endif
+			else
+				trace("pTweakDLC01Script reports it is not installed")
 			endif
+		else
+			trace("pTweakDLC01 failed to cast to pTweakDLC01Script")
 		endif
+	else
+		trace("pTweakDLC01 not found")
 	endif
 		
 	Quest pTweakDLC03 = Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC03
 		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
-		if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
-			lookupindex = pTweakDLC03Script.FindLocation(lid)
-			if (lookupindex > -1)
-				Trace("Lookup of [" + lid + "] Succeeded!")
-				float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
-				float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
-				float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
-				ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
-				result.SetPosition(center_x, center_y, center_z)
-				Utility.wait(0.5)
-				return result
+		if (pTweakDLC03Script)
+			if (pTweakDLC03Script.Installed)	
+				lookupindex = pTweakDLC03Script.FindLocation(lid)
+				if (lookupindex > -1)
+					Trace("pTweakDLC03Script.FindLocation(" + lid + ") Succeeded!")
+					float center_x = pTweakDLC03Script.GetLocationCenterX(lookupindex)
+					float center_y = pTweakDLC03Script.GetLocationCenterY(lookupindex)
+					float center_z = pTweakDLC03Script.GetLocationCenterZ(lookupindex)
+					ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+					result.SetPosition(center_x, center_y, center_z)
+					Utility.wait(0.5)
+					return result
+				else
+					trace("pTweakDLC03Script.FindLocation(" + lid + ") returned -1")
+				endif
+			else
+				trace("pTweakDLC03Script reports it is not installed")
 			endif
+		else
+			trace("pTweakDLC03 failed to cast to pTweakDLC03Script")
 		endif	
+	else
+		trace("pTweakDLC03 not found")
 	endif
 
 	Quest pTweakDLC04 = Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC04
 		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-		if (pTweakDLC04Script && pTweakDLC04Script.Installed)
-			lookupindex = pTweakDLC04Script.FindLocation(lid)
-			if (lookupindex > -1)
-				float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
-				float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
-				float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
-				ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
-				result.SetPosition(center_x, center_y, center_z)
-				Utility.wait(0.5)
-				return result
+		if (pTweakDLC04Script)
+			if (pTweakDLC04Script.Installed)
+				lookupindex = pTweakDLC04Script.FindLocation(lid)
+				if (lookupindex > -1)
+					Trace("pTweakDLC04Script.FindLocation(" + lid + ") Succeeded!")
+					float center_x = pTweakDLC04Script.GetLocationCenterX(lookupindex)
+					float center_y = pTweakDLC04Script.GetLocationCenterY(lookupindex)
+					float center_z = pTweakDLC04Script.GetLocationCenterZ(lookupindex)
+					ObjectReference result = spawnTarget.PlaceAtMe(Game.GetForm(0x00024571))
+					result.SetPosition(center_x, center_y, center_z)
+					Utility.wait(0.5)
+					return result
+				else
+					trace("pTweakDLC04Script.FindLocation(" + lid + ") returned -1")
+				endif
+			else
+				trace("pTweakDLC04Script reports it is not installed")
 			endif
+		else
+			trace("pTweakDLC04 failed to cast to pTweakDLC04Script")
 		endif	
+	else
+		trace("pTweakDLC04 not found")
 	endif
 	
 	Trace("Lookup of [" + lid + "] Failed.")
@@ -1802,34 +1930,58 @@ float Function getRadius(int lid)
 	Quest pTweakDLC01 = Game.GetFormFromFile(0x0100BA5B,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC01	
 		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)	
-		if (pTweakDLC01Script && pTweakDLC01Script.Installed)
-			lookupindex = pTweakDLC01Script.FindLocation(lid)
-			if (lookupindex > -1)
-				return pTweakDLC01Script.GetLocationRadius(lookupindex)
+		if (pTweakDLC01Script)
+			if (pTweakDLC01Script.Installed)
+				lookupindex = pTweakDLC01Script.FindLocation(lid)
+				if (lookupindex > -1)
+					return pTweakDLC01Script.GetLocationRadius(lookupindex)
+				endif
+			else
+				trace("pTweakDLC01Script reports it is not installed")
 			endif
+		else
+			trace("pTweakDLC01 failed to cast to pTweakDLC01Script")
 		endif
+	else
+		trace("pTweakDLC01 not found")
 	endif
 
 	Quest pTweakDLC03 = Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC03	
 		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)	
-		if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
-			lookupindex = pTweakDLC03Script.FindLocation(lid)
-			if (lookupindex > -1)
-				return pTweakDLC03Script.GetLocationRadius(lookupindex)
-			endif	
-		endif
+		if (pTweakDLC03Script)
+			if (pTweakDLC03Script.Installed)	
+				lookupindex = pTweakDLC03Script.FindLocation(lid)
+				if (lookupindex > -1)
+					return pTweakDLC03Script.GetLocationRadius(lookupindex)
+				endif	
+			else
+				trace("pTweakDLC03Script reports it is not installed")
+			endif
+		else
+			trace("pTweakDLC03 failed to cast to pTweakDLC03Script")
+		endif	
+	else
+		trace("pTweakDLC03 not found")
 	endif
 
 	Quest pTweakDLC04 = Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC04	
 		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-		if (pTweakDLC04Script && pTweakDLC04Script.Installed)
-			lookupindex = pTweakDLC04Script.FindLocation(lid)
-			if (lookupindex > -1)
-				return pTweakDLC04Script.GetLocationRadius(lookupindex)
+		if (pTweakDLC04Script)
+			if (pTweakDLC04Script.Installed)
+				lookupindex = pTweakDLC04Script.FindLocation(lid)
+				if (lookupindex > -1)
+					return pTweakDLC04Script.GetLocationRadius(lookupindex)
+				endif
+			else
+				trace("pTweakDLC04Script reports it is not installed")
 			endif
-		endif
+		else
+			trace("pTweakDLC04 failed to cast to pTweakDLC04Script")
+		endif	
+	else
+		trace("pTweakDLC04 not found")
 	endif
 	
 	Trace("Lookup of [" + lid + "] Failed. Using Default.")
@@ -1847,37 +1999,61 @@ String Function getName(int lid)
 	Quest pTweakDLC01 = Game.GetFormFromFile(0x0100BA5B,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC01	
 		AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
-		if (pTweakDLC01Script && pTweakDLC01Script.Installed)
-			lookupindex = pTweakDLC01Script.FindLocation(lid)
-			if (lookupindex > -1)
-				Trace("Lookup of [" + lid + "] Succeeded!")
-				return pTweakDLC01Script.GetLocationName(lookupindex)
+		if (pTweakDLC01Script)
+			if (pTweakDLC01Script.Installed)
+				lookupindex = pTweakDLC01Script.FindLocation(lid)
+				if (lookupindex > -1)
+					Trace("Lookup of [" + lid + "] Succeeded!")
+					return pTweakDLC01Script.GetLocationName(lookupindex)
+				endif
+			else
+				trace("pTweakDLC01Script reports it is not installed")
 			endif
+		else
+			trace("pTweakDLC01 failed to cast to pTweakDLC01Script")
 		endif
+	else
+		trace("pTweakDLC01 not found")
 	endif
 		
 	Quest pTweakDLC03 = Game.GetFormFromFile(0x0100C98E,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC03	
 		AFT:TweakDLC03Script pTweakDLC03Script = (pTweakDLC03 as AFT:TweakDLC03Script)
-		if (pTweakDLC03Script && pTweakDLC03Script.Installed)	
-			lookupindex = pTweakDLC03Script.FindLocation(lid)
-			if (lookupindex > -1)
-				Trace("Lookup of [" + lid + "] Succeeded!")
-				return pTweakDLC03Script.GetLocationName(lookupindex)
+		if (pTweakDLC03Script)
+			if (pTweakDLC03Script.Installed)	
+				lookupindex = pTweakDLC03Script.FindLocation(lid)
+				if (lookupindex > -1)
+					Trace("Lookup of [" + lid + "] Succeeded!")
+					return pTweakDLC03Script.GetLocationName(lookupindex)
+				endif
+			else
+				trace("pTweakDLC03Script reports it is not installed")
 			endif
-		endif
+		else
+			trace("pTweakDLC03 failed to cast to pTweakDLC03Script")
+		endif	
+	else
+		trace("pTweakDLC03 not found")
 	endif
 		
 	Quest pTweakDLC04 = Game.GetFormFromFile(0x0100E815,"AmazingFollowerTweaks.esp") as Quest
 	if pTweakDLC04	
 		AFT:TweakDLC04Script pTweakDLC04Script = (pTweakDLC04 as AFT:TweakDLC04Script)
-		if (pTweakDLC04Script && pTweakDLC04Script.Installed)
-			lookupindex = pTweakDLC04Script.FindLocation(lid)
-			if (lookupindex > -1)
-				Trace("Lookup of [" + lid + "] Succeeded!")
-				return pTweakDLC04Script.GetLocationName(lookupindex)
+		if (pTweakDLC04Script)
+			if (pTweakDLC04Script.Installed)
+				lookupindex = pTweakDLC04Script.FindLocation(lid)
+				if (lookupindex > -1)
+					Trace("Lookup of [" + lid + "] Succeeded!")
+					return pTweakDLC04Script.GetLocationName(lookupindex)
+				endif
+			else
+				trace("pTweakDLC04Script reports it is not installed")
 			endif
-		endif
+		else
+			trace("pTweakDLC04 failed to cast to pTweakDLC04Script")
+		endif	
+	else
+		trace("pTweakDLC04 not found")
 	endif
 	
 	Trace("Lookup of [" + lid + "] Failed. Using Default.")
