@@ -26,6 +26,7 @@ Quest		Property pTweakDLC01			Auto Const
 Quest		Property pTweakDLC03			Auto Const
 Quest		Property pTweakDLC04			Auto Const
 Quest		Property pTweakCOMSpouse    	Auto Const
+Quest		Property pTweakInterjections	Auto Const
 
 Bool		Property IsInDialogue			Auto
 Bool		Property RelayEvent				Auto
@@ -486,6 +487,13 @@ Function OnGameLoaded()
 		Trace("Unable to Call pTweakSpouse.OnGameLoaded()")
 	endif
 
+	AFT:TweakInterjectionQuestScript pTweakInterjectionQuestScript = pTweakInterjections as AFT:TweakInterjectionQuestScript
+	if pTweakInterjectionQuestScript
+		pTweakInterjectionQuestScript.OnGameLoaded(firstCall)
+	else
+		Trace("Unable to Call pTweakInterjectionQuestScript.OnGameLoaded()")	
+	endif
+	
 	allowdraw  = true
 	StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
 	StartTimer(4.0,NO_ANIM_SHEATH_FLOOD)
