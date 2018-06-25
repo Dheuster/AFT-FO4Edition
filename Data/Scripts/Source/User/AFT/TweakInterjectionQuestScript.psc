@@ -24,16 +24,30 @@ bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 	RETURN debug.TraceUser("TweakInterjectionQuestScript", asTextToPrint, aiSeverity)
 EndFunction
 
-Event OnInit()
-	Actor player = Game.GetPlayer()
-	RegisterForRemoteEvent(player,"OnPlayerLoadGame")	
-	; Give WorkshopParent Quest time start up on a New Game....
+; Called from TweakMonitorPlayer
+Function OnGameLoaded(bool firstTime=false)
+	Trace("OnGameLoaded() Called")
 	StartTimer(4.0, NO_LOAD_FLOOD)
+EndFunction
+
+Event OnInit()
+	Trace("OnInit() Called")
+EndEvent
+
+Event OnQuestInit()
+	Trace("OnQuestInit() Called")
 EndEvent
 
 Event Actor.OnPlayerLoadGame(Actor akSender)
+
+	; 1.18 : Left in for stray events from previous versions
+	; of the mod. We now rely on TweakMonitorPlayer to call 
+	; OnGameLoaded. This ensures we dont register for 
+	; interjections before the rest of the mod has initialized. 
+	
 	Trace("OnPlayerLoadGame Called")
-	StartTimer(0.1, NO_LOAD_FLOOD)
+	UnRegisterForRemoteEvent(Game.GetPlayer(),"OnPlayerLoadGame")	
+	
 EndEvent
 
 Event OnTimer(int timerID)
@@ -65,13 +79,9 @@ Function UnRegisterInterjections()
 	pTweakRR100Interjections.UnRegisterInterjections()
 	pTweakRR300Interjections.UnRegisterInterjections()
 	pTweakStartGameEnabledInterjections.UnRegisterInterjections()
-	
-	Actor player = Game.GetPlayer()
-	UnRegisterForRemoteEvent(player,"OnPlayerLoadGame")	
 EndFunction
 
 Function RegisterInterjections()
-	Trace("RegisterInterjections")
 	if (1.0 == pTweakAllowMultInterjections.GetValue())	
 		pTweakBos100Interjections.RegisterInterjections()
 		pTweakBos200Interjections.RegisterInterjections()
@@ -88,8 +98,5 @@ Function RegisterInterjections()
 		pTweakRR100Interjections.RegisterInterjections()
 		pTweakRR300Interjections.RegisterInterjections()
 		pTweakStartGameEnabledInterjections.RegisterInterjections()
-
-		Actor player = Game.GetPlayer()
-		RegisterForRemoteEvent(player,"OnPlayerLoadGame")		
 	endif
 EndFunction

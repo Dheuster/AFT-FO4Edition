@@ -31,7 +31,7 @@ ReferenceAlias  Property pShelterCookBench     Auto Const
 ReferenceAlias  Property pShelterPowerBench    Auto Const
 ReferenceAlias  Property pShelterFridge   	   Auto Const
 ReferenceAlias  Property pShelterCenter        Auto Const
-WorkshopParentScript Property pWorkshopParent  Auto Const
+Quest 			Property pWorkshopParentQuest       Auto Const
 
 ; Pre-Fab static instances in Game World See CommonWealth, Cell : Wilderness 95,80
 ReferenceAlias  Property pShelterStorage       Auto Const
@@ -259,37 +259,43 @@ EndFunction
 Function DockCamp()
 	ObjectReference pAFTMapMarker = pShelterMapMarker.GetReference()
 	if pAFTMapMarker.Is3DLoaded()
-		WorkshopScript workshopRef = pWorkshopParent.GetWorkshopFromLocation(pAFTMapMarker.GetCurrentLocation())
-		ObjectReference CampTerminalStand = myObjectCache[pTweakCampTerminalStandID]
-		if workshopRef && CampTerminalStand && CampTerminalStand.Is3DLoaded() && workshopRef.Is3DLoaded()		
-			ObjectReference cDock = workshopRef.GetLinkedRef(pTweakCampDock)
-			if cDock
-				Trace("Existing TweakCampDock [" + pTweakCampDock + "] Found. Removing.")
-				cDock.Disable()
-				cDock.Delete()
-				workshopRef.SetLinkedRef(None, pTweakCampDock)
-			endif
-			ObjectReference newDock = CampTerminalStand.placeatme(TweakWorkshopCampDock,1,true)
-			Utility.waitmenumode(0.1)
-			workshopRef.SetLinkedRef(newDock, pTweakCampDock)
-			pTweakCampDocked.SetValue(1)
-		endIf
+		WorkshopParentScript pWorkshopParentScript = pWorkshopParentQuest as WorkshopParentScript
+		if pWorkshopParentScript
+			WorkshopScript workshopRef = pWorkshopParentScript.GetWorkshopFromLocation(pAFTMapMarker.GetCurrentLocation())
+			ObjectReference CampTerminalStand = myObjectCache[pTweakCampTerminalStandID]
+			if workshopRef && CampTerminalStand && CampTerminalStand.Is3DLoaded() && workshopRef.Is3DLoaded()		
+				ObjectReference cDock = workshopRef.GetLinkedRef(pTweakCampDock)
+				if cDock
+					Trace("Existing TweakCampDock [" + pTweakCampDock + "] Found. Removing.")
+					cDock.Disable()
+					cDock.Delete()
+					workshopRef.SetLinkedRef(None, pTweakCampDock)
+				endif
+				ObjectReference newDock = CampTerminalStand.placeatme(TweakWorkshopCampDock,1,true)
+				Utility.waitmenumode(0.1)
+				workshopRef.SetLinkedRef(newDock, pTweakCampDock)
+				pTweakCampDocked.SetValue(1)
+			endIf
+		endif
 	endIf
 EndFunction
 
 Function UnDockCamp()
 	ObjectReference pAFTMapMarker = pShelterMapMarker.GetReference()
 	if pAFTMapMarker.Is3DLoaded()
-		WorkshopScript workshopRef = pWorkshopParent.GetWorkshopFromLocation(pAFTMapMarker.GetCurrentLocation())
-		if workshopRef && workshopRef.Is3DLoaded()		
-			ObjectReference cDock = workshopRef.GetLinkedRef(pTweakCampDock)		
-			if cDock
-				Trace("Existing TweakCampDock [" + pTweakCampDock + "] Found. Removing.")
-				cDock.Disable()
-				cDock.Delete()
-				workshopRef.SetLinkedRef(None, pTweakCampDock)
-			endif
-		endIf
+		WorkshopParentScript pWorkshopParentScript = pWorkshopParentQuest as WorkshopParentScript
+		if pWorkshopParentScript	
+			WorkshopScript workshopRef = pWorkshopParentScript.GetWorkshopFromLocation(pAFTMapMarker.GetCurrentLocation())
+			if workshopRef && workshopRef.Is3DLoaded()		
+				ObjectReference cDock = workshopRef.GetLinkedRef(pTweakCampDock)		
+				if cDock
+					Trace("Existing TweakCampDock [" + pTweakCampDock + "] Found. Removing.")
+					cDock.Disable()
+					cDock.Delete()
+					workshopRef.SetLinkedRef(None, pTweakCampDock)
+				endif
+			endIf
+		endif
 	endIf
 	pTweakCampDocked.SetValue(0)
 EndFunction
@@ -572,46 +578,51 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 		endif	
 
 		; Are we in a settlement?
-		WorkshopScript workshopRef = pWorkshopParent.GetWorkshopFromLocation(pccopy.GetCurrentLocation())
-		if workshopRef
-			Trace("Current Location is Workshop")
-			inSettlement = true
-			
-			; Has the player set a Camp Dock?
-			ObjectReference cDock = workshopRef.GetLinkedRef(pTweakCampDock)
-			if cDock
-				Trace("TweakCampDock [" + pTweakCampDock + "] Found")
-			
-				if cDock.Is3DLoaded()
-					pTweakCampDocked.SetValue(1)
-					; Adjust Camp Build Location
-					Trace("TweakCampDock 3D is Loaded. Updating SpawnMarker, myCenterMarker and pccopy")
-					spawnMarker.SetPosition(cDock.GetPositionX(), cDock.GetPositionY(),cDock.GetPositionZ() + 133)
-					spawnMarker.SetAngle(0.0,0.0, cDock.GetAngleZ() - 130)
-					Utility.wait(0.1)
-					posdata = TraceCircle(spawnMarker,368,145)
-					myCenterMarker.SetPosition(posdata[0],posdata[1],posdata[2])
-					myCenterMarker.SetAngle(0.0,0.0, spawnMarker.GetAngleZ())
-					posdata = TraceCircle(myCenterMarker,256)
-					playerx  = posdata[0]
-					playery  = posdata[1]
-					playerz  = posdata[2]
-					pccopy.SetPosition(playerx,playery,playerz)
-					pccopy.SetAngle(0.0,0.0, pccopy.GetAngleZ() + pccopy.GetHeadingAngle(myCenterMarker))
-					playeraz = pccopy.GetAngleZ()
-					Trace("New Player [" + playerx + "," + playery + "," + playerz + "] : [" + playeraz + "]")					
+		WorkshopParentScript pWorkshopParentScript = pWorkshopParentQuest as WorkshopParentScript
+		if pWorkshopParentScript	
+			WorkshopScript workshopRef = pWorkshopParentScript.GetWorkshopFromLocation(pccopy.GetCurrentLocation())
+			if workshopRef
+				Trace("Current Location is Workshop")
+				inSettlement = true
+				
+				; Has the player set a Camp Dock?
+				ObjectReference cDock = workshopRef.GetLinkedRef(pTweakCampDock)
+				if cDock
+					Trace("TweakCampDock [" + pTweakCampDock + "] Found")
+				
+					if cDock.Is3DLoaded()
+						pTweakCampDocked.SetValue(1)
+						; Adjust Camp Build Location
+						Trace("TweakCampDock 3D is Loaded. Updating SpawnMarker, myCenterMarker and pccopy")
+						spawnMarker.SetPosition(cDock.GetPositionX(), cDock.GetPositionY(),cDock.GetPositionZ() + 133)
+						spawnMarker.SetAngle(0.0,0.0, cDock.GetAngleZ() - 130)
+						Utility.wait(0.1)
+						posdata = TraceCircle(spawnMarker,368,145)
+						myCenterMarker.SetPosition(posdata[0],posdata[1],posdata[2])
+						myCenterMarker.SetAngle(0.0,0.0, spawnMarker.GetAngleZ())
+						posdata = TraceCircle(myCenterMarker,256)
+						playerx  = posdata[0]
+						playery  = posdata[1]
+						playerz  = posdata[2]
+						pccopy.SetPosition(playerx,playery,playerz)
+						pccopy.SetAngle(0.0,0.0, pccopy.GetAngleZ() + pccopy.GetHeadingAngle(myCenterMarker))
+						playeraz = pccopy.GetAngleZ()
+						Trace("New Player [" + playerx + "," + playery + "," + playerz + "] : [" + playeraz + "]")					
+					else
+						Trace("TweakCampDock 3D Not loaded. Skipping")
+					endif				
 				else
-					Trace("TweakCampDock 3D Not loaded. Skipping")
-				endif				
+					Trace("TweakCampDock [" + pTweakCampDock + "] Not Found")
+				endif
+				
 			else
-				Trace("TweakCampDock [" + pTweakCampDock + "] Not Found")
+				Trace("Current Location does NOT have Workshop")
+				inSettlement = false
 			endif
-			
 		else
-			Trace("Current Location does NOT have Workshop")
+			Trace("WorkshopParentScript Cast Failure.")
 			inSettlement = false
 		endif
-		
 	endif
 		
 	; ----------------------------------
@@ -3625,7 +3636,14 @@ EndFunction
 Function TransferToLocalSettlement()
 
 	ObjectReference center = pShelterCenter.GetReference()
-	WorkshopScript workshopRef = pWorkshopParent.GetWorkshopFromLocation(center.GetCurrentLocation())
+	WorkshopParentScript pWorkshopParentScript = pWorkshopParentQuest as WorkshopParentScript
+	if !pWorkshopParentScript	
+		Trace("Cast to WorkshopParentScript Failed!")
+		inSettlement = false
+		return	
+	endif
+
+	WorkshopScript workshopRef = pWorkshopParentScript.GetWorkshopFromLocation(center.GetCurrentLocation())
 	if !workshopRef
 		Trace("Not in settlement!")
 		inSettlement = false
@@ -3697,7 +3715,14 @@ EndFunction
 Function TransferToCamp()
 
 	ObjectReference center = pShelterCenter.GetReference()
-	WorkshopScript workshopRef = pWorkshopParent.GetWorkshopFromLocation(center.GetCurrentLocation())
+	WorkshopParentScript pWorkshopParentScript = pWorkshopParentQuest as WorkshopParentScript
+	if !pWorkshopParentScript	
+		Trace("Cast to WorkshopParentScript failed!")
+		inSettlement = false
+		return	
+	endIf
+	
+	WorkshopScript workshopRef = pWorkshopParentScript.GetWorkshopFromLocation(center.GetCurrentLocation())
 	if !workshopRef
 		Trace("Not in settlement!")
 		inSettlement = false

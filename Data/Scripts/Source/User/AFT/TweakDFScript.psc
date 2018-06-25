@@ -1675,13 +1675,37 @@ Function TryToShowMessage(CompanionActorScript:EventData EventDataToUse, Compani
 		float progress  = (CAS.GetValue(pCA_Affinity)/10.0)
 		
 		if MSG_DISLIKE == showMessage
-			TweakGenDislikeMsgStat.Show(progress)
+		
+			if TweakGenDislikeMsgStat
+				TweakGenDislikeMsgStat.Show(progress)
+			elseif RelatedMessage
+				RelatedMessage.show()
+			endif
+			
 		elseIf MSG_LIKE == showMessage
-			TweakGenLikeMsgStat.Show(progress)
+		
+			if TweakGenLikeMsgStat
+				TweakGenLikeMsgStat.Show(progress)
+			elseif RelatedMessage
+				RelatedMessage.show()
+			endif
+			
 		elseIf MSG_HATE == showMessage
-			TweakGenHateMsgStat.Show(progress)
+		
+			if TweakGenHateMsgStat
+				TweakGenHateMsgStat.Show(progress)
+			elseif RelatedMessage
+				RelatedMessage.show()
+			endif
+				
 		elseIf MSG_LOVE == showMessage
-			TweakGenLoveMsgStat.Show(progress)
+		
+			if TweakGenLoveMsgStat
+				TweakGenLoveMsgStat.Show(progress)
+			elseif RelatedMessage
+				RelatedMessage.show()
+			endif
+				
 		endIf
 		
 		Utility.WaitMenuMode(0.1)

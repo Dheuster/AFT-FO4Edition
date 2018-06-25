@@ -7,12 +7,12 @@
                               [Fallout 4 Edition]
                    ___________________________________________
 
-                                 June 19, 2018
-                                 Version: 1.18b
+                                 June 25, 2018
+                                 Version: 1.18
 
                         Written by:  Dheu
                              Email:  Dheuster@gmail.com
-                       Use subject:  AFT FO4 Version 1.18b
+                       Use subject:  AFT FO4 Version 1.18
 
 
                                  QUICK SUMMARY
@@ -357,7 +357,7 @@ III. > > > >  Installation
      2) Once 7-zip is installed, open the .7z file downloaded from NexusMods 
         Typically you need only double click the file:
          
-          AmazingFollowerTweaksFO4_v1_17.7z
+          AmazingFollowerTweaksFO4_v1_18.7z
          
      3) Within the 7-zip window, select the menu options: 
          
@@ -369,7 +369,7 @@ III. > > > >  Installation
      4) The 7-zip window will show 2 files:
            
           /Data
-          readme_aft_1_17.txt
+          readme_aft_1_18.txt
           
         Make sure BOTH items are hi-lighted. To hi-light both entries quickly, 
         hit CTRL + A
@@ -773,6 +773,9 @@ IV. > > > >  Usage
               
              Appears if the follower is an Active Follower currently in Follow
              mode. Selecting will cause follower to enter Wait mode and Sandbox.
+			 Hangout Mode is also more persistant that Wait mode. If the player
+			 fast travels or causes a loading screen, the follower will not catch 
+			 up until summoned using Summon All Followers. 
 
         e) Come with Me
               
@@ -5415,11 +5418,14 @@ X. > > > >  Version History
   1.18 : ( Compiled against FO4 version 1.10.89.0.0 )
   - Fixed bug where initialization would fail outside the commonwealth.
   - Fixed bug where initialization could fail if user was using PipPad.
+  - Fixed bug where interjections did not initialize until user loaded save game.
   - Fixed bug where radio could stop working after interjection or rescuing spouse.
-  - Fixed bug where AFT Camp firepit wasn't linked to storage until next Camp Setup.
+  - Fixed bug where AFT Camp fire pit wasn't linked to storage until next Camp Setup.
   - Fixed bug where Cannibal Events were ignored by Affinity System
   - Fixed bug where followers often became immortal after trading with them.
-  
+  - Fixed bug where dogmeat would not sneak with player. 
+  - Updated dogmeat Sneak AI to fall through if using defaults (Scout Ahead + medium)
+  - Updated code to avoid circular dependencies and possible init timing issues.    
 
 -------------------------------------------------------------------------------
 XI. Credits
