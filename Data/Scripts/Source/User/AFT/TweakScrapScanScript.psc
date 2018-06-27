@@ -1268,7 +1268,7 @@ Function ScanHelper()
 				totalscrap += scrapamount
 				if snapshot
 					int base = pTweakScrapComponents.GetAt(i).GetFormID()
-					requirements += "\t; requires [" + scrapamount + "] of [" + tohex(base) +"] (" + base + ")\n"
+					requirements += "\t; requires [" + scrapamount + "] of [" + tweak_tohex(base) +"] (" + base + ")\n"
 				else
 					Trace("Giving [" + scrapamount + "] of Component [" + i + "]")
 					ScrapReceiver.AddItem(pTweakScrapComponents.GetAt(i), scrapamount)
@@ -1518,7 +1518,7 @@ Function TweakBuildInfo(string name, int base, float posx, float posy, float pos
 	endif
 EndFunction
 
-String Function tohex(int value)
+String Function tweak_tohex(int value)
 	string ret = ""
 	int remainder   = 0
 	while (value > 15)
@@ -1801,7 +1801,7 @@ Function allocate_SettlementLookup(int len)
 EndFunction
 
 ; Called From TweakBuildScript
-ObjectReference Function getCenter(int lid)
+ObjectReference Function builder_get_center(int lid)
 
 	WorkshopParentScript wshopParent
 	
@@ -1919,7 +1919,7 @@ ObjectReference Function getCenter(int lid)
 	
 endFunction
 
-float Function getRadius(int lid)
+float Function builder_get_radius(int lid)
 
 	int    lookupindex = SettlementLookup.FindStruct("locid",lid)		
 	if (lookupindex > -1)
@@ -1988,7 +1988,7 @@ float Function getRadius(int lid)
 	return 8000.0
 endFunction
 
-String Function getName(int lid)
+String Function builder_get_name(int lid)
 
 	int lookupindex = SettlementLookup.FindStruct("locid",lid)		
 	if (lookupindex > -1)
