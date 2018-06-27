@@ -7,12 +7,12 @@
                               [Fallout 4 Edition]
                    ___________________________________________
 
-                                 June 25, 2018
-                                 Version: 1.18
+                                 June 26, 2018
+                                 Version: 1.19
 
                         Written by:  Dheu
                              Email:  Dheuster@gmail.com
-                       Use subject:  AFT FO4 Version 1.18
+                       Use subject:  AFT FO4 Version 1.19
 
 
                                  QUICK SUMMARY
@@ -5427,6 +5427,9 @@ X. > > > >  Version History
   - Updated dogmeat Sneak AI to fall through if using defaults (Scout Ahead + medium)
   - Updated code to avoid circular dependencies and possible init timing issues.    
 
+  1.19 : ( Compiled against FO4 version 1.10.89.0.0 )
+  - Fixed F4SE compatibility bug introduced by version v1.17
+  
 -------------------------------------------------------------------------------
 XI. Credits
 -------------------------------------------------------------------------------         

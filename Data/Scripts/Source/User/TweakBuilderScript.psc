@@ -181,11 +181,11 @@ Function init(int lid, int requirenofood = 1)
 		if (Scrapper)
 			Var[] lidparam = new Var[1]
 			lidparam[0] = lid
-			center = Scrapper.CallFunction("getCenter", lidparam) as ObjectReference
+			center = Scrapper.CallFunction("builder_get_center", lidparam) as ObjectReference
 			if (center)
-				radius = Scrapper.CallFunction("getRadius", lidparam) as float
+				radius = Scrapper.CallFunction("builder_get_radius", lidparam) as float
 			else
-				log("CallFunction getCenter failed")
+				log("CallFunction builder_get_center failed")
 			endif
 		endIf
 	endIf
