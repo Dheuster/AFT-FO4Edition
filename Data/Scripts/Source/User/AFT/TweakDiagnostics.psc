@@ -269,7 +269,7 @@ Function RunDiagnosticsHelper(Actor npc = None) debugOnly
 		; Scan Keywords:
 		debug.TraceUser(logName, "ACTOR VALUES:\n", 0)
 
-		float ac = npc.GetValue(Game.GetFormFromFile(0x010502F9,"AmazingFollowerTweaks.esp") as ActorValue)
+		float ac = npc.GetValue(Game.GetFormFromFile(0x01011627,"AmazingFollowerTweaks.esp") as ActorValue)
 		debug.TraceUser(logName, "  TweakAvailable [" + ac + "]\n", 0)
 		ac = npc.GetValue(Game.GetFormFromFile(0x01003E19,"AmazingFollowerTweaks.esp") as ActorValue)
 		debug.TraceUser(logName, "  TweakInPowerArmor [" + ac + "]\n", 0)

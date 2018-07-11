@@ -1543,12 +1543,10 @@ EndFunction
 
 Function UnManageFollower(Actor npc)
 
-	int followerid = npc.GetFactionRank(pTweakFollowerFaction) As Int		
-	if (followerid < 1)
-		Trace("Follower Unmanaged. Ignoring")
-		return
-	endIf
-
+	; We have had issues with UnManageFollower not working, so
+	; I'm updating this in 1.20 to be more robust, even if it
+	; means not having early bails. 
+	
 	Perk crNoFallDamage = Game.GetForm(0x0002A6FC) as Perk
 	
 	if npc.HasPerk(crNoFallDamage)
@@ -1575,6 +1573,7 @@ Function UnManageFollower(Actor npc)
 		Trace("UnManageFollower : Dismissing Follower")
 		pFollowersScript.DismissCompanion(npc, false, true)
 	endif
+		
 	AFT:TweakNamesScript pTweakNamesScript = (pTweakNames as AFT:TweakNamesScript)
 	if pTweakNamesScript
 		Trace("UnManageFollower : Resetting Name")
@@ -1613,27 +1612,35 @@ Function UnManageFollower(Actor npc)
 	npc.SetValue(pTweakTopicStyleDefModID, 0) 
 	
 	UnregisterForRemoteEvent(npc, "OnDeath")
-			
-	ReferenceAlias a = pManagedMap[followerid]
-	if a.GetActorRef()
-		
-		; Order Matters. TweakSettings will blow away all factions, so if you need
-		; faction checks, do those UnManage calls first....
-
-		(a As TweakAppearance).UnManage()
-		(a As TweakInventoryControl).UnManage()
-		(a As TweakSettings).UnManage()
+	
+	if npc.IsInFaction(pTweakFollowerFaction)
+		int followerid = npc.GetFactionRank(pTweakFollowerFaction) As Int
+		if (followerid > 0)
+			ReferenceAlias a = pManagedMap[followerid]
+			if a.GetActorRef()
 				
-		Trace("UnManageFollower : Clearing Reference and freeing slot")
-		a.clear()
-	else
-		Trace("UnManageFollower : Follower ID mapped to unfilled reference. Ckipping Clear")
+				; Order Matters. TweakSettings will blow away all factions, so if you need
+				; faction checks, do those UnManage calls first....
+
+				(a As TweakAppearance).UnManage()
+				(a As TweakInventoryControl).UnManage()
+				(a As TweakSettings).UnManage()
+						
+				Trace("UnManageFollower : Clearing Reference and freeing slot")
+				a.clear()
+			else
+				Trace("UnManageFollower : Follower ID mapped to unfilled reference. Ckipping Clear")
+			endif	
+		else
+			Trace("Follower Unmanaged. Ignoring")
+		endIf
+		npc.RemoveFromFaction(pTweakFollowerFaction)
 	endif
 	
-	; bool gotlock = GetSpinLock(pTweakMutexCompanions,1, "UnManageFollower") ; low priority since it is read-only	
+	npc.RemoveFromFaction(pCurrentCompanionFaction)
+		
 	int numFollowers = GetAllTweakFollowers().length
 	pTweakFollowerCount.SetValueInt(numFollowers)
-	; ReleaseSpinLock(pTweakMutexCompanions, gotlock, "UnManageFollower")
 
 	
 EndFunction

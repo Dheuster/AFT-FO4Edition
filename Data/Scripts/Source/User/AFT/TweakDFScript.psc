@@ -2142,6 +2142,10 @@ function SetDogmeatCompanion(Actor ActorToMakeCompanion = None)
 	if pActiveCompanions.find(ActorToMakeCompanion) < 0
 		pActiveCompanions.addRef(ActorToMakeCompanion)
 	endIf
+
+	if !ActorToMakeCompanion.IsInFaction(pCurrentCompanionFaction)
+		ActorToMakeCompanion.AddToFaction(pCurrentCompanionFaction)
+	endIf
 	
 	; This should Make Teammate, NPC not show up on VATS, ignore friendly fire, etc...
 	CompanionDataToggle(pDogmeatCompanion, true, canDoFavor = true, givePlayerXP = true) ;canDoFavor is param that forces the no-dialogue command mode
@@ -2462,21 +2466,25 @@ Function DismissDogmeatCompanion(bool ShowLocationAssignmentListIfAvailable = tr
 		if DAS && HomeLoc != None
 			DAS.HomeLocation = HomeLoc
 		endIf
+	endif
 
 		
-		; DAS.RemoveFromFaction(pTweakWaitingFaction)			
-		DAS.SetValue(Game.GetCommonProperties().FollowerState, 0)
+	; DAS.RemoveFromFaction(pTweakWaitingFaction)			
+	npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
 
-		pTweakFollowerScript.EventFollowerDismissed(DAS)			                 
-		CompanionDataToggle(pDogmeatCompanion, false, false)
-		DAS.StopCombatAlarm()
-
-		pFollowers.SendCompanionChangeEvent((DAS as Actor), IsNowCompanion = False)			
-		pPlayerHasActiveDogmeatCompanion.SetValue(0)
-		pDogmeatCompanion.Clear()
-		
+	pTweakFollowerScript.EventFollowerDismissed(npc)
+	CompanionDataToggle(pDogmeatCompanion, false, false)
+	npc.StopCombatAlarm()
+	
+	if npc.IsInFaction(pCurrentCompanionFaction)
+		; UnManaged NPC support
+		npc.RemoveFromFaction(pCurrentCompanionFaction)
 	endIf
-
+	
+	pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)
+	pPlayerHasActiveDogmeatCompanion.SetValue(0)
+	pDogmeatCompanion.Clear()
+	
 EndFunction
 
 Function TryToTeleportCompanion(ObjectReference TeleportDestinationRef, bool ShouldPlayTeleportInEffect = true, bool ShouldPlayTeleportOutEffect = true)
@@ -3197,76 +3205,160 @@ int Function CountFilledAliases()
 endFunction
 
 ReferenceAlias Function FindFreeAlias()
+	Trace("FindFreeAlias()")
+	
 	; Need to find this many free aliases before we can return...
-	int min_needed = (5 - pTweakFollowerLimit.GetValueInt())
+	int tlimit = pTweakFollowerLimit.GetValueInt()
+	if 0 == tlimit
+		Trace("Bad TweakFollowerLimit. Trying Float")
+		tlimit = (pTweakFollowerLimit.GetValue() as Int)
+		if 0 == tlimit
+			Trace("Bad TweakFollowerLimit. Trying Cast")
+			GlobalVariable lTweakFollowerLimit = Game.GetFormFromFile(0x0100079D,"AmazingFollowerTweaks.esp") as GlobalVariable
+			if lTweakFollowerLimit
+				Trace("Found Global Variable")
+				tlimit = (lTweakFollowerLimit.GetValue() as Int)
+			else
+				Trace("GlobalVariable TweakFollowerLimit (0x0100079D) Not found in AmazingFollowerTweaks.esp")
+			endif
+		endif
+	endif
+
+	if 0 == tlimit
+		Trace("Bad Value (0 not valid). Using Default value of 5")
+		tlimit = 5
+	endif
+	
+	Trace("TweakFollowerLimit: [" + tlimit + "]")
+	int min_needed = (5 - tlimit)
 	int free_found = 0
 
-	if (!pCompanion1.GetReference())
+	Trace("FindFreeAlias: min_needed = [" + min_needed + "]")
+	ObjectReference oCompanion1 = pCompanion1.GetReference()
+	if (!oCompanion1)
+		Trace("oCompanion1 appears empty")
 		if (free_found == min_needed)
 			return pCompanion1
 		endIf
 		free_found += 1
+	else
+		Trace("pCompanion1 Contains [" + (oCompanion1 as Actor) + "]")	
 	endIf
-	if (!pCompanion2.GetReference())
+	ObjectReference oCompanion2 = pCompanion2.GetReference()
+	if (!oCompanion2)
+		Trace("oCompanion2 appears empty")
 		if (free_found == min_needed)
 			return pCompanion2
 		endIf
 		free_found += 1
+	else
+		Trace("pCompanion2 Contains [" + (oCompanion2 as Actor) + "]")
 	endIf
-	if (!pCompanion3.GetReference())
+	ObjectReference oCompanion3 = pCompanion3.GetReference()	
+	if (!oCompanion3)
+		Trace("pCompanion3 appears empty")
 		if (free_found == min_needed)
 			return pCompanion3
 		endIf
 		free_found += 1
+	else
+		Trace("pCompanion3 Contains [" + (oCompanion3 as Actor) + "]")
 	endIf
-	if (!pCompanion4.GetReference())
+	ObjectReference oCompanion4 = pCompanion4.GetReference()
+	if (!oCompanion4)
+		Trace("pCompanion4 appears empty")
 		if (free_found == min_needed)
 			return pCompanion4
 		endIf
 		free_found += 1
+	else
+		Trace("pCompanion4 Contains [" + (oCompanion4 as Actor) + "]")
 	endIf
-	if (!pCompanion5.GetReference())
+	ObjectReference oCompanion5 = pCompanion5.GetReference()
+	if (!oCompanion5)
+		Trace("pCompanion5 appears empty")
 		if (free_found == min_needed)
 			return pCompanion5
 		endIf
+	else
+		Trace("pCompanion5 Contains [" + (oCompanion5 as Actor) + "]")
 	endIf
 	return None	
 endFunction
 
 ReferenceAlias Function FindFilledAlias()
+	Trace("FindFilledAlias()")
 
-	Actor p1 = pCompanion1.GetActorReference()
-	if (p1 && !p1.IsInFaction(pTweakRotateLockFollowerFaction))
+	ObjectReference p1 = pCompanion1.GetReference()
+	if p1
+		if (!(p1 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion1
+		else
+			Trace("pCompanion1 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion1 appears empty")
+	endIf
+	ObjectReference p2 = pCompanion2.GetReference()
+	if (p2)
+		if (!(p2 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion2
+		else
+			Trace("pCompanion2 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion2 appears empty")
+	endIf
+	ObjectReference p3 = pCompanion3.GetReference()
+	if (p3)
+		if (!(p3 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion3
+		else
+			Trace("pCompanion3 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion3 appears empty")
+	endIf
+	ObjectReference p4 = pCompanion4.GetReference()
+	if (p4)
+		if (!(p4 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion4
+		else
+			Trace("pCompanion4 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion4 appears empty")
+	endIf
+	ObjectReference p5 = pCompanion5.GetReference()
+	if (p5)
+		if (!(p5 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion5
+		else
+			Trace("pCompanion5 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion5 appears empty")
+	endIf
+	
+	Trace("No hits, returning first available.")	
+	if (p1)
+		Trace("returning pCompanion1")
 		return pCompanion1
-	endIf
-	Actor p2 = pCompanion2.GetActorReference()
-	if (p2 && !p2.IsInFaction(pTweakRotateLockFollowerFaction))
+	elseif (p2)
+		Trace("returning pCompanion2")
 		return pCompanion2
-	endIf
-	Actor p3 = pCompanion3.GetActorReference()
-	if (p3 && !p3.IsInFaction(pTweakRotateLockFollowerFaction))
+	elseif (p3)
+		Trace("returning pCompanion3")
 		return pCompanion3
-	endIf
-	Actor p4 = pCompanion4.GetActorReference()
-	if (p4 && !p4.IsInFaction(pTweakRotateLockFollowerFaction))
+	elseif (p4)
+		Trace("returning pCompanion4")
 		return pCompanion4
-	endIf
-	Actor p5 = pCompanion5.GetActorReference()
-	if (p5 && !p5.IsInFaction(pTweakRotateLockFollowerFaction))
+	elseif (p5)
+		Trace("returning pCompanion5")
 		return pCompanion5
 	endIf
 	
-	if (p1)
-		return pCompanion1
-	elseif (p2)
-		return pCompanion2
-	elseif (p3)
-		return pCompanion3
-	elseif (p4)
-		return pCompanion4
-	elseif (p5)
-		return pCompanion5
-	endIf
+	Trace("returning None. All slots empty")
 	return None	
 endFunction
 

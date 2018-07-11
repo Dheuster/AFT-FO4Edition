@@ -1091,10 +1091,17 @@ Function AttackVisible()
  	; Have NPC "Peek" at surroundings (Normally they only see the player)
  	Utility.wait(0.25);
  	npc.SetPlayerTeammate(false)
- 	npc.RemoveFromFaction(pCurrentCompanionFaction)
+	
+	; This may cause issues in the combat change state handler and the OnLoad
+	; Handler. I don't think Faction membership removal is necessary to get NPCs 
+	; to attack. Teammate status is the main thing....
+	
+ 	; npc.RemoveFromFaction(pCurrentCompanionFaction) 
+	
  	Utility.wait(2.5)
  	npc.SetPlayerTeammate(true)
- 	npc.AddToFaction(pCurrentCompanionFaction)
+	
+ 	; npc.AddToFaction(pCurrentCompanionFaction)
 
 	npc.SetValue(pConfidence,enforceConfidence)
 	if (enforceAggression < 2)
