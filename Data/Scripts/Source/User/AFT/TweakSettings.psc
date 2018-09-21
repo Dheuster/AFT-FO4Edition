@@ -225,7 +225,11 @@ Event OnInit()
 	originalLuck			= 0
 
 	originalFactions = new Faction[2]
-	originalFactions[0] = Game.GetForm(0x000A1B85) as Faction ; HasBeenCompanionFaction
+	
+	; 1.20 : Bug Fix - Adding HasBeenCompaninon breaks non-core Companions when unmanaged
+	;originalFactions[0] = Game.GetForm(0x000A1B85) as Faction ; HasBeenCompanionFaction
+	
+	originalFactions[0] = Game.GetForm(0x001EC1B9) as Faction ; PotentialCompanionFaction	
 	originalFactions[1] = Game.GetForm(0x001EC1B9) as Faction ; PotentialCompanionFaction
 EndEvent
 
@@ -475,9 +479,11 @@ Function initialize()
 		Faction pDLC01WorkshopRobotFaction = Game.GetFormFromFile(0x0100F47A,"DLCRobot.esm") As Faction
 		if pDLC01WorkshopRobotFaction && npc.IsInFaction(pDLC01WorkshopRobotFaction)
 			originalFactions.Add(pDLC01WorkshopRobotFaction)
+			RobotFaction = pDLC01WorkshopRobotFaction
 			wasDLCRobot = true
 		elseif pTweakDLC01.DLC01WorkshopRobotFaction && npc.IsInFaction(pTweakDLC01.DLC01WorkshopRobotFaction)
 			originalFactions.Add(pTweakDLC01.DLC01WorkshopRobotFaction)
+			RobotFaction = pTweakDLC01.DLC01WorkshopRobotFaction
 			wasDLCRobot = true		
 		endif
 	endif
@@ -940,7 +946,7 @@ Function initialize()
 		endif		
 		
 		int numFactions = pTweakCommonFactions.GetSize()
-		int i = 0
+		int i = 1 ; intentionally 1
 		while (i < numFactions)
 			f = pTweakCommonFactions.GetAt(i) as Faction
 			if npc.IsInFaction(f)
@@ -967,7 +973,12 @@ Function initialize()
 		npc.AddToFaction(pPlayerFaction)	
 	endif
 	
-	npc.AddToFaction(originalFactions[0])
+	; 1.20 : HasBeenCompanion Faction prevents trade menu from appearing
+	;        on non-core companions when unmanaged. So we add it directly
+	;        instead of hiding it in the originalFactions:
+	
+	; npc.AddToFaction(originalFactions[0])
+	npc.AddToFaction(Game.GetForm(0x000A1B85) as Faction)  ; HasBeenCompanionFaction
 	npc.AddToFaction(originalFactions[1])
 	
 	if (npc.HasKeyword(pTeammateReadyWeapon_DO))
@@ -991,7 +1002,7 @@ Function initialize()
 	endif
 	
 	Trace("originalHome    : [" + originalHome + "]")
-	Trace("originalHomeRef : [" + originalHomeRef + "]")
+	Trace("originalHomeRef : [" + originalHomeRef + "]")	
 			
 	if (WNS)
 		WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
@@ -1029,6 +1040,10 @@ Function initialize()
 	
 	((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = assignedHomeRef
 	npc.SetLinkedRef(assignedHomeRef,pTweakLocHome)
+	
+	if assignedHome && npc.IsCreated()
+		npc.SetPersistLoc(assignedHome)
+	endif
 	
 	if (wasVoiced)
 		npc.AddToFaction(Voices_CompanionsFaction)
@@ -1150,63 +1165,12 @@ Function UnManage()
 	npc.SetValue(pMorality,    originalMorality)
 	npc.SetValue(pConfidence,  originalConfidence)
 	npc.SetValue(pAssistance,  originalAssistance)
-
-	bool corecompanion = false	
-	ActorBase base  = npc.GetActorBase()
-	int ActorBaseID = base.GetFormID()
 	
-	if (base == Game.GetForm(0x00079249) as ActorBase)     ; 1 ---=== Cait ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x000179FF) as ActorBase) ; 2 ---=== Codsworth ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x00027683) as ActorBase) ; 4 ---=== Danse ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x00045AC9) as ActorBase) ; 5 ---=== Deacon ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x0001D15C) as ActorBase) ; 6 ---=== Dogmeat ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
-		corecompanion = true
-	elseif (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
-		corecompanion = true
-	elseif (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x00002F1E) as ActorBase) ; 10 ---=== Piper ===---	
-		corecompanion = true
-	elseif (base == Game.GetForm(0x00019FD9) as ActorBase) ; 11 ---=== Preston ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x00027682) as ActorBase) ; 12 ---=== Strong ===---
-		corecompanion = true
-	elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
-		corecompanion = true
-	elseif (base == pTweakCompanionNate)	
-		corecompanion = true
-	elseif (base == pTweakCompanionNora)	
-		corecompanion = true
-	else
-		if (ActorBaseID > 0x00ffffff)
-			int ActorBaseMask
-			if ActorBaseID > 0x80000000			
-				ActorBaseMask = (ActorBaseID - 0x80000000) % (0x01000000)
-			else
-				ActorBaseMask = ActorBaseID % (0x01000000)
-			endif
-			
-			; Now compare MASK
-			if     0x0000FD5A == ActorBaseMask ; Ada
-				corecompanion = true
-			elseif 0x00006E5B == ActorBaseMask ; Longfellow
-				corecompanion = true
-			elseif 0x0000881D == ActorBaseMask ; Porter Gage
-				corecompanion = true
-			endif
-		endif
-	endif	
-	
-	if !corecompanion
+	if !IsCoreCompanion(npc)	
 		bool clearfactions = true
+		ActorBase base  = npc.GetActorBase()
+		int ActorBaseID = base.GetFormID()
+		
 		if ActorBaseID > 0x00ffffff
 			clearfactions = false
 			
@@ -1236,7 +1200,7 @@ Function UnManage()
 		if clearfactions && !npc.IsInFaction(Game.GetForm(0x0002C125) as Faction)
 			npc.RemoveFromAllFactions()
 			int numFactions = originalFactions.Length
-			int i = 0
+			int i = 1 ; intentionally 1
 			while (i < numFactions)
 				npc.AddToFaction(originalFactions[i])
 				i += 1
@@ -1557,6 +1521,14 @@ Function EventNotFollowingPlayer()
 	npc.SetValue(pAggression, originalAggression)
 	npc.SetValue(pFollowerStance, 1.0)
 	npc.SetValue(pAssistance,1)
+	
+	
+	; Q: Should we remove HasBeenCompanionFaction so that WorkshopNPC Settlers
+	; will trade? 
+	; A: Not for now. Users can still access gear with AFT Activator as long
+	; as they remain managed.
+	
+	; Game.GetForm(0x000A1B85) as Faction ; 
 	
 
 endFunction
@@ -2167,6 +2139,12 @@ Function AssignHome()
 		endif
 	endif
 	
+	if assignedHome
+		if npc.IsCreated()
+			npc.SetPersistLoc(assignedHome)
+		endif
+	endif
+	
 	; Update Factions to ensure correct AI behaviors....
 	if (!camphomeFaction && npc.IsInFaction(pTweakCampHomeFaction))
 		npc.RemoveFromFaction(pTweakCampHomeFaction)
@@ -2393,6 +2371,77 @@ Event OnLoad()
 	; Flood Protection
 	StartTimer(2.5,ONLOAD_FLOOD_PROTECT)	
 endEvent
+
+bool Function IsCoreCompanion(Actor npc)
+	ActorBase base  = npc.GetActorBase()	
+	if (base == Game.GetForm(0x00079249) as ActorBase)     ; 1 ---=== Cait ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x000179FF) as ActorBase) ; 2 ---=== Codsworth ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00027683) as ActorBase) ; 4 ---=== Danse ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00045AC9) as ActorBase) ; 5 ---=== Deacon ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x0001D15C) as ActorBase) ; 6 ---=== Dogmeat ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
+		return true
+	endif
+	if (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
+		return true
+	endif
+	if (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00002F1E) as ActorBase) ; 10 ---=== Piper ===---	
+		return true
+	endif
+	if (base == Game.GetForm(0x00019FD9) as ActorBase) ; 11 ---=== Preston ===---
+		return true
+	endif
+    if (base == Game.GetForm(0x00027682) as ActorBase) ; 12 ---=== Strong ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
+		return true
+	endif
+	if (base == pTweakCompanionNate)	
+		return true
+	endif
+	if (base == pTweakCompanionNora)	
+		return true
+	endif
+	int ActorBaseID = base.GetFormID()
+	if (ActorBaseID < 0x01000000)
+		return false
+	endif
+	int ActorBaseMask
+	if ActorBaseID > 0x80000000			
+		ActorBaseMask = (ActorBaseID - 0x80000000) % (0x01000000)
+	else
+		ActorBaseMask = ActorBaseID % (0x01000000)
+	endif
+			
+	; Now compare the MASK
+	if     0x0000FD5A == ActorBaseMask ; Ada
+		return true
+	endif
+	if 0x00006E5B == ActorBaseMask ; Longfellow
+		return true
+	endif
+	if 0x0000881D == ActorBaseMask ; Porter Gage
+		return true
+	endif
+	return false
+EndFunction
 
 function teleportAway()
 	debug.trace(self.GetActorRef() + " teleportAway: Warning. 3D will be unloaded an may not be recoverable without location change.")

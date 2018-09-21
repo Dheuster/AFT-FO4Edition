@@ -6,7 +6,7 @@ Function Fragment_Terminal_01(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.CombatOutfitReset()
+    pTweakPipBoyScript.CombatOutfitReset(true)
 endif
 ;END CODE
 EndFunction
@@ -28,7 +28,7 @@ Function Fragment_Terminal_03(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.CityOutfitReset()
+    pTweakPipBoyScript.CityOutfitReset(true)
 endif
 ;END CODE
 EndFunction
@@ -61,7 +61,7 @@ Function Fragment_Terminal_06(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.CampOutfitReset()
+    pTweakPipBoyScript.CampOutfitReset(true)
 endif
 ;END CODE
 EndFunction
@@ -72,7 +72,7 @@ Function Fragment_Terminal_08(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.StandardOutfitReset()
+    pTweakPipBoyScript.StandardOutfitReset(true)
 endif
 ;END CODE
 EndFunction
@@ -138,7 +138,7 @@ Function Fragment_Terminal_14(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.HomeOutfitReset()
+    pTweakPipBoyScript.HomeOutfitReset(true)
 endif
 ;END CODE
 EndFunction
@@ -160,7 +160,29 @@ Function Fragment_Terminal_16(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SwimOutfitReset()
+    pTweakPipBoyScript.SwimOutfitReset(true)
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_17
+Function Fragment_Terminal_17(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.ToggleForceCombatOutfitWeapon()
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_18
+Function Fragment_Terminal_18(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.ToggleForceCombatOutfitWeapon()
 endif
 ;END CODE
 EndFunction

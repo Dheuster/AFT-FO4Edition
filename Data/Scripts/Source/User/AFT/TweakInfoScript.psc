@@ -151,6 +151,8 @@ Message		Property pTweakInfoReactionDislikes	Auto Const
 Message		Property pTweakInfoReactionLoves	Auto Const
 Message		Property pTweakInfoReactionHates	Auto Const
 
+LocationRefType Property pWorkshopSynthRefType Auto Const
+
 TweakDLC03Script Property pTweakDLC03Script		Auto Const
 
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
@@ -447,6 +449,8 @@ Function UpdateTraits(Race oRace, Location oLocation, Location aLocation)
 			elseif npc.HasPerk(pImmuneToRadiation) && npc.HasPerk(pImmuneToPoison)
 				cfrace = pTweakInfoHumanSynth
 			elseif (None != ws && ws.bIsSynth)
+				cfrace = pTweakInfoHumanSynth
+			elseif (npc.HasLocRefType(pWorkshopSynthRefType))
 				cfrace = pTweakInfoHumanSynth
 			else
 				Trace("Does not have synth immunities. Checking DeathItem...")

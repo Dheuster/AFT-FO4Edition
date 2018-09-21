@@ -2959,7 +2959,10 @@ Function EnsurePowerBenchDisabled()
 EndFunction
 
 Function MoveFollowers(ObjectReference parentObj, ObjectReference spawnMarker, bool fixNavmesh = false)
+
     Trace("MoveFollowers Called. fixNavmesh [" + fixNavmesh + "]") 
+	Actor pc =  Game.GetPlayer()
+	
     AFT:TweakFollowerScript pTweakFollowerScript = (self as Quest) as AFT:TweakFollowerScript
     if (pTweakFollowerScript)
 	
@@ -2982,16 +2985,28 @@ Function MoveFollowers(ObjectReference parentObj, ObjectReference spawnMarker, b
 			endif
 			i += 1
 		endwhile
-
-		bool slot0Available=true
-		bool slot1Available=true ; Best for PA Equipped Follower 
-		bool slot2Available=true ; Best for PA Equipped Follower
-		bool slot3Available=true ; Best for PA Equipped Follower
-		bool slot4Available=true ; Best for PA Equipped Follower
-		bool slot5Available=true
 		
-		int followersWithPALen   = followersWithPA.length
-		int followersNoPALen     = followersNoPA.length
+		ReferenceAlias[] dismissedToCamp       = pTweakFollowerScript.GetDismissedToCamp()
+		ReferenceAlias[] dismissedToCampWithPA = pTweakFollowerScript.GetDismissedToCamp()
+		
+
+		bool slot0Available=true  ; -180
+		bool slot1Available=true  ; 135  : Best for PA Equipped Follower 
+		bool slot2Available=true  ; -135 : Best for PA Equipped Follower
+		bool slot3Available=true  ; 45   : Best for PA Equipped Follower
+		bool slot4Available=true  ; -45  : Best for PA Equipped Follower
+		bool slot5Available=true  ; 90
+		
+		bool slot6Available=true  ; 543.06, -45.0  : Bottom Left (Bed)
+		bool slot7Available=true  ; 543.06, 45.0   : Bottom Right (bathroom)
+		bool slot8Available=true  ; 543.06, -135.0 : Top Left (Kitchen)
+		bool slot9Available=true  ; 543.06,  135.0 : Top Right (Medbay)
+		bool slot10Available=true ; 384,  -90      : Left (Player PA)
+		bool slot11Available=true ; 384,  90       : Right (Armor Bench)		
+		
+		int followersWithPALen  = followersWithPA.length
+		int followersNoPALen    = followersNoPA.length
+		int dismissedToCampLen  = dismissedToCamp.length
 
 		if (followersWithPALen > 0)
 			slot1Available = false
@@ -3005,7 +3020,7 @@ Function MoveFollowers(ObjectReference parentObj, ObjectReference spawnMarker, b
 			slot3Available = false
 			MoveFollowerHelper( followersWithPA[2], parentObj, spawnMarker, 45, 350, fixNavmesh)
 		endIf
-		if (followerLen > 3)
+		if (followersWithPALen > 3)
 			slot4Available = false
 			MoveFollowerHelper( followers[3], parentObj, spawnMarker, -45, 350, fixNavmesh)
 		endIf
@@ -3038,13 +3053,114 @@ Function MoveFollowers(ObjectReference parentObj, ObjectReference spawnMarker, b
 		if (slot5Available && followersNoPACurrent < followersNoPALen)
 			MoveFollowerHelper( followersNoPA[followersNoPACurrent], parentObj, spawnMarker, 90, 240, fixNavmesh)
 		endIf
+		
+		if 0 == dismissedToCampLen
+			return
+		endif
+		
+		; If Someone was dismissed, we are not going to remove them from their PA when we bring them to Camp. The
+		; camp PA slots are for current followers.
+		
+		int dismissedToCampCurrent = 0
+		if (slot0Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, -180, 240, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot1Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 135, 350, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot2Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, -135, 350, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot3Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 45, 350, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot4Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, -45, 350, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot5Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 90, 240, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot6Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 543.06, -45.0, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot7Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 543.06, 45.0, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot8Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 543.06, -135.0, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot9Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 543.06,  135.0, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot10Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 384,  -90, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+		if (slot11Available && dismissedToCampCurrent < dismissedToCampLen)
+			MoveFollowerHelper( dismissedToCamp[dismissedToCampCurrent], parentObj, spawnMarker, 384,  90, fixNavmesh, false)
+			dismissedToCampCurrent += 1
+		endIf
+
+		if dismissedToCampCurrent < dismissedToCampLen
+
+			int[] offset = new int[8]
+			offset[0] = -90
+			offset[1] = 90
+			offset[2] = -180
+			offset[3] = 0
+			offset[4] = -135
+			offset[5] = 45
+			offset[6] = 135
+			offset[7] = -45
 				
+			float[] facing = new float[3]
+			facing[0] = pc.GetAngleX()
+			facing[1] = pc.GetAngleY()
+			facing[2] = pc.GetAngleZ()
+			int distance = 640	
+			i = dismissedToCampCurrent ; intentionally 1
+			Int c = 0
+			ReferenceAlias a
+	
+			while i < dismissedToCampLen
+				a = dismissedToCamp[i]
+				Actor n = a.GetActorRef()
+				if (n)
+					float[] pos = TraceCircle(parentObj, distance, offset[c])
+					spawnMarker.SetPosition(pos[0],pos[1],pos[2])
+					spawnMarker.SetAngle(facing[0], facing[1],facing[2])
+					spawnMarker.MoveToNearestNavmeshLocation()
+					n.MoveToIfUnloaded(spawnMarker)
+					n.WaitFor3DLoad()
+					n.SetAngle(facing[0], facing[1],facing[2])
+					c += 1
+					if (4 == c)
+						distance += 384
+					elseif (8 == c)
+						c = 0
+					endif
+				else
+					Trace("dismissedToCamp[" + i + "] is empty")
+				endif
+				i += 1
+			endWhile
+		endif				
     else
         Trace("pTweakFollowerScript cast Failure") 
     endif
 endFunction
 
-Function MoveFollowerHelper(ReferenceAlias ref, ObjectReference parentObj, ObjectReference spawnMarker, float angleoffset, float distance, bool fixNavmesh)
+Function MoveFollowerHelper(ReferenceAlias ref, ObjectReference parentObj, ObjectReference spawnMarker, float angleoffset, float distance, bool fixNavmesh, bool removePA=true)
 
     Trace("MoveFollowerHelper() angleoffset [" + angleoffset + "] distance [" + distance + "] fixNavmesh [" + fixNavmesh + "]") 
     Trace("parentObj [" + parentObj + "] [" + parentObj.GetPositionX() + "][" + parentObj.GetPositionY() + "][" + parentObj.GetPositionZ() + "] AZ [" + parentObj.GetAngleZ() + "]") 
@@ -3056,37 +3172,39 @@ Function MoveFollowerHelper(ReferenceAlias ref, ObjectReference parentObj, Objec
     ObjectReference thePA = None
     float headingZ = 0.0
  
-    AFT:TweakInventoryControl pTweakInventoryControl = (ref as AFT:TweakInventoryControl)   
-    if (npc.WornHasKeyword(pArmorTypePower))
-        Trace("NPC [" + npc + "] is wearing PowerArmor") 
-        spawnMarker.SetPosition(pa_posdata[0],pa_posdata[1],pa_posdata[2])
-        spawnMarker.SetAngle(0.0,0.0,spawnMarker.GetAngleZ() + spawnMarker.GetHeadingAngle(parentObj) - 180)
-        if fixNavmesh
-            spawnMarker.MoveToNearestNavmeshLocation()
-        endif 
-        npc.MoveTo(spawnMarker)
-        Utility.wait(0.1)
-        if (pTweakInventoryControl)
-            Trace("Calling TweakInventoryControl.ExitPA()")  
-            pTweakInventoryControl.ExitPA()
-            thePA = pTweakInventoryControl.GetAssignedPA()
-        else
-            Trace("TweakInventoryControl cast failure. Attempting recovery")  
-            npc.SwitchToPowerArmor(None)
-            int maxwait = 6
-            while (npc.GetSitState() != 0 && maxwait > 0)
-                Utility.wait(1.0)
-                maxwait -= 1
-            endwhile
-            thePA = npc.GetLinkedRef(pLinkPowerArmor)
-        endif  
-    elseif (pTweakInventoryControl)
-        thePA = pTweakInventoryControl.GetAssignedPA()
-    else
-        Trace("TweakInventoryControl cast failure. PA not detected")
-    endif
+	if removePA
+		AFT:TweakInventoryControl pTweakInventoryControl = (ref as AFT:TweakInventoryControl)   
+		if (npc.WornHasKeyword(pArmorTypePower))
+			Trace("NPC [" + npc + "] is wearing PowerArmor") 
+			spawnMarker.SetPosition(pa_posdata[0],pa_posdata[1],pa_posdata[2])
+			spawnMarker.SetAngle(0.0,0.0,spawnMarker.GetAngleZ() + spawnMarker.GetHeadingAngle(parentObj) - 180)
+			if fixNavmesh
+				spawnMarker.MoveToNearestNavmeshLocation()
+			endif 
+			npc.MoveTo(spawnMarker)
+			Utility.wait(0.1)
+			if (pTweakInventoryControl)
+				Trace("Calling TweakInventoryControl.ExitPA()")  
+				pTweakInventoryControl.ExitPA()
+				thePA = pTweakInventoryControl.GetAssignedPA()
+			else
+				Trace("TweakInventoryControl cast failure. Attempting recovery")  
+				npc.SwitchToPowerArmor(None)
+				int maxwait = 6
+				while (npc.GetSitState() != 0 && maxwait > 0)
+					Utility.wait(1.0)
+					maxwait -= 1
+				endwhile
+				thePA = npc.GetLinkedRef(pLinkPowerArmor)
+			endif  
+		elseif (pTweakInventoryControl)
+			thePA = pTweakInventoryControl.GetAssignedPA()
+		else
+			Trace("TweakInventoryControl cast failure. PA not detected")
+		endif
  
-    Trace("NPC not wearing armor...")
+		Trace("NPC not wearing armor...")
+	endif
 
     spawnMarker.SetPosition(npc_posdata[0],npc_posdata[1],npc_posdata[2])
     spawnMarker.SetAngle(0.0,0.0,spawnMarker.GetAngleZ() + spawnMarker.GetHeadingAngle(parentObj))

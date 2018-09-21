@@ -20,9 +20,9 @@ ActorBase Property Player Auto Const
 Message Property TweakGatherFeedback Auto Const
 
 ObjectReference[] ownedContainers
-int[] ownedCounts
-float nextSearchingMsg
 ObjectReference[] ownedResults
+int[]             ownedCounts
+float nextSearchingMsg
 int lockedCount
 int ownedCount
 int gatheredCount
@@ -54,11 +54,17 @@ Function GatherLooseItems(ObjectReference targetContainer)
 			targetContainer = Game.GetPlayer() as ObjectReference
 		endIf
 	endIf
-	
-	ownedContainers.clear()
-	ownedResults.clear()
-	ownedCounts.clear()
-	
+
+	if ownedContainers && ownedContainers.length > 0
+		ownedContainers.clear()
+	endif
+	if ownedResults && ownedResults.length > 0
+		ownedResults.clear()
+	endif
+	if ownedCounts && ownedCounts.length > 0
+		ownedCounts.clear()
+	endif
+		
 	gatheredCount = 0
 	ownedCount = 0
 	lockedCount = 0
@@ -108,17 +114,19 @@ Function GatherLooseItems(ObjectReference targetContainer)
 		Trace("Event Processing Complete")
 	endIf
 	
-	int ownedContainerLen = ownedContainers.length
-	If (ownedContainerLen > 0)
-		Trace("Owned Items Detected [" + ownedContainerLen as string + "]. Restoring")
-		int i = 0
-		while (i < ownedContainerLen)
-			if (ownedContainers[i])
-				theContainer.RemoveItem(ownedResults[i], ownedCounts[i], True, ownedContainers[i])
-			endIf
-			i += 1
-		endWhile
-	endIf
+	if ownedContainers
+		int ownedContainerLen = ownedContainers.length
+		If (ownedContainerLen > 0)
+			Trace("Owned Items Detected [" + ownedContainerLen as string + "]. Restoring")
+			int i = 0
+			while (i < ownedContainerLen)
+				if (ownedContainers[i])
+					theContainer.RemoveItem(ownedResults[i], ownedCounts[i], True, ownedContainers[i])
+				endIf
+				i += 1
+			endWhile
+		endIf
+	endif
 	
 	theContainer.RemoveAllItems(targetContainer, False)
 	Utility.WaitMenuMode(0.1)
@@ -139,9 +147,15 @@ Function GatherLooseItems(ObjectReference targetContainer)
 	endIf
 	theContainer = None
 	
-	ownedContainers.clear()
-	ownedResults.clear()
-	ownedCounts.clear()
+	if ownedContainers && ownedContainers.length > 0
+		ownedContainers.clear()
+	endif
+	if ownedResults && ownedResults.length > 0
+		ownedResults.clear()
+	endif
+	if ownedCounts && ownedCounts.length > 0
+		ownedCounts.clear()
+	endif
 	
 	RemoveAllInventoryEventFilters()
 	searchMsgHandler.StopShowSearching()	

@@ -27,6 +27,7 @@ Quest		Property pTweakDLC03			Auto Const
 Quest		Property pTweakDLC04			Auto Const
 Quest		Property pTweakCOMSpouse    	Auto Const
 Quest		Property pTweakInterjections	Auto Const
+Quest		Property pTweakSettlers			Auto Const
 
 Bool		Property IsInDialogue			Auto
 Bool		Property RelayEvent				Auto
@@ -421,7 +422,7 @@ Function OnGameLoaded()
 	else
 		Trace("Unable to Call AFT:TweakDFScript.OnGameLoaded()")
 	endif
-
+	
 	FollowersScript pFollowersScript = (pFollowers as FollowersScript)
 	if (pFollowersScript)
 		; Trace("AFT:TweakMonitorPlayer : Calling FollowersScript.OnGameLoaded()")
@@ -492,6 +493,13 @@ Function OnGameLoaded()
 		pTweakInterjectionQuestScript.OnGameLoaded(firstCall)
 	else
 		Trace("Unable to Call pTweakInterjectionQuestScript.OnGameLoaded()")	
+	endif
+	
+	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
+	if (pAFTSettlers)
+		pAFTSettlers.OnGameLoaded(firstcall)
+	else
+		Trace("Unable to Call TweakSettlers.OnGameLoaded()")
 	endif
 	
 	allowdraw  = true
@@ -594,6 +602,11 @@ Function AftReset()
 	TweakRegisterPrefabScript pRegisterPrefabs = pTweakSettlementLoader As TweakRegisterPrefabScript
 	if pRegisterPrefabs
 		pRegisterPrefabs.Cleanup()
+	endif
+
+	TweakSettlersScript pAFTSettlers = (pTweakSettlers as TweakSettlersScript)
+	if (pAFTSettlers)
+		pAFTSettlers.AftReset()
 	endif
 	
 	Actor player = Game.GetPlayer()	                          

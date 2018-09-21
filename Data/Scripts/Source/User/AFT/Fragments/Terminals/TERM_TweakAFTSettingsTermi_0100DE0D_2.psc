@@ -23,6 +23,17 @@ endif
 EndFunction
 ;END FRAGMENT
 
+;BEGIN FRAGMENT Fragment_Terminal_13
+Function Fragment_Terminal_13(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.SummonAll()
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;END FRAGMENT CODE - Do not edit anything between this and the begin comment
 
 Quest Property pTweakPipBoy Auto Const
