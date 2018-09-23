@@ -459,232 +459,249 @@ Event OnTimer(int aiTimerID)
 		float ov_102fix = version
 		version  = 1.19
 		
-		if ov < 1.19 ; Fixed F4SE Compatibility (Removed use of GetName as a script function)
-			if ov < 1.18 ; 1.18 Fixed Init Bugs, Stealth Issues, Cannibalism Issue, Immortality issue. 
-				if ov < 1.17 ; 1.17 Added items to ScrapScanner (DLC Prefab support) + Perk Loss Bug Fix
-					if ov < 1.16 ; 1.16 : Added Swim Outfit 
-						if ov < 1.13 ; 1.13 : Added Home Outfit and Outfit Management Reset
-							if ov < 1.12 ; 1.11 : Health/Endurance boosts. 1.12 : Fixed Ghosting artifacts 
-								if ov < 1.09 ; Added DLC support in 1.09. 
-									if ov < 1.04 ; Affinity Fixes + No Fall Damage
-										if (ov < 1.03) ; Fix 1.02 non-init and Settlement assignement compatibiliy		
+		if ov < 1.20
+			if ov < 1.19 ; Fixed F4SE Compatibility (Removed use of GetName as a script function)
+				if ov < 1.18 ; 1.18 Fixed Init Bugs, Stealth Issues, Cannibalism Issue, Immortality issue. 
+					if ov < 1.17 ; 1.17 Added items to ScrapScanner (DLC Prefab support) + Perk Loss Bug Fix
+						if ov < 1.16 ; 1.16 : Added Swim Outfit 
+							if ov < 1.13 ; 1.13 : Added Home Outfit and Outfit Management Reset
+								if ov < 1.12 ; 1.11 : Health/Endurance boosts. 1.12 : Fixed Ghosting artifacts 
+									if ov < 1.09 ; Added DLC support in 1.09. 
+										if ov < 1.04 ; Affinity Fixes + No Fall Damage
+											if (ov < 1.03) ; Fix 1.02 non-init and Settlement assignement compatibiliy		
 										
-											if (ov == 1.02)
-												; Potential Bug in 1.02 upgrade process.
-												if (0 == pManagedMap.Length)
-													ov_102fix = 0.0
-												endif
-											endif
-												
-											if (ov_102fix < 1.0)	; First time init		
-								
-								
-												if (20 < pTimeScale.GetValue())
-													Trace("Timescale is too high. Alerting user")
-													pTweakTimescale.Show()
+												if (ov == 1.02)
+													; Potential Bug in 1.02 upgrade process.
+													if (0 == pManagedMap.Length)
+														ov_102fix = 0.0
+													endif
 												endif
 												
-												; " [ Initializing AFT :          : ]"
-												pTweakUpdateMsg.Show()
+												if (ov_102fix < 1.0)	; First time init		
+								
+								
+													if (20 < pTimeScale.GetValue())
+														Trace("Timescale is too high. Alerting user")
+														pTweakTimescale.Show()
+													endif
+												
+													; " [ Initializing AFT :          : ]"
+													pTweakUpdateMsg.Show()
 															
-												pFollowerNoMorals        = true
-												pFollowerCatchup         = true
-												pFollowerPackMule        = true
-												pFollowerSynergy         = true
-												PlayerHome               = None
+													pFollowerNoMorals        = true
+													pFollowerCatchup         = true
+													pFollowerPackMule        = true
+													pFollowerSynergy         = true
+													PlayerHome               = None
 
-												if (0 == pManagedMap.Length)
-													initializeManagedMap()
-													initializeFollowerMap()
-												endif
+													if (0 == pManagedMap.Length)
+														initializeManagedMap()
+														initializeFollowerMap()
+													endif
 												
-												int import_count = pDFScript.v10Update()
+													int import_count = pDFScript.v10Update()
 
-												; bool gotlock = GetSpinLock(pTweakMutexCompanions,1, "OnTimer (UpdateVersion)") ; low priority since it is read-only	
-												int numFollowers = GetAllTweakFollowers().length
-												pTweakFollowerCount.SetValueInt(numFollowers)
-												; ReleaseSpinLock(pTweakMutexCompanions, gotlock, "OnTimer (UpdateVersion)")
+													; bool gotlock = GetSpinLock(pTweakMutexCompanions,1, "OnTimer (UpdateVersion)") ; low priority since it is read-only	
+													int numFollowers = GetAllTweakFollowers().length
+													pTweakFollowerCount.SetValueInt(numFollowers)
+													; ReleaseSpinLock(pTweakMutexCompanions, gotlock, "OnTimer (UpdateVersion)")
 
-												; As AFT lets you import NPCs, protect a few important ones with
-												; pDisallowedCompanionFaction
+													; As AFT lets you import NPCs, protect a few important ones with
+													; pDisallowedCompanionFaction
 												
-												Actor Kellog = (Game.GetForm(0x0009BC6C) as ActorBase).GetUniqueActor()
-												Actor Amari  = (Game.GetForm(0x0009A680) as ActorBase).GetUniqueActor()
-												Actor Father = (Game.GetForm(0x0002A19A) as ActorBase).GetUniqueActor()
-												Actor Virgil = (Game.GetForm(0x0006B503) as ActorBase).GetUniqueActor()
-												Actor Maxon  = (Game.GetForm(0x000642B8) as ActorBase).GetUniqueActor()
-												Actor Des    = (Game.GetForm(0x00045AD1) as ActorBase).GetUniqueActor()
-												Actor MS16SonyaBot = (Game.GetForm(0x000C895F) as ActorBase).GetUniqueActor()
+													Actor Kellog = (Game.GetForm(0x0009BC6C) as ActorBase).GetUniqueActor()
+													Actor Amari  = (Game.GetForm(0x0009A680) as ActorBase).GetUniqueActor()
+													Actor Father = (Game.GetForm(0x0002A19A) as ActorBase).GetUniqueActor()
+													Actor Virgil = (Game.GetForm(0x0006B503) as ActorBase).GetUniqueActor()
+													Actor Maxon  = (Game.GetForm(0x000642B8) as ActorBase).GetUniqueActor()
+													Actor Des    = (Game.GetForm(0x00045AD1) as ActorBase).GetUniqueActor()
+													Actor MS16SonyaBot = (Game.GetForm(0x000C895F) as ActorBase).GetUniqueActor()
 												
-												if Kellog
-													Kellog.AddToFaction(pDisallowedCompanionFaction)
+													if Kellog
+														Kellog.AddToFaction(pDisallowedCompanionFaction)
+													endif
+													if Amari
+														Amari.AddToFaction(pDisallowedCompanionFaction)
+													endIf
+													if Father
+														Father.AddToFaction(pDisallowedCompanionFaction)
+													endIf
+													if Virgil
+														Virgil.AddToFaction(pDisallowedCompanionFaction)
+													endIf
+													if Maxon
+														Maxon.AddToFaction(pDisallowedCompanionFaction)
+													endif
+													if Des
+														Des.AddToFaction(pDisallowedCompanionFaction)
+													endif
+													if MS16SonyaBot
+														MS16SonyaBot.AddToFaction(pDisallowedCompanionFaction)
+													endif
+													
+													; "Thanks for installing AFT v%.2f by Dheuster<BR>See Aft Readme in your inventory for usage"
+													; Old - Aft Version %.2f update complete. [%.0f] Followers Imported.  See Aft Readme in 
+													; inventory for usage.									
+													pTweakUpdateDoneMsg.Show(version)
+													
+													GiveAFTToPlayer()
+													
+													player.AddPerk(pTweakPlayerSynergyChrPerk)
+													player.AddPerk(pTweakPlayerSynergyLckPerk)
+													player.AddPerk(pTweakPlayerSwimMonitorPerk)
+													EvaluateSynergy()
+													
+													Trace("[" + import_count + "] followers imported")
+												endif ; ov < 1.0
+																		
+											endif ; ov < 1.03
+											
+											if (ov != 0.0)
+												; 1.01 -> 1.03 bug : Forgot to init CA_WantsToTalk as 0
+												AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
+												if TweakCOMSpouseScript
+													TweakCOMSpouseScript.ResetAffinityScene()
 												endif
-												if Amari
-													Amari.AddToFaction(pDisallowedCompanionFaction)
-												endIf
-												if Father
-													Father.AddToFaction(pDisallowedCompanionFaction)
-												endIf
-												if Virgil
-													Virgil.AddToFaction(pDisallowedCompanionFaction)
-												endIf
-												if Maxon
-													Maxon.AddToFaction(pDisallowedCompanionFaction)
-												endif
-												if Des
-													Des.AddToFaction(pDisallowedCompanionFaction)
-												endif
-												if MS16SonyaBot
-													MS16SonyaBot.AddToFaction(pDisallowedCompanionFaction)
-												endif
 												
-												; "Thanks for installing AFT v%.2f by Dheuster<BR>See Aft Readme in your inventory for usage"
-												; Old - Aft Version %.2f update complete. [%.0f] Followers Imported.  See Aft Readme in 
-												; inventory for usage.									
-												pTweakUpdateDoneMsg.Show(version)
-												
-												GiveAFTToPlayer()
-												
-												player.AddPerk(pTweakPlayerSynergyChrPerk)
-												player.AddPerk(pTweakPlayerSynergyLckPerk)
-												player.AddPerk(pTweakPlayerSwimMonitorPerk)
-												EvaluateSynergy()
-												
-												Trace("[" + import_count + "] followers imported")
-											endif ; ov < 1.0
-																	
-										endif ; ov < 1.03
-										
-										if (ov != 0.0)
-											; 1.01 -> 1.03 bug : Forgot to init CA_WantsToTalk as 0
-											AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
-											if TweakCOMSpouseScript
-												TweakCOMSpouseScript.ResetAffinityScene()
 											endif
 											
+										endif ; ov < 1.04
+										
+										if (ov != 0.0)
+										
+											; 1.09 new Feature : Water Fountain in Shelter
+											((self as Quest) as TweakShelterScript).v109Upgrade()
+											
+											; 1.09 : DLC01 Support - Added Support for Ada
+											if pTweakDLC01
+												AFT:TweakDLC01Script pTweakDLC01Script = pTweakDLC01 as AFT:TweakDLC01Script									
+												if pTweakDLC01Script && pTweakDLC01Script.Installed && pTweakDLC01Script.Ada &&  pTweakDLC01Script.Ada.IsInFaction(pTweakFollowerFaction)
+													ImportTopicsForCompanion(pTweakDLC01Script.Ada)
+												endif
+											endif
+
+											; DLC03 Support
+											if pTweakDLC03
+												AFT:TweakDLC03Script pTweakDLC03Script = pTweakDLC03 as AFT:TweakDLC03Script									
+												if pTweakDLC03Script.Installed && pTweakDLC03Script.OldLongfellow && pTweakDLC03Script.OldLongfellow.IsInFaction(pTweakFollowerFaction)
+													ImportTopicsForCompanion(pTweakDLC03Script.OldLongfellow)
+												endif
+											endif
+
+											; DLC04 Support
+											if pTweakDLC04
+												AFT:TweakDLC04Script pTweakDLC04Script = pTweakDLC04 as AFT:TweakDLC04Script									
+												if pTweakDLC04Script.Installed && pTweakDLC04Script.PorterGage && pTweakDLC04Script.PorterGage.IsInFaction(pTweakFollowerFaction)
+													ImportTopicsForCompanion(pTweakDLC04Script.PorterGage)
+												endif
+											endif
+											
+											; Reset IdleCooldowns to defaults (since 1.09 disables controls)
+											pTweakIdleCooldownActiveMin.SetValue(240)
+											pTweakIdleCooldownActiveMax.SetValue(300)
+											pTweakIdleCooldownDismissedMin.SetValue(240)
+											pTweakIdleCooldownDismissedMax.SetValue(480)
 										endif
 										
-									endif ; ov < 1.04
-									
+									endif ; ov < 1.09
+
 									if (ov != 0.0)
-									
-										; 1.09 new Feature : Water Fountain in Shelter
-										((self as Quest) as TweakShelterScript).v109Upgrade()
-										
-										; 1.09 : DLC01 Support - Added Support for Ada
-										if pTweakDLC01
-											AFT:TweakDLC01Script pTweakDLC01Script = pTweakDLC01 as AFT:TweakDLC01Script									
-											if pTweakDLC01Script && pTweakDLC01Script.Installed && pTweakDLC01Script.Ada &&  pTweakDLC01Script.Ada.IsInFaction(pTweakFollowerFaction)
-												ImportTopicsForCompanion(pTweakDLC01Script.Ada)
-											endif
-										endif
-
-										; DLC03 Support
-										if pTweakDLC03
-											AFT:TweakDLC03Script pTweakDLC03Script = pTweakDLC03 as AFT:TweakDLC03Script									
-											if pTweakDLC03Script.Installed && pTweakDLC03Script.OldLongfellow && pTweakDLC03Script.OldLongfellow.IsInFaction(pTweakFollowerFaction)
-												ImportTopicsForCompanion(pTweakDLC03Script.OldLongfellow)
-											endif
-										endif
-
-										; DLC04 Support
-										if pTweakDLC04
-											AFT:TweakDLC04Script pTweakDLC04Script = pTweakDLC04 as AFT:TweakDLC04Script									
-											if pTweakDLC04Script.Installed && pTweakDLC04Script.PorterGage && pTweakDLC04Script.PorterGage.IsInFaction(pTweakFollowerFaction)
-												ImportTopicsForCompanion(pTweakDLC04Script.PorterGage)
-											endif
-										endif
-										
-										; Reset IdleCooldowns to defaults (since 1.09 disables controls)
-										pTweakIdleCooldownActiveMin.SetValue(240)
-										pTweakIdleCooldownActiveMax.SetValue(300)
-										pTweakIdleCooldownDismissedMin.SetValue(240)
-										pTweakIdleCooldownDismissedMax.SetValue(480)
+										((self as Quest) as TweakShelterScript).v112Upgrade()
 									endif
 									
-								endif ; ov < 1.09
-
+								endif ; ov < 1.12
+								
+								; 1.13						
 								if (ov != 0.0)
-									((self as Quest) as TweakShelterScript).v112Upgrade()
+									int pmlength = pManagedMap.Length
+									int pm = 1
+									while (pm < pmlength)
+										ReferenceAlias pmfix = pManagedMap[pm]
+										if pmfix && pmfix.GetActorReference()
+											(pmfix as TweakInventoryControl).v13upGrade()
+										endif
+										pm += 1
+									endwhile
 								endif
 								
-							endif ; ov < 1.12
-							
-							; 1.13						
+							endif
+
+							; 1.16						
 							if (ov != 0.0)
 								int pmlength = pManagedMap.Length
 								int pm = 1
 								while (pm < pmlength)
 									ReferenceAlias pmfix = pManagedMap[pm]
 									if pmfix && pmfix.GetActorReference()
-										(pmfix as TweakInventoryControl).v13upGrade()
+										(pmfix as TweakInventoryControl).v16upGrade()
 									endif
 									pm += 1
 								endwhile
 							endif
 							
 						endif
-
-						; 1.16						
+						
+						; 1.17
+						UnregisterForMenuOpenCloseEvent("ContainerMenu")
+						RegisterForMenuOpenCloseEvent("ContainerMenu")		
+						
 						if (ov != 0.0)
-							int pmlength = pManagedMap.Length
-							int pm = 1
-							while (pm < pmlength)
-								ReferenceAlias pmfix = pManagedMap[pm]
-								if pmfix && pmfix.GetActorReference()
-									(pmfix as TweakInventoryControl).v16upGrade()
-								endif
-								pm += 1
-							endwhile
+							; Updated the pref/scrap scanner with camp items
+							AFT:TweakScanNCBtoCScript pTweakScanNCBtoCScript = pTweakScanNonConstructed_BtoC as AFT:TweakScanNCBtoCScript
+							if pTweakScanNCBtoCScript
+								pTweakScanNCBtoCScript.initialize_ComponentData()
+							else
+								trace("Upgrade Failure. Unable To cast pTweakScanNonConstructed_BtoC to pTweakScanNCBtoCScript")
+							endif
+							
+							Actor dmeat = Dogmeat.GetUniqueActor()
+							if dmeat && dmeat.IsInFaction(pTweakFollowerFaction)
+								dmeat.AddToFaction(pTweakRangedFaction)
+							endif
 						endif
-						
-					endif
-					
-					; 1.17
-					UnregisterForMenuOpenCloseEvent("ContainerMenu")
-					RegisterForMenuOpenCloseEvent("ContainerMenu")		
-					
-					if (ov != 0.0)
-						; Updated the pref/scrap scanner with camp items
-						AFT:TweakScanNCBtoCScript pTweakScanNCBtoCScript = pTweakScanNonConstructed_BtoC as AFT:TweakScanNCBtoCScript
-						if pTweakScanNCBtoCScript
-							pTweakScanNCBtoCScript.initialize_ComponentData()
-						else
-							trace("Upgrade Failure. Unable To cast pTweakScanNonConstructed_BtoC to pTweakScanNCBtoCScript")
-						endif
-						
-						Actor dmeat = Dogmeat.GetUniqueActor()
-						if dmeat && dmeat.IsInFaction(pTweakFollowerFaction)
-							dmeat.AddToFaction(pTweakRangedFaction)
-						endif
-					endif
+					else
+						; Upgrading from 1.17 to 1.18 Fix Trade Immortatlity Bug....
+						int i = 0
+						int pFollowerMapLength = pFollowerMap.length	
+						Actor npc
+						while (i < pFollowerMapLength)
+							npc = pFollowerMap[i].GetActorRef()
+							npc.StartDeferredKill()
+							Utility.wait(0.1)
+							bool wasEssential = npc.IsEssential()
+							npc.SetEssential(true)
+							npc.EndDeferredKill()
+							Utility.wait(0.1)
+							npc.RestoreValue(pHealth, 9999)
+							if !wasEssential
+								npc.SetEssential(false)
+							endif
+							i += 1
+						endWhile
+					endif ; verion < 1.17
 				else
-					; Upgrading from 1.17 to 1.18 Fix Trade Immortatlity Bug....
-					int i = 0
-					int pFollowerMapLength = pFollowerMap.length	
-					Actor npc
-					while (i < pFollowerMapLength)
-						npc = pFollowerMap[i].GetActorRef()
-						npc.StartDeferredKill()
-						Utility.wait(0.1)
-						bool wasEssential = npc.IsEssential()
-						npc.SetEssential(true)
-						npc.EndDeferredKill()
-						Utility.wait(0.1)
-						npc.RestoreValue(pHealth, 9999)
-						if !wasEssential
-							npc.SetEssential(false)
-						endif
-						i += 1
-					endWhile
-				endif ; verion < 1.17
-			else
-				; upgrading from 1.18 to 1.19
-				if !pTweakScrapScanMaster.IsRunning()
-					pTweakScrapScanMaster.Start()
-				endif				
-			endif ; verion < 1.18			
-		endif ; version < 1.19
+					; upgrading from 1.18 to 1.19
+					if !pTweakScrapScanMaster.IsRunning()
+						pTweakScrapScanMaster.Start()
+					endif				
+				endif ; verion < 1.18
+			endif ; version < 1.19
+			
+			; 1.13						
+			if (ov != 0.0)
+				int pmlength = pManagedMap.Length
+				int pm = 1
+				while (pm < pmlength)
+				ReferenceAlias pmfix = pManagedMap[pm]
+					if pmfix && pmfix.GetActorReference()
+						(pmfix as TweakInventoryControl).v20upGrade()
+						(pmfix as TweakSettings).v20upGrade()
+					endif
+					pm += 1
+				endwhile
+			endif
+
+		endif ; version < 1.20
 			
 		if (ov != 0.0)
 					

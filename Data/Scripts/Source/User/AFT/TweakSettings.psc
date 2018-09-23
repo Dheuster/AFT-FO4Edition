@@ -21,12 +21,14 @@ Group Injected
 	Faction			Property pTweakCampHomeFaction			Auto Const
 	Faction			Property pTweakNoHomeFaction			Auto Const
 	Faction			Property pTweakAutoStanceFaction		Auto Const
+	Faction			Property pTweakSettlerFaction			Auto Const
 
 	
 	Faction			Property pPlayerFaction					Auto Const ; 0001C21C 
 	
 	Quest           Property pTweakNames					Auto Const ; 010035B1
 	Quest			Property pTweakDismiss					Auto Const
+	Quest			Property pTweakSettlers					Auto Const
 	
 	Formlist        Property pTweakCommonFactions			Auto Const ; 0101BB21
 	
@@ -233,6 +235,9 @@ Event OnInit()
 	originalFactions[1] = Game.GetForm(0x001EC1B9) as Faction ; PotentialCompanionFaction
 EndEvent
 
+Function v20upGrade()
+EndFunction
+
 Function EventPlayerSneakStart()
 
 	if (2 == enforceAggression)
@@ -346,6 +351,9 @@ Function initialize()
 	
 	Actor npc = self.GetActorRef()
 	Trace("initialize()  [" + npc.GetActorBase() + "]")
+	AFT:TweakSettlersScript AFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)		
+
+		
 	WorkshopNPCScript    WNS = npc as WorkshopNPCScript
 	CompanionActorScript CAS = npc as CompanionActorScript
 	DogmeatActorScript   DAS = npc as DogmeatActorScript
@@ -916,10 +924,10 @@ Function initialize()
 		if !corecompanion
 			if (CAS)
 				originalHome    = CAS.HomeLocation
-				originalHomeRef = LocationToMarkerRef(originalHome)
+				originalHomeRef = AFTSettlers.LocationToMarker(originalHome)
 			elseif (DAS)
 				originalHome    = DAS.HomeLocation
-				originalHomeRef = LocationToMarkerRef(originalHome)
+				originalHomeRef = AFTSettlers.LocationToMarker(originalHome)
 			endIf
 		endif
 		
@@ -927,9 +935,17 @@ Function initialize()
 			WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 			int workshopID = npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
 			if (workshopID > -1)
-				originalHome    = WorkShopIDToLocation(workshopID)
-				originalHomeRef = LocationToWorkShopRef(originalHome)
+				originalHome    = AFTSettlers.WorkShopIDToLocation(workshopID)
+				originalHomeRef = AFTSettlers.LocationToWorkShopMarker(originalHome)
 			endif
+		endif
+		
+		if (!originalHome && npc.IsInFaction(pTweakSettlerFaction))
+			int workshopid = AFTSettlers.TweakGetWorkshopId(npc)
+			if (workshopID > -1)
+				originalHome    = AFTSettlers.WorkShopIDToLocation(workshopID)
+				originalHomeRef = AFTSettlers.LocationToWorkShopMarker(originalHome)
+			endif		
 		endif
 		
 		if (!originalHome)
@@ -1008,11 +1024,20 @@ Function initialize()
 		WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 		int workshopID = npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
 		if (workshopID > -1 && "assigned"  == WNS.getState())
-			assignedHome    = WorkShopIDToLocation(workshopID)
-			assignedHomeRef = LocationToWorkShopRef(assignedHome)
+			assignedHome    = AFTSettlers.WorkShopIDToLocation(workshopID)
+			assignedHomeRef = AFTSettlers.LocationToWorkShopMarker(assignedHome)
 			npc.AddToFaction(pTweakSkipGoHomeFaction)
 		endif
 	endif
+	if (npc.IsInFaction(pTweakSettlerFaction))
+		int workshopID = AFTSettlers.TweakGetWorkshopId(npc)
+		if (workshopID > -1)
+			assignedHome    = AFTSettlers.WorkShopIDToLocation(workshopID)
+			assignedHomeRef = AFTSettlers.LocationToWorkShopMarker(assignedHome)
+			npc.AddToFaction(pTweakSkipGoHomeFaction)
+		endif		
+	endIf
+	
 	
 	if (!assignedHome)
 		if (CAS)
@@ -1029,9 +1054,9 @@ Function initialize()
 	
 	if (!assignedHomeRef)
 		if (CAS && CAS.HomeLocation)
-			assignedHomeRef = LocationToMarkerRef(CAS.HomeLocation)
+			assignedHomeRef = AFTSettlers.LocationToMarker(CAS.HomeLocation)
 		elseif (DAS && DAS.HomeLocation)
-			assignedHomeRef = LocationToMarkerRef(DAS.HomeLocation)
+			assignedHomeRef = AFTSettlers.LocationToMarker(DAS.HomeLocation)
 		endIf
 		if (!assignedHomeRef)
 			assignedHomeRef = originalHomeRef
@@ -1044,7 +1069,7 @@ Function initialize()
 	if assignedHome && npc.IsCreated()
 		npc.SetPersistLoc(assignedHome)
 	endif
-	
+		
 	if (wasVoiced)
 		npc.AddToFaction(Voices_CompanionsFaction)
 	endif
@@ -1139,15 +1164,26 @@ Function UnManage()
 	if (dynamicAssignment) ; Needs Cleanup...
 		dynamicAssignment = false
 		if assignedHomeRef
-			assignedHomeRef.Disable()
-			assignedHomeRef.Delete()
-			if ((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef
-				((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Disable()
-				((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Delete()
+			Keyword	WorkshopKeyword	=	Game.GetForm(0x00054BA7) as Keyword
+			if !assignedHomeRef.HasKeyword(WorkshopKeyword)
+				assignedHomeRef.Disable()
+				assignedHomeRef.Delete()
 			endif
 		endif
 	else
 		trace("dynamicAssignment is false")
+	endif
+	
+	if (dynamicHome) ; Needs Cleanup...
+		dynamicHome = false
+		if originalHomeRef
+			Keyword	WorkshopKeyword	=	Game.GetForm(0x00054BA7) as Keyword
+			if !originalHomeRef.HasKeyword(WorkshopKeyword)
+				originalHomeRef.Disable()
+				originalHomeRef.Delete()
+			endif
+		endif
+		originalHomeRef = None
 	endif
 	
 	assignedHomeRef = None
@@ -1806,8 +1842,29 @@ EndFunction
 ; We have to do something similar when we assign a home.
 ; What a pain...
 Function AssignHome()
+
 	trace("AssignHome")
 
+	; AI Notes: 
+	;
+	; Quest TweakFollower pushes 3 Packages on all managed Followers (Priority 91)
+	;   TweakPosed    <- Keeps follower in pose. Some commands like sculpt/parts will also use this package to hold the NPC in place.
+	;   TweakEnterPA  <- Used when follower is instructed to get into PA
+	;   TweakStayHere <- Stand where you are if not follower and (nohomefaction or (camphome faction and camp is not setup))
+	;
+	; Quest Followers pushes 21 Packages (and another dozen or so for combat) on all ACTIVE Followers (Priority 90)	
+    ;
+	; Quest TweakLowPriortyAI pushes 2 Packages on all Managed Followers (Priority 42)
+	;   TweakGoHome <- As it sounds. But is skipped if Follower is in TweakSkipGoHomeFaction
+	;   TweakGoCamp <- As it sounds. But is skipped unless the Follower is in TweakCampHomeFaction
+	;
+	; Quest TweakSettlers pushes 13 Packages on any Settlers (Priorit 41)
+	;   Various Settlement related AI Packages....
+	;
+	; Quest WorkshopPermanentActor pushes 1 package on all Workshop Assigned WNS companions (Priority 40)
+	;   WorkshopMasterPackage (Only works on NPCs with WNS script attached)
+	
+	Actor pc  = Game.GetPlayer()
 	Actor npc = self.GetActorReference()
 		
 	
@@ -1816,11 +1873,10 @@ Function AssignHome()
 	AFT:TweakDismissScript pTweakDismissScript = pTweakDismiss as AFT:TweakDismissScript
 	
 	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-	Keyword WorkshopLinkHome    = Game.GetForm(0x0002058F) as Keyword
+	Keyword WorkshopLinkHome             = Game.GetForm(0x0002058F) as Keyword
 
 	int choice = 4 ; 0 = OriginalHome, 1 = Current Location (NoHome), 2 = AFT Camp, 3 = Settlement, 4 = Cancel
 	bool camphomeFaction = false
-	bool nohomeFaction   = false
 	
 	if (pTweakDismissScript)
 		choice = pTweakDismissScript.ShowMenu(npc,originalHome)
@@ -1833,140 +1889,111 @@ Function AssignHome()
 	
 	; The issue with removing upfront is they may choose to assign a settlement and then cancel.
 	; So we repeat the cleanup code in each case to avoid it in the exception:
+	AFT:TweakSettlersScript AFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)		
 	
 	if (0 == choice)  ; Original
 	
 		; Cleanup
-		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
-		if (dynamicAssignment) ; Needs Cleanup...
-			dynamicAssignment = false
-			if assignedHomeRef
-				npc.SetLinkedRef(None, pTweakLocHome)
-				assignedHomeRef.Disable()
-				assignedHomeRef.Delete()
-				if ((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef
-					((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Disable()
-					((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Delete()
-				endif
-			endif
-		else
-			trace("dynamicAssignment is false")
-		endif
-		
-		assignedHomeRef = None
-		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = None			
+		AssignCleanHelper(npc)
 		
 		Trace("Attempting to restore original Home")
 				
 		assignedHome    = originalHome
 		assignedHomeRef = originalHomeRef
 		
-		if (!assignedHome)
-			; This shouldn't happen as we default to SanctuaryHills. 
-			nohomeFaction = true
-			Trace("Assertion Error. originalHome is None. Bailing...")
-			return
-		endIf
-		if (!assignedHomeRef)
-			; This shouldn't happen as we default to CodsworthKitchenMarker. 
-			nohomeFaction = true
-			Trace("Assertion Error. originalHomeRef is None. Bailing...")
-			return
-		endif
-		
-		WorkshopNPCScript    WNS = npc as WorkshopNPCScript
-		CompanionActorScript CAS = npc as CompanionActorScript
-		DogmeatActorScript   DAS = npc as DogmeatActorScript
-		
-		; If someone is assigned to a settlement and
-		; the player chooses this, they probably want
-		; to unassign the NPC from the settlement
-		
-		if (WNS && WNS.GetWorkshopID() != -1)
-			pWorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
-		endIf		
-		if (CAS)
-			Trace("Updating CAS.HomeLocation")
-			CAS.HomeLocation = assignedHome
-		elseif (DAS)
-			Trace("Updating DAS.HomeLocation")
-			DAS.HomeLocation = assignedHome
-		endif
-		
-		Trace("Adding TweakLocHom Reference...")
-		
-		npc.SetLinkedRef(assignedHomeRef, pTweakLocHome)		
-		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHome    = assignedHome
-		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = assignedHomeRef
-		
+		if (assignedHome && assignedHomeRef)
+			WorkshopNPCScript    WNS = npc as WorkshopNPCScript
+			CompanionActorScript CAS = npc as CompanionActorScript
 				
-	elseif (1 == choice) ; Current Location
+			; 1.20 : If Original Home is a settlement (Sanctuary is defualt
+			; for imported NPCs), and the NPC is ghoul, human, robot and !WNS,
+			; then make them a TweakSettler
+		
+			AssignHomeHelper(npc)
+
+			; Note : values checked above. We shouldn't get this far if either is NONE
+			((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHome    = assignedHome
+			((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = assignedHomeRef
+		
+			; This is DEFAULT: Create an "anchor" for TweakLowPriorityAI. This is the fall back unless
+			; something above added the NPC to the pTweakSkipGoHomeFaction.
+		
+			Trace("Adding TweakLocHom Reference...")		
+			npc.SetLinkedRef(assignedHomeRef, pTweakLocHome)
+		else
+			; This shouldn't happen as we default to SanctuaryHills. 
+			Trace("Assertion Error. originalHome is None.")
+			npc.AddToFaction(pTweakNoHomeFaction)
+		endIf
+		
+		if assignedHome
+			if npc.IsCreated() && (assignedHome != pTweakCampLocation) 
+				npc.SetPersistLoc(assignedHome)
+			endif
+		endif
+		
+		return
+		
+	endIf
+	
+	
+	if (1 == choice) ; Current Location
 	
 		; Cleanup
-		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
-		if (dynamicAssignment) ; Needs Cleanup...
-			dynamicAssignment = false
-			if assignedHomeRef
-				npc.SetLinkedRef(None, pTweakLocHome)
-				assignedHomeRef.Disable()
-				assignedHomeRef.Delete()
-				if ((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef
-					((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Disable()
-					((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Delete()
-				endif
-			endif
-		else
-			trace("dynamicAssignment is false")
-		endif
-		
-		assignedHomeRef = None
-		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = None			
-		
-		WorkshopNPCScript    WNS = npc as WorkshopNPCScript
-		CompanionActorScript CAS = npc as CompanionActorScript
-		DogmeatActorScript   DAS = npc as DogmeatActorScript
-		
-		Trace("Attempting to assign Current Location Home")
-		
-		assignedHome = npc.GetCurrentLocation()		
-		
-		; Do we need to test for DiamondCityPlayerHouseLocation : 0x00003967
-		
-		if (assignedHome)
-			Trace("GetCurrentLocation [" + assignedHome + "]")
-		
-			WorkshopScript workshopRef = pWorkshopParent.GetWorkshopFromLocation(assignedHome)
-			
-			assignedHomeRef = LocationToWorkShopRef(assignedHome)
-									
-			if (workshopRef)
-				Trace("Current Location is Workshop")
+		AssignCleanHelper(npc)
 				
-				; The current location happens to be a workshop,
-				; If NPC supports Workshops, make sure we update
-				; them.
-				if (WNS)
-					if npc.GetActorBase().IsUnique()
-						pWorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
-					else
-						pWorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
-					endIf
-					
-					npc.AddToFaction(pTweakSkipGoHomeFaction)
-				elseif !(CAS || DAS)
-					nohomeFaction = true
-				endif
+		Trace("Examining current Location")		
+		
+		; We use "candidate" values so that we can bail if things go wrong and npc
+		; has valid entries. 
+		
+		ObjectReference origin       = pc
+		assignedHome                 = pc.GetCurrentLocation()
+		
+		if !assignedHome
+			assignedHome = npc.GetCurrentLocation()
+			if assignedHome
+				origin = npc
 			else
-				if (WNS && WNS.GetWorkshopID() != -1)
-					pWorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
+				WorkshopScript workshopRef = FindNearbyWorkshop(pc)
+				if workshopRef
+					assignedHomeRef = workshopRef
+					assignedHome = workshopRef.GetCurrentLocation()
+ 					origin = pc
+				else					
+					workshopRef = FindNearbyWorkshop(npc)
+					if workshopRef
+						assignedHomeRef = workshopRef
+						assignedHome = workshopRef.GetCurrentLocation()
+						origin = npc
+					endIf
 				endIf
 			endIf
-
-			if (CAS)
-				CAS.HomeLocation = assignedHome
-			elseif (DAS)
-				DAS.HomeLocation = assignedHome
+		endIf
+		
+		if (assignedHome)
+		
+			if !assignedHomeRef
+				if AFTSettlers
+					assignedHomeRef = AFTSettlers.LocationToMarker(assignedHome)
+				endif
 			endif
+			
+			if !assignedHomeRef
+				WorkshopScript workshopRef = FindNearbyWorkshop(pc)
+				if workshopRef
+					assignedHomeRef = workshopRef
+ 					origin = pc
+				else					
+					workshopRef = FindNearbyWorkshop(npc)
+					if workshopRef
+						assignedHomeRef = workshopRef
+						origin = npc
+					endIf
+				endIf				
+			endif
+			
+			AssignHomeHelper(npc) 
 			
 			; Codsworth Check
 			if npc.GetActorBase() == (Game.GetForm(0x000179FF) as ActorBase)
@@ -1976,150 +2003,99 @@ Function AssignHome()
 					; isn't needed after he is following you.
 					DialogueCodsworthPostWar.Stop()
 				endif
-			endif		
-		else
-			Trace("GetCurrentLocation [None]")
-			; Sometimes GetCurrentLocation() returns NONE. There ARE
-			; Cells that are only associated with a Worldspace and 
-			; not a Location. 
-			nohomeFaction = true
+			endif
+			
 		endif
-		
+				
 		if !assignedHomeRef
 			dynamicAssignment = true
-			assignedHomeRef   = npc.PlaceAtMe(XMarkerHeading, 1, true)
-		endIf
+			assignedHomeRef   = origin.PlaceAtMe(XMarkerHeading, 1, true)		
+		endif
 		
 		npc.SetLinkedRef(assignedHomeRef, pTweakLocHome)
 		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHome    = assignedHome
 		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = assignedHomeRef
-
-	elseif (2 == choice) ; AFT CAMP 
-	
-		; Cleanup
-		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
-		if (dynamicAssignment) ; Needs Cleanup...
-			dynamicAssignment = false
-			if assignedHomeRef
-				npc.SetLinkedRef(None, pTweakLocHome)
-				assignedHomeRef.Disable()
-				assignedHomeRef.Delete()
-				if ((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef
-					((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Disable()
-					((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Delete()
-				endif
+		
+		if assignedHome
+			if npc.IsCreated() && (assignedHome != pTweakCampLocation) 
+				npc.SetPersistLoc(assignedHome)
 			endif
-		else
-			trace("dynamicAssignment is false")
 		endif
 		
-		assignedHomeRef = None
-		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = None			
+		return
+		
+	endif
+	
+	if (2 == choice) ; AFT CAMP 
+	
+		; Cleanup
+		AssignCleanHelper(npc)
 
 		Trace("Attempting to assign to Camp")
 		
-		camphomeFaction = true
 		assignedHome    = pTweakCampLocation
 		assignedHomeRef = pAftMapMarker
 		
-		WorkshopNPCScript    WNS = npc as WorkshopNPCScript
-		CompanionActorScript CAS = npc as CompanionActorScript
-		DogmeatActorScript   DAS = npc as DogmeatActorScript
-		
-		if (WNS && WNS.GetWorkshopID() != -1)
-			pWorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
-		elseif !(CAS || DAS)
-			nohomeFaction = true
-		endif
-	
-		if (CAS)
-			CAS.HomeLocation = assignedHome
-		elseif (DAS)
-			DAS.HomeLocation = assignedHome
-		endif
+		AssignHomeHelper(npc)
 		
 		npc.SetLinkedRef(assignedHomeRef, pTweakLocHome)
 		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHome    = assignedHome
 		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = assignedHomeRef
 		
-	elseif (3 == choice) ; Choose Settlement	
-	
-		WorkshopNPCScript    WNS = npc as WorkshopNPCScript		
-		CompanionActorScript CAS = npc as CompanionActorScript
-		DogmeatActorScript   DAS = npc as DogmeatActorScript
-		Location       selection = None
+		npc.AddToFaction(pTweakCampHomeFaction)	
 		
-		if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
-			if npc.GetActorBase().IsUnique()
-				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=CAS.HomeLocation, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
+		; Dont set persist location to pTweakCampLocation as it doesn't exist....
+		return
+		
+	endif
+		
+	if (3 == choice) ; Choose Settlement	
+	
+		Location selection = assignedHome
+		if !selection
+			selection = originalHome
+			if !selection
+				selection = pc.GetCurrentLocation()
+				if !selection
+					selection = npc.GetCurrentLocation()
+				endIf
+			endIf
+		endIf
+		
+		CompanionActorScript CAS = npc as CompanionActorScript
+		
+		if npc.GetActorBase().IsUnique()
+			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
+				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
 			else
-				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHome, aLocToHighlight=CAS.HomeLocation, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
-			endIf			
-		elseif pWorkshopParent.PlayerOwnsAWorkshop
-			if WNS
-				if npc.GetActorBase().IsUnique()
-					selection = pWorkshopParent.AddActorToWorkshopPlayerChoice(npc) ; May return NONE if player hits cancel
-				else
-					selection = pWorkshopParent.AddPermanentActorToWorkshopPlayerChoice(npc) ; May return NONE if player hits cancel
-				endif
+				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akExcludeKeywordList=pWorkshopParent.WorkshopSettlementMenuExcludeList)
+			endif
+		else
+			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
+				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
 			else
-				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHomePermanentActor)
-			endif				
+				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akExcludeKeywordList=pWorkshopParent.WorkshopSettlementMenuExcludeList)
+			endif
 		endif
 		
 		if (selection)
 					
 			; Cleanup
-			npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
-			if (dynamicAssignment) ; Needs Cleanup...
-				dynamicAssignment = false
-				if assignedHomeRef
-					npc.SetLinkedRef(None, pTweakLocHome)
-					assignedHomeRef.Disable()
-					assignedHomeRef.Delete()
-					if ((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef
-						((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Disable()
-						((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef.Delete()
-					endif
-				endif
-			else
-				trace("dynamicAssignment is false")
-			endif
-			
-			assignedHomeRef = None
-			((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = None			
-
+			AssignCleanHelper(npc)
 			assignedHome = selection
-			WorkshopScript workshopRef = pWorkshopParent.GetWorkshopFromLocation(assignedHome)
-									
-			if (workshopRef)
-				if (WNS)
-					pWorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)					
-					npc.AddToFaction(pTweakSkipGoHomeFaction)
-				elseif !(CAS || DAS)
-					nohomeFaction = true
-				endif
-				assignedHomeRef = LocationToWorkShopRef(assignedHome)
-				if (!assignedHomeRef)
-					assignedHomeRef = workshopRef
-				endif
+			AssignHomeHelper(npc)		
+			
+			if npc.IsInFaction(pTweakSkipGoHomeFaction)
+				assignedHomeRef = npc.GetLinkedRef(WorkshopLinkHome)
 			else
-				assignedHomeRef = LocationToWorkShopRef(assignedHome)
-				if !assignedHomeRef
-					if originalHomeRef
-						assignedHomeRef = originalHomeRef
-					else
-						assignedHomeRef = CodsworthKitchenMarker
-					endIf
-				endif
+				; As the chooser only allows workshops, if selection is non-null, this would be very unusal..
+				; As the methods above should never fail on workshops.
 				
-				; This entire block is basically 1 giant assertion failure, 
-				; so lets not add insult to injury by removing them from
-				; their workshop...
+				Trace("Unexpected failure : npc was not assigned to settlement [" + selection + "]")
 				
-				; if (WNS && WNS.GetWorkshopID() != -1)
-				;	pWorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
-				; endIf
+				if AFTSettlers
+					assignedHomeRef = AFTSettlers.LocationToWorkShopMarker(assignedHome)
+				endIf
 			endIf
 			
 			npc.SetLinkedRef(assignedHomeRef, pTweakLocHome)
@@ -2129,137 +2105,24 @@ Function AssignHome()
 		else ; Cancel... No Change
 			if !assignedHome
 				; This shouldn't happen as we default to SanctuaryHills. 
-				nohomeFaction = true
+				npc.AddToFaction(pTweakNoHomeFaction)
 			endif			
 		endif
-	else ; Cancel... No Change
-		if !assignedHome
-			; This shouldn't happen as we default to SanctuaryHills. 
-			nohomeFaction = true
+		
+		if assignedHome
+			if npc.IsCreated() && (assignedHome != pTweakCampLocation) 
+				npc.SetPersistLoc(assignedHome)
+			endif
 		endif
-	endif
-	
-	if assignedHome
-		if npc.IsCreated()
-			npc.SetPersistLoc(assignedHome)
-		endif
-	endif
-	
-	; Update Factions to ensure correct AI behaviors....
-	if (!camphomeFaction && npc.IsInFaction(pTweakCampHomeFaction))
-		npc.RemoveFromFaction(pTweakCampHomeFaction)
-	elseif (camphomeFaction && !npc.IsInFaction(pTweakCampHomeFaction))
-		npc.AddToFaction(pTweakCampHomeFaction)
-	endif
-	if (!nohomeFaction && npc.IsInFaction(pTweakNoHomeFaction))
-		npc.RemoveFromFaction(pTweakNoHomeFaction)
-	elseif (nohomeFaction && !npc.IsInFaction(pTweakNoHomeFaction))
-		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
+		
+		return
+	endIf
+		
+	if !assignedHome
+		; This shouldn't happen as we default to SanctuaryHills. 
 		npc.AddToFaction(pTweakNoHomeFaction)
 	endif
 	
-EndFunction
-
-; For when you dont care
-ObjectReference Function LocationToMarkerRef(Location loc)
-	ObjectReference marker = LocationToWorkShopRef(loc)
-	if marker
-		return marker
-	endIf
-	return LocationToCachedRef(loc)
-EndFunction
-
-; Provides confirmation if location is a workshop location...
-Location Function WorkShopIDToLocation(int id)
-	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-	RefCollectionAlias   wscollection    = pWorkshopParent.WorkshopsCollection
-	if (id >= wscollection.GetCount())
-		return None
-	endif
-	WorkshopScript workshopRef       = wscollection.GetAt(id) as WorkshopScript
-	return workshopRef.GetCurrentLocation()
-endFunction
-
-; Provides confirmation if location is a workshop location...
-int Function LocationToWorkShopID(Location loc)
-	Location ws                          = None
-	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-	RefCollectionAlias   wscollection     = pWorkshopParent.WorkshopsCollection
-	
-	int index = 0
-	while (index < wscollection.GetCount() && loc != ws)
-		WorkshopScript workshopRef = wscollection.GetAt(index) as WorkshopScript
-		ws = workshopRef.GetCurrentLocation()
-		if loc == ws
-			return index
-		endif
-		index += 1
-	endwhile
-	return -1
-EndFunction
-
-
-; Provides both a translation and confirmation if
-; a location is a workshop location...
-ObjectReference Function LocationToWorkShopRef(Location loc)
-	ObjectReference marker = None
-	
-	Keyword WorkshopLinkSandbox = Game.GetForm(0x0022B5A7) as Keyword
-	Keyword WorkshopLinkCenter  = Game.GetForm(0x00038C0B) as Keyword
-	
-	Location ws                          = None
-	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-	RefCollectionAlias   wscollection     = pWorkshopParent.WorkshopsCollection
-	
-	int index = 0
-	while (index < wscollection.GetCount() && loc != ws)
-		WorkshopScript workshopRef = wscollection.GetAt(index) as WorkshopScript
-		ws = workshopRef.GetCurrentLocation()
-		if loc == ws
-			marker = workshopRef.GetLinkedRef(WorkshopLinkSandbox)			
-			if marker == NONE
-				marker = workshopRef.GetLinkedRef(WorkshopLinkCenter)
-			endif
-			if marker == NONE
-				marker = workshopRef as ObjectReference
-			endIf
-			return marker
-		endif
-		index += 1
-	endwhile
-EndFunction
-
-ObjectReference Function LocationToCachedRef(Location loc)
-	ObjectReference marker = None
-	int locid  = (loc.GetFormID() as int)
-	if (0x0001905B == locid)     ; CombatZoneLocation
-		marker = CaitPostCombatMarker01
-	elseif (0x0001F229 == locid) ; SanctuaryHillsPlayerHouseLocation
-		marker = CodsworthKitchenMarker
-	elseif (0x0002BE8D == locid) ; Vault81Location
-		marker = COMCurieIntroMarker
-	elseif (0x0001FA4A == locid) ; CambridgePDLocation
-		marker = BoS101PlayerStartMarker
-	elseif (0x000482C2 == locid) ; RailroadHQLocation
-		marker = DeaconHomeMarker
-	elseif (0x00024FAB == locid) ; RedRocketTruckStopLocation
-		marker = RedRocketCenterMarker
-	elseif (0x0002260F == locid) ; GoodneighborOldStateHouseLocation
-		marker = MS04HancockEndMarker
-	elseif (0x0002267F == locid) ; GoodneighborTheThirdRailLocation
-		marker = COMMacCreadyStartMarker
-	elseif (0x00003979 == locid) ; DiamondCityValentinesLocation
-		marker = MS07NickOfficeMarker
-	elseif (0x00003962 == locid) ; DiamondCityPublickOccurrencesLocation
-		marker = MQ201BPiperTravelMarker02
-	elseif (0x0001F228 == locid) ; SanctuaryHillsLocation
-		marker = SanctuaryLocationCenterMarker
-	elseif (0x0001DAF7 == locid) ; TrinityTowerLocation
-		marker = MS10SafetyMarker
-	elseif (0x001BBC22 == locid) ; InstituteSRBLocation
-		marker = InstSceneAlaneJustin1JustinMarker
-	endif
-	return marker
 EndFunction
 
 Function SetConfidence(int value)
@@ -2495,6 +2358,189 @@ Bool Function DistanceWithin(ObjectReference a, ObjectReference b, float radius)
 	total += (factor * factor)
 	return ((radius * radius) > total)
 EndFunction
+
+WorkshopScript Function FindNearbyWorkshop(ObjectReference origin)
+
+	Keyword				WorkshopKeyword	=	Game.GetForm(0x00054BA7) as Keyword
+	ObjectReference[]	candidates		=	origin.FindAllReferencesWithKeyword(WorkshopKeyword, 4000)
+	
+	int cilen = candidates.Length
+	if (cilen > 0)
+		bool keepgoing = true
+		int ci = 0
+		while (ci < cilen && keepgoing)
+			WorkshopScript workshopRef = candidates[ci] as WorkshopScript
+			if workshopRef
+				return workshopRef
+			endif
+			ci += 1
+		endwhile
+	endif
+	
+EndFunction
+
+Function AssignCleanHelper(Actor npc)
+
+	npc.RemoveFromFaction(pTweakNoHomeFaction)
+	npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
+	npc.RemoveFromFaction(pTweakCampHomeFaction)
+	if (dynamicAssignment) ; Needs Cleanup...
+		dynamicAssignment = false
+		if assignedHomeRef
+			Keyword	WorkshopKeyword	=	Game.GetForm(0x00054BA7) as Keyword
+			npc.SetLinkedRef(None, pTweakLocHome)
+			if !assignedHomeRef.HasKeyword(WorkshopKeyword)
+				assignedHomeRef.Disable()
+				assignedHomeRef.Delete()
+			endif
+		endif
+	else
+		trace("dynamicAssignment is false")
+	endif
+		
+	assignedHomeRef = None
+	((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHomeRef = None
+
+endFunction
+
+Function AssignHomeHelper(Actor npc)
+
+	; When this method is called, certain class instance variables are expeceted to be set:
+	; assignHome <- Location to assign
+	
+	WorkshopNPCScript		WNS				=	npc as WorkshopNPCScript
+	CompanionActorScript	CAS				=	npc as CompanionActorScript
+	WorkshopParentScript	pWorkshopParent	=	(Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+	AFT:TweakSettlersScript	AFTSettlers		=	(pTweakSettlers as AFT:TweakSettlersScript)
+	
+	if AFTSettlers
+			
+		; May want to restrict AFT Settlers to humans and robots. (No cats, dogs, Behomeths, insects, etc...)
+		; For now no restrictions
+				
+		; Keyword ActorTypeHuman               = Game.GetForm(0x0002CB72) as Keyword
+		; Keyword ActorTypeGhoul               = Game.GetForm(0x000EAFB7) as Keyword
+		; Keyword ActorTypeRobot               = Game.GetForm(0x0002CB73) as Keyword
+				
+		; if (npc.HasKeyword(ActorTypeHuman) || npc.HasKeyword(ActorTypeGhoul) || npc.HasKeyword(ActorTypeRobot))					
+			
+		if AFTSettlers.MakeSettler(npc, assignedHome, false)
+			npc.AddToFaction(pTweakSkipGoHomeFaction)
+		elseif assignedHome		
+			; assignHome is not a workshop....
+			if (npc.IsInFaction(pTweakSettlerFaction))
+				AFTSettlers.UnMakeSettler(npc)
+			endif
+			if (WNS && WNS.GetWorkshopID() != -1)
+				pWorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
+			endif
+		endif
+				
+		; elseif (WNS && WNS.GetWorkshopID() != -1)
+		;	pWorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
+		; endif
+								
+	else
+			
+		Trace("AFTSettlers failed to caste")
+		if (WNS)
+			if (WNS.GetWorkshopID() != -1)
+				pWorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
+			endif
+			WorkshopScript workshopRef = pWorkshopParent.GetWorkshopFromLocation(assignedHome)
+			if workshopRef
+				if !assignedHomeRef
+					assignedHomeRef = workshopRef
+				endif
+					
+				; This will succeed so long as the assignedHome is a workshop AND the npc
+				; has WNS scripts attached.
+						
+				if npc.GetActorBase().IsUnique()
+					pWorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
+				else
+					pWorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
+				endIf
+				npc.AddToFaction(pTweakSkipGoHomeFaction)
+			endif
+		endif
+				
+	endif
+			
+	if (CAS)
+		Trace("Updating CAS.HomeLocation")
+		CAS.HomeLocation = assignedHome
+	else
+		DogmeatActorScript   DAS = npc as DogmeatActorScript		
+		if (DAS)
+			Trace("Updating DAS.HomeLocation")
+			DAS.HomeLocation = assignedHome
+		endif
+	endif	
+
+EndFunction
+
+
+; Provides both a translation and confirmation if
+; a location is a workshop location...
+;ObjectReference Function LocationToWorkShopMarker(Location loc)
+;	ObjectReference marker = None
+;	
+;	Keyword WorkshopLinkSandbox = Game.GetForm(0x0022B5A7) as Keyword
+;	Keyword WorkshopLinkCenter  = Game.GetForm(0x00038C0B) as Keyword
+;	
+;	Location ws                          = None
+;	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+;	RefCollectionAlias   wscollection     = pWorkshopParent.WorkshopsCollection
+;	
+;	int index = 0
+;	int wslen = wscollection.GetCount()
+;	while (index < wslen && loc != ws)
+;		WorkshopScript workshopRef = wscollection.GetAt(index) as WorkshopScript
+;		if workshopRef
+;			ws = workshopRef.GetCurrentLocation()
+;			if loc == ws
+;				marker = workshopRef.GetLinkedRef(WorkshopLinkSandbox)			
+;				if marker == NONE
+;					marker = workshopRef.GetLinkedRef(WorkshopLinkCenter)
+;				endif
+;				if marker == NONE
+;					marker = workshopRef as ObjectReference
+;				endIf
+;				return marker
+;			endif
+;		endif
+;		index += 1
+;	endwhile
+;	return None
+;EndFunction
+
+;WorkshopScript Function LocationToWorkShop(Location loc)
+;	ObjectReference marker = None
+;	
+;	Keyword WorkshopLinkSandbox = Game.GetForm(0x0022B5A7) as Keyword
+;	Keyword WorkshopLinkCenter  = Game.GetForm(0x00038C0B) as Keyword
+;	
+;	Location ws                          = None
+;	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+;	RefCollectionAlias   wscollection    = pWorkshopParent.WorkshopsCollection
+;	
+;	int index = 0
+;	int wslen = wscollection.GetCount()
+;	while (index < wslen && loc != ws)
+;		WorkshopScript workshopRef = wscollection.GetAt(index) as WorkshopScript
+;		if workshopRef
+;			ws = workshopRef.GetCurrentLocation()
+;			if loc == ws
+;				return workshopRef
+;			endif
+;		endif
+;		index += 1
+;	endwhile
+;	return None
+;EndFunction
+
+
 
 Int Function GetPluginID(int formid)
 	int fullid = formid

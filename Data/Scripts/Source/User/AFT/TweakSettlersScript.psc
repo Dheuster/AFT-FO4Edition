@@ -9,10 +9,10 @@ WorkshopParentScript Property WorkshopParent Auto Const
 Keyword Property WorkshopLinkSandbox Auto Const
 Keyword Property WorkshopLinkCenter Auto Const
 Keyword Property WorkshopLinkHome Auto Const
+Keyword	Property WorkshopKeyword Auto Const
 Keyword Property AO_Type_WorkshopResourceObject Auto Const
 
-ObjectReference Property CodsworthKitchenMarker			Auto Const ; 0x00023CBC
-Location Property SanctuaryHillsPlayerHouseLocation Auto Const
+Location Property SanctuaryHillsLocation Auto Const
 Faction Property WorkshopNPCFaction Auto Const
 Faction Property WorkshopDialogueFaction Auto Const
 Faction  Property FarmerGenericDialogue Auto Const
@@ -29,6 +29,23 @@ Keyword	   Property TweakSettlerBrahmin Auto Const
 Quest	   Property BoS302 Auto Const
 
 GlobalVariable Property pTweakMutexCompanions	Auto Const
+
+ObjectReference Property CaitPostCombatMarker01			Auto Const ; 0x000C73E9
+ObjectReference Property CodsworthKitchenMarker			Auto Const ; 0x00023CBC
+ObjectReference Property COMCurieIntroMarker			Auto Const ; 0x00239ED3
+ObjectReference Property BoS101PlayerStartMarker		Auto Const ; 0x00193F92
+ObjectReference Property BoS201DanseMessHallMarker		Auto Const ; 0x000AA1B9	
+ObjectReference Property DeaconHomeMarker				Auto Const ; 0x00050987
+ObjectReference Property RedRocketCenterMarker			Auto Const ; 0x0004BE79
+ObjectReference Property MS04HancockEndMarker			Auto Const ; 0x0012937E
+ObjectReference Property COMMacCreadyStartMarker		Auto Const ; 0x00115EA2
+ObjectReference Property MS07NickOfficeMarker			Auto Const ; 0x00054344
+ObjectReference Property MQ201BPiperTravelMarker02		Auto Const ; 0x001558A8
+ObjectReference Property SanctuaryLocationCenterMarker	Auto Const ; 0x0004BE7A
+ObjectReference Property MS10SafetyMarker				Auto Const ; 0x000F15CD
+ObjectReference Property InstSceneAlaneJustin1JustinMarker Auto Const ; 0x000C9D59
+
+Faction 		Property TweakSettlerFaction			Auto Const
 
 int NO_WORKSHOPID       = 9001 const
 int NO_MULTIRESOURCEID  = 9003 const
@@ -48,158 +65,243 @@ EndEvent
 Event OnQuestInit()
 EndEvent
 
-Function MakeSettler(Actor npc, bool PromptForHome=false)
-	Trace("MakeSettler npc [" + npc + "] PromptForHome [" + PromptForHome + "]")
+; Returns false if an anchor is needed because location is not Workshop or unowned
+; I'm leaving out ownership checks for now. 
+bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHome=true)
+
+	Trace("MakeSettler npc [" + npc + "] settlement [" + settlement + "] PromptForHome [" + PromptForHome + "]")
+
+	; if !WorkshopParent.PlayerOwnsAWorkshop
+	;	return false
+	; endif
+
+	if settlement
+		PromptForHome = false
+	endif
 	
-	WorkshopNPCScript    WNS     = npc as WorkshopNPCScript
-	int workshopID = -1
+	WorkshopNPCScript WNS  				 = npc as WorkshopNPCScript
+	int workshopID         				 = LocationToWorkShopID(settlement)
+	Location selection     				 = settlement
 	
 	; If already a WNS, not much to do....
 	if (WNS && WNS.WorkshopParent)
 		Trace("  WNS detected")
-		workshopID = npc.GetValue(WorkshopParent.WorkshopIDActorValue) as int		
-	else
-		if (pSettlers.Find(npc) < 0)
-			Trace("Adding to Settlers Collection")
-			pSettlers.AddRef(npc)
-			
-			; Use 9000 as place holder value to indicate no settlement.
-			npc.SetValue(WorkshopParent.workshopIDActorValue, NO_WORKSHOPID)
-			npc.SetValue(TweakSettlerMultiResourceId,         NO_MULTIRESOURCEID)
-			npc.SetValue(TweakSettlerWork24Hours,             0.0)
-			
-			Actor myBrahmin = NONE
-			ObjectReference oBrahmin = npc.GetLinkedRef(TweakSettlerBrahmin)
-			if oBrahmin
-				myBrahmin = oBrahmin as Actor
+		
+		if PromptForHome
+			if (workshopID < 0)
+				selection = SanctuaryHillsLocation
 			endif
-			if myBrahmin
-				WorkshopParent.CaravanBrahminAliases.RemoveRef(myBrahmin)
-				myBrahmin.SetLinkedRef(NONE, WorkshopParent.WorkshopLinkFollow)
-				myBrahmin.Delete()				
-			endif
-			npc.SetLinkedRef(NONE, TweakSettlerBrahmin)
-			
-			if npc.IsChild()
-				npc.AddToFaction(FarmerGenericChild)
+			if npc.GetActorBase().IsUnique()
+				selection = WorkshopParent.AddActorToWorkshopPlayerChoice(npc) ; May return NONE if player hits cancel
 			else
-				npc.AddToFaction(FarmerGenericDialogue)
+				selection = WorkshopParent.AddPermanentActorToWorkshopPlayerChoice(npc) ; May return NONE if player hits cancel
 			endif
-			
-			; if I have a linked work object, set my ownership to it
-			if npc.GetLinkedRef(WorkshopParent.WorkshopLinkWork)
-				WorkshopObjectScript workobject = ((npc.GetLinkedRef(WorkshopParent.WorkshopLinkWork)) as WorkshopObjectScript)
-				TweakAssignActor(workobject, npc)
+			if selection
+				workshopID = LocationToWorkShopID(selection)
+			else
+				if (workshopID > -1)
+					selection = settlement
+				endIf
 			endif
-			
 		endif
 		
-		; Faction membership enforced by RefCollectionAlias
-		; npc.AddToFaction(WorkshopNPCFaction)
-		; npc.AddToFaction(WorkshopDialogueFaction)		
-		TweakSetCommandable(npc,  true)
-		TweakSetAllowCaravan(npc, true)
-		TweakSetAllowMove(npc,    true)
+		if (workshopID < 0)
+			Trace("Prompt is false and no valid Workshop location provided. Bailing.")
+			return false		
+		endif
 		
+		if (WNS.GetWorkshopID() != -1)
+			if (WNS.GetWorkshopID() == workshopID)
+				Trace("Worksop assignment is same as current workshop. Bailing")
+				return true
+			endif
+		endif
 		
-	endif
+		WorkshopScript workshopRef = WorkshopParent.GetWorkshop(workshopID)	
+		if !workshopRef
+			; One Last Sanity Check
+			Trace("Prompt is false and no valid Workshop could be found. Using Sanctuary Hills")
+			workshopRef = LocationToWorkShop(SanctuaryHillsLocation)
+		endIf
+		
+		if !workshopRef
+			Trace("Assertion Failure. Sanctuary Hills not found as workshop")
+			return false
+		endif
 
-	if !PromptForHome
-		return
-	endif
-	
-	if !WorkshopParent.PlayerOwnsAWorkshop
-		return
-	endif
-	
-	CompanionActorScript CAS     = npc as CompanionActorScript
-	DogmeatActorScript   DAS     = npc as DogmeatActorScript
-	
-	Location selection    = SanctuaryHillsPlayerHouseLocation
-			
-	if (workshopID > -1)			
-		selection    = WorkShopIDToLocation(workshopID)
-	elseif CAS
-		selection = CAS.HomeLocation
-	elseif DAS
-		selection = DAS.HomeLocation
-	endif
-	
-	if npc.GetActorBase().IsUnique()
-		if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
-			selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
+		; if !workshopRef.OwnedByPlayer
+		;	Trace("Can not assign to this location as Settlement.")
+		;	return false
+		; endif
+		
+		if (WNS.GetWorkshopID() != -1)
+			WorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
+		endIf
+
+		if npc.GetActorBase().IsUnique()
+			WorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
 		else
-			selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akExcludeKeywordList=WorkshopParent.WorkshopSettlementMenuExcludeList)
+			WorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
+		endIf
+		return true
+	endIf
+	
+		
+	if PromptForHome
+		CompanionActorScript CAS = npc as CompanionActorScript
+		if (workshopID < 0)
+			selection = SanctuaryHillsLocation
 		endif
+		if npc.GetActorBase().IsUnique()
+			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
+				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
+			else
+				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akExcludeKeywordList=WorkshopParent.WorkshopSettlementMenuExcludeList)
+			endif
+		else
+			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
+				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
+			else
+				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akExcludeKeywordList=WorkshopParent.WorkshopSettlementMenuExcludeList)
+			endif
+		endif
+		if selection
+			workshopID = LocationToWorkShopID(selection)
+		else
+			if (workshopID > -1)
+				selection = settlement
+			endif
+		endif
+	endif
+	
+	if workshopID < 0
+		Trace("No valid Workshop location provided. Bailing.")
+		return false
+	endif
+	
+	if npc.IsInFaction(TweakSettlerFaction)
+		if (workshopID == TweakGetWorkshopID(npc))
+			Trace("Worksop assignment is same as current workshop. Bailing")
+			return false
+		endif
+		UnMakeSettler(npc)		
+	endIf
+	
+	WorkshopScript workshopRef = WorkshopParent.GetWorkshop(workshopID)	
+	if !workshopRef
+		; One Last Sanity Check
+		Trace("Prompt is false and no valid Workshop could be found. Using Sanctuary Hills")
+		workshopRef = LocationToWorkShop(SanctuaryHillsLocation)
+	endIf
+	
+	if !workshopRef
+		Trace("Assertion Failure. Sanctuary Hills not found as workshop")
+		return false
+	endif
+	
+	return MakeSettlerHelper(npc, workshopRef)
+	
+EndFunction
+
+bool Function MakeSettlerHelper(Actor npc, WorkshopScript workshopRef)
+	
+	Trace("Adding [" + npc + "] to Settlers Collection")
+	if npc.IsInFaction(TweakSettlerFaction)
+		Trace("Assertion Failure. NPC is already a TweakSettler")	
+		return false
+	endif
+	if !workshopRef
+		Trace("Assertion Failure. workshopRef is NONE")	
+		return false
+	endif
+		
+	pSettlers.AddRef(npc)
+	
+	; Use 9000 as place holder value to indicate no settlement.
+	npc.SetValue(WorkshopParent.workshopIDActorValue, NO_WORKSHOPID)
+	npc.SetValue(TweakSettlerMultiResourceId,         NO_MULTIRESOURCEID)
+	npc.SetValue(TweakSettlerWork24Hours,             0.0)
+	
+	Actor myBrahmin = NONE
+	ObjectReference oBrahmin = npc.GetLinkedRef(TweakSettlerBrahmin)
+	if oBrahmin
+		myBrahmin = oBrahmin as Actor
+	endif
+	if myBrahmin
+		WorkshopParent.CaravanBrahminAliases.RemoveRef(myBrahmin)
+		myBrahmin.SetLinkedRef(NONE, WorkshopParent.WorkshopLinkFollow)
+		myBrahmin.Delete()				
+	endif
+	npc.SetLinkedRef(NONE, TweakSettlerBrahmin)
+	
+	if npc.IsChild()
+		npc.AddToFaction(FarmerGenericChild)
 	else
-		if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
-			selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
-		else
-			selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akExcludeKeywordList=WorkshopParent.WorkshopSettlementMenuExcludeList)
-		endif
+		npc.AddToFaction(FarmerGenericDialogue)
 	endif
 	
-	if WNS
-		Trace("Skipping Custom AI. NPC is alwready a WorkshopNPC")
-		return
+	; if I have a linked work object, set my ownership to it
+	if npc.GetLinkedRef(WorkshopParent.WorkshopLinkWork)
+		WorkshopObjectScript workobject = ((npc.GetLinkedRef(WorkshopParent.WorkshopLinkWork)) as WorkshopObjectScript)
+		TweakAssignActor(workobject, npc)
 	endif
 	
-	; NON WWorkshopNPCScript Actors will need some AI help 
-	ObjectReference selectionRef = LocationToWorkShopRef(selection)
-	if !selectionRef
-		selection    = SanctuaryHillsPlayerHouseLocation
-		selectionRef = CodsworthKitchenMarker
-	endif
-	
-	npc.SetLinkedRef(selectionRef,WorkshopLinkHome)
+	; Faction membership enforced by RefCollectionAlias
+	; npc.AddToFaction(WorkshopNPCFaction)
+	; npc.AddToFaction(WorkshopDialogueFaction)		
+	TweakSetCommandable(npc,  true)
+	TweakSetAllowCaravan(npc, true)
+	TweakSetAllowMove(npc,    true)			
+		
+	npc.SetLinkedRef(workshopRef, WorkshopLinkHome)
 	npc.EvaluatePackage()
+	return true
 	
 EndFunction
 
 Function UnMakeSettler(Actor npc, bool removeFromCollection=true)
 
 	Trace("UnMakeSettler(" + npc + ")")
+
+	WorkshopNPCScript    WNS     = npc as WorkshopNPCScript
+	if (WNS)
+		Trace("  WNS detected")
+		WorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
+		return
+	endIf
 	
 	if (pSettlers.Find(npc) < 0)
 		Trace("  npc not found. Aborting")
 		return
 	endif
 	
-	WorkshopNPCScript    WNS     = npc as WorkshopNPCScript
-	int workshopID = -1
+	TweakSetCommandable(npc,  false)
+	TweakSetAllowCaravan(npc, false)
+	TweakSetAllowMove(npc,    false)
 	
-	if (WNS)
-		Trace("  WNS detected")
-		workshopID = npc.GetValue(WorkshopParent.WorkshopIDActorValue) as int	
-	else
-		TweakSetCommandable(npc,  false)
-		TweakSetAllowCaravan(npc, false)
-		TweakSetAllowMove(npc,    false)
-		
-		npc.SetValue(WorkshopParent.workshopIDActorValue, NO_WORKSHOPID)
-		npc.SetValue(TweakSettlerMultiResourceId, NO_MULTIRESOURCEID)
-		npc.SetValue(TweakSettlerWork24Hours,0)		
-		TweakUnassignActor(npc, true)
+	npc.SetValue(WorkshopParent.workshopIDActorValue, NO_WORKSHOPID)
+	npc.SetValue(TweakSettlerMultiResourceId, NO_MULTIRESOURCEID)
+	npc.SetValue(TweakSettlerWork24Hours,0)		
+	TweakUnassignActor(npc, true)
 
-		Actor myBrahmin = NONE
-		ObjectReference oBrahmin = npc.GetLinkedRef(TweakSettlerBrahmin)
-		if oBrahmin
-			myBrahmin = oBrahmin as Actor
-		endif
-		if myBrahmin
-			WorkshopParent.CaravanBrahminAliases.RemoveRef(myBrahmin)
-			myBrahmin.SetLinkedRef(NONE, WorkshopParent.WorkshopLinkFollow)
-			myBrahmin.Delete()				
-		endif
-		npc.SetLinkedRef(NONE, TweakSettlerBrahmin)
-			
-		if npc.IsChild()
-			npc.RemoveFromFaction(FarmerGenericChild)
-		else
-			npc.RemoveFromFaction(FarmerGenericDialogue)
-		endif
-		
+	Actor myBrahmin = NONE
+	ObjectReference oBrahmin = npc.GetLinkedRef(TweakSettlerBrahmin)
+	if oBrahmin
+		myBrahmin = oBrahmin as Actor
 	endif
+	if myBrahmin
+		WorkshopParent.CaravanBrahminAliases.RemoveRef(myBrahmin)
+		myBrahmin.SetLinkedRef(NONE, WorkshopParent.WorkshopLinkFollow)
+		myBrahmin.Delete()				
+	endif
+	npc.SetLinkedRef(NONE, TweakSettlerBrahmin)
+		
+	if npc.IsChild()
+		npc.RemoveFromFaction(FarmerGenericChild)
+	else
+		npc.RemoveFromFaction(FarmerGenericDialogue)
+	endif
+		
 	
 	npc.SetLinkedRef(NONE,WorkshopLinkHome)	
 	if removeFromCollection
@@ -337,8 +439,7 @@ Function HandleBoSKickOut()
 				UnMakeSettler(Danse)
 				WorkshopNPCScript wns = Danse as WorkshopNPCScript
 				if wns
-					WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-					pWorkshopParent.UnAssignActor(Danse as WorkshopNPCScript, true)
+					WorkshopParent.UnAssignActor(Danse as WorkshopNPCScript, true)
 				endif				
 			endif
 			
@@ -739,7 +840,7 @@ Function TweakOnWorkshopNPCTransfer(ObjectReference oNPC, Location akNewWorkshop
 	if akActionKW == WorkshopParent.WorkshopAssignCaravan
 		TweakAssignCaravanActorPUBLIC(npc, akNewWorkshopLocation)
 	else
-		WorkshopScript newWorkshop = WorkshopParent.GetWorkshopFromLocation(akNewWorkshopLocation)
+		WorkshopScript newWorkshop = LocationToWorkShop(akNewWorkshopLocation)
 		if newWorkshop
 			if akActionKW == WorkshopParent.WorkshopAssignHome
 				TweakAddActorToWorkshopPUBLIC(npc, newWorkshop)
@@ -869,7 +970,7 @@ endFunction
 function TweakAssignCaravanActorPUBLIC(Actor assignedActor, Location destinationLocation)
 	Trace("TweakAssignCaravanActorPUBLIC assignedActor [" + assignedActor + "] destinationLocation [" + destinationLocation + "]")
 	bool gotlock = GetSpinLock(pTweakMutexCompanions,30, "TweakAssignCaravanActorPUBLIC") 
-	WorkshopScript workshopDestination = WorkshopParent.GetWorkshopFromLocation(destinationLocation)
+	WorkshopScript workshopDestination = LocationToWorkShop(destinationLocation)
 
 	WorkshopScript workshopStart = WorkshopParent.GetWorkshop(TweakGetWorkshopID(assignedActor))
 	TweakUnassignActor(assignedActor)
@@ -1653,36 +1754,163 @@ ActorValue function TweakGetMultiResource(Actor npc)
 	return result
 endFunction
 
+; Similar to GetWorkshop but returns Location instead of Workshop
 Location Function WorkShopIDToLocation(int id)
-	RefCollectionAlias   wscollection    = WorkshopParent.WorkshopsCollection
-	if (id >= wscollection.GetCount())
-		return None
+	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+	if (id > -1 && id < pWorkshopParent.Workshops.Length)
+		WorkshopScript workshopRef = pWorkshopParent.GetWorkshop(id)
+		if workshopRef
+			return workshopRef.GetCurrentLocation()
+		endIf
 	endif
-	WorkshopScript workshopRef       = wscollection.GetAt(id) as WorkshopScript
-	return workshopRef.GetCurrentLocation()
+	return None
 endFunction
 
-ObjectReference Function LocationToWorkShopRef(Location loc)
-	ObjectReference marker = None	
-	Location ws            = None
-	RefCollectionAlias   wscollection     = WorkshopParent.WorkshopsCollection
+; Similar to GetWorkshopID, but takes location instead of Workshop
+int Function LocationToWorkShopID(Location loc)
+	if loc
+		WorkshopScript workshopRef = LocationToWorkShop(loc)
+		if workshopRef
+			WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+			return pWorkshopParent.GetWorkshopID(workshopRef)		
+		endIf
+	endif
+	return -1	
+EndFunction
+
+; Replacement for GetWorkshopFromLocation (with checks)
+WorkshopScript Function LocationToWorkShop(Location loc)
+
+	if loc	
+		WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+		if pWorkshopParent
+			; They have a fast WorkshopLocation lookup on the parent, but I don't trust it. 
+			Location ws                          = None
+			RefCollectionAlias   wscollection    = pWorkshopParent.WorkshopsCollection
+	
+			int index = 0
+			int wslen = wscollection.GetCount()
+			while (index < wslen && loc != ws)
+				WorkshopScript workshopRef = wscollection.GetAt(index) as WorkshopScript
+				if workshopRef
+					ws = workshopRef.GetCurrentLocation()
+					if loc == ws
+						return workshopRef
+					endif
+				endif
+				index += 1
+			endwhile
+		endif
+	endif
+	
+	return None
+EndFunction
+
+Location Function WorkShopToLocation(WorkshopScript workshopRef)
+	if workshopRef
+		return workshopRef.GetCurrentLocation()
+	endif
+	return NONE
+EndFunction
+
+; searchOnFailure is normally true when using "Current" location as home.
+ObjectReference Function LocationToWorkShopMarker(Location loc, bool searchOnFailure = false)
+	ObjectReference marker = None
+		
+	Location ws                          = None
+	WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+	RefCollectionAlias   wscollection     = pWorkshopParent.WorkshopsCollection
 	
 	int index = 0
-	while (index < wscollection.GetCount() && loc != ws)
+	int wslen = wscollection.GetCount()
+	while (index < wslen && loc != ws)
 		WorkshopScript workshopRef = wscollection.GetAt(index) as WorkshopScript
-		ws = workshopRef.GetCurrentLocation()
-		if loc == ws
-			marker = workshopRef.GetLinkedRef(WorkshopLinkSandbox)			
-			if marker == NONE
-				marker = workshopRef.GetLinkedRef(WorkshopLinkCenter)
+		if workshopRef
+			ws = workshopRef.GetCurrentLocation()
+			if loc == ws
+				marker = workshopRef.GetLinkedRef(WorkshopLinkSandbox)			
+				if marker == NONE
+					marker = workshopRef.GetLinkedRef(WorkshopLinkCenter)
+				endif
+				if marker == NONE
+					marker = workshopRef as ObjectReference
+				endIf
+				return marker
 			endif
-			if marker == NONE
-				marker = workshopRef as ObjectReference
-			endIf
-			return marker
 		endif
 		index += 1
 	endwhile
+	
+	if searchOnFailure
+	
+		; This allows us to "See" nearby workbenches installed by mods that may not have been 
+		; registered with the Settlement System using WorkshopParent.ReinitializeLocationsPUBLIC()
+		; It still has to caste to workshopscript to count.
+		
+		ObjectReference[] candidates =  Game.GetPlayer().FindAllReferencesWithKeyword(WorkshopKeyword, 4000)
+		int cilen = candidates.Length
+		if (cilen > 0)
+			int ci = 0
+			WorkshopScript workshopRef = None
+			while (ci < cilen)
+				workshopRef = candidates[ci] as WorkshopScript
+				if workshopRef
+					marker = workshopRef.GetLinkedRef(WorkshopLinkSandbox)			
+					if marker == NONE
+						marker = workshopRef.GetLinkedRef(WorkshopLinkCenter)
+					endif
+					if marker == NONE
+						marker = workshopRef as ObjectReference
+					endIf
+					return marker
+				endif
+				ci += 1
+			endwhile
+		endif		
+	endif
+	
+	return marker
+EndFunction
+
+; For when you dont care
+ObjectReference Function LocationToMarker(Location loc)
+	ObjectReference marker = LocationToWorkShopMarker(loc)
+	if marker
+		return marker
+	endIf
+	return LocationToCachedMarker(loc)
+EndFunction
+
+ObjectReference Function LocationToCachedMarker(Location loc)
+	ObjectReference marker = None
+	int locid  = (loc.GetFormID() as int)
+	if (0x0001905B == locid)     ; CombatZoneLocation
+		marker = CaitPostCombatMarker01
+	elseif (0x0001F229 == locid) ; SanctuaryHillsPlayerHouseLocation
+		marker = CodsworthKitchenMarker
+	elseif (0x0002BE8D == locid) ; Vault81Location
+		marker = COMCurieIntroMarker
+	elseif (0x0001FA4A == locid) ; CambridgePDLocation
+		marker = BoS101PlayerStartMarker
+	elseif (0x000482C2 == locid) ; RailroadHQLocation
+		marker = DeaconHomeMarker
+	elseif (0x00024FAB == locid) ; RedRocketTruckStopLocation
+		marker = RedRocketCenterMarker
+	elseif (0x0002260F == locid) ; GoodneighborOldStateHouseLocation
+		marker = MS04HancockEndMarker
+	elseif (0x0002267F == locid) ; GoodneighborTheThirdRailLocation
+		marker = COMMacCreadyStartMarker
+	elseif (0x00003979 == locid) ; DiamondCityValentinesLocation
+		marker = MS07NickOfficeMarker
+	elseif (0x00003962 == locid) ; DiamondCityPublickOccurrencesLocation
+		marker = MQ201BPiperTravelMarker02
+	elseif (0x0001F228 == locid) ; SanctuaryHillsLocation
+		marker = SanctuaryLocationCenterMarker
+	elseif (0x0001DAF7 == locid) ; TrinityTowerLocation
+		marker = MS10SafetyMarker
+	elseif (0x001BBC22 == locid) ; InstituteSRBLocation
+		marker = InstSceneAlaneJustin1JustinMarker
+	endif
 	return marker
 EndFunction
 

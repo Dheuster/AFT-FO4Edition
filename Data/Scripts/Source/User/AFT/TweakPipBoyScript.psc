@@ -3604,7 +3604,7 @@ Function ImportNPCRelay(int itype = 0)
 			endif
 			pFollowersScript.SetCompanion(TerminalTarget)		
 		else
-			TWScript.MakeSettler(TerminalTarget, true)
+			TWScript.MakeSettler(TerminalTarget)
 		endif
 		
 	endif

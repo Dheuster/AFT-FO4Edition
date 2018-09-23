@@ -334,6 +334,11 @@ Event OnTimer(int aiTimerID)
 				StartTimer(3,NO_LG_FLOOD_CONT)
 				return
 			endif
+			if (!pTweakSettlers.IsRunning())
+				Trace("Waiting for TweakSettlers Quest to Start")
+				StartTimer(3,NO_LG_FLOOD_CONT)
+				return
+			endif
 			if (!pTweakFollower.IsRunning())
 				Trace("Waiting for TweakFollowers Quest to Start")
 				StartTimer(3,NO_LG_FLOOD_CONT)
@@ -414,7 +419,14 @@ Function OnGameLoaded()
 	else
 		Trace("Unable to Call AFT:pTweakDLC04Script.OnGameLoaded()")
 	endif
-			
+
+	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
+	if (pAFTSettlers)
+		pAFTSettlers.OnGameLoaded(firstcall)
+	else
+		Trace("Unable to Call TweakSettlers.OnGameLoaded()")
+	endif
+	
 	AFT:TweakDFScript pTweakDFScript = (pFollowers as AFT:TweakDFScript)
 	if (pTweakDFScript)
 		Trace("Calling AFT:TweakDFScript.OnGameLoaded()")
@@ -494,14 +506,7 @@ Function OnGameLoaded()
 	else
 		Trace("Unable to Call pTweakInterjectionQuestScript.OnGameLoaded()")	
 	endif
-	
-	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
-	if (pAFTSettlers)
-		pAFTSettlers.OnGameLoaded(firstcall)
-	else
-		Trace("Unable to Call TweakSettlers.OnGameLoaded()")
-	endif
-	
+		
 	allowdraw  = true
 	StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
 	StartTimer(4.0,NO_ANIM_SHEATH_FLOOD)

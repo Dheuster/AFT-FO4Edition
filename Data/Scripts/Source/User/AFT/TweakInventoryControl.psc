@@ -2772,6 +2772,8 @@ endEvent
 
 Bool Function ShouldUseHomeOutfit()
 	Actor npc = self.GetActorReference()
+	; NOTE : If user is circumventing AFT's limit (Create Followers) and
+	;        has managed NPCs along, this would keep evaluating to true. 
 	if !npc.IsInFaction(pCurrentCompanionFaction)
 		return true
 	endif
