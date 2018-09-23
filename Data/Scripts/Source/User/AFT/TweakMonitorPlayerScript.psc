@@ -27,6 +27,7 @@ Quest		Property pTweakDLC03			Auto Const
 Quest		Property pTweakDLC04			Auto Const
 Quest		Property pTweakCOMSpouse    	Auto Const
 Quest		Property pTweakInterjections	Auto Const
+Quest		Property pTweakSettlers			Auto Const
 
 Bool		Property IsInDialogue			Auto
 Bool		Property RelayEvent				Auto
@@ -333,6 +334,11 @@ Event OnTimer(int aiTimerID)
 				StartTimer(3,NO_LG_FLOOD_CONT)
 				return
 			endif
+			if (!pTweakSettlers.IsRunning())
+				Trace("Waiting for TweakSettlers Quest to Start")
+				StartTimer(3,NO_LG_FLOOD_CONT)
+				return
+			endif
 			if (!pTweakFollower.IsRunning())
 				Trace("Waiting for TweakFollowers Quest to Start")
 				StartTimer(3,NO_LG_FLOOD_CONT)
@@ -413,7 +419,14 @@ Function OnGameLoaded()
 	else
 		Trace("Unable to Call AFT:pTweakDLC04Script.OnGameLoaded()")
 	endif
-			
+
+	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
+	if (pAFTSettlers)
+		pAFTSettlers.OnGameLoaded(firstcall)
+	else
+		Trace("Unable to Call TweakSettlers.OnGameLoaded()")
+	endif
+	
 	AFT:TweakDFScript pTweakDFScript = (pFollowers as AFT:TweakDFScript)
 	if (pTweakDFScript)
 		Trace("Calling AFT:TweakDFScript.OnGameLoaded()")
@@ -421,7 +434,7 @@ Function OnGameLoaded()
 	else
 		Trace("Unable to Call AFT:TweakDFScript.OnGameLoaded()")
 	endif
-
+	
 	FollowersScript pFollowersScript = (pFollowers as FollowersScript)
 	if (pFollowersScript)
 		; Trace("AFT:TweakMonitorPlayer : Calling FollowersScript.OnGameLoaded()")
@@ -493,7 +506,7 @@ Function OnGameLoaded()
 	else
 		Trace("Unable to Call pTweakInterjectionQuestScript.OnGameLoaded()")	
 	endif
-	
+		
 	allowdraw  = true
 	StartTimer(4.0,NO_ANIM_DRAW_FLOOD)
 	StartTimer(4.0,NO_ANIM_SHEATH_FLOOD)
@@ -594,6 +607,11 @@ Function AftReset()
 	TweakRegisterPrefabScript pRegisterPrefabs = pTweakSettlementLoader As TweakRegisterPrefabScript
 	if pRegisterPrefabs
 		pRegisterPrefabs.Cleanup()
+	endif
+
+	TweakSettlersScript pAFTSettlers = (pTweakSettlers as TweakSettlersScript)
+	if (pAFTSettlers)
+		pAFTSettlers.AftReset()
 	endif
 	
 	Actor player = Game.GetPlayer()	                          

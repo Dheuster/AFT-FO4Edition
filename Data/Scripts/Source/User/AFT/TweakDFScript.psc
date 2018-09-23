@@ -22,6 +22,7 @@ Faction property pTweakFollowerFaction       Auto Const
 Faction property pTweakNamesFaction			 Auto Const
 Faction property pTweakPosedFaction			 Auto Const
 Faction property HasBeenCompanionFaction	 Auto Const
+Faction property pSalemFaction				 Auto Const
 Perk	property crNoFallDamage				 Auto Const
 Faction property pDanversFaction             Auto Const
 
@@ -146,11 +147,17 @@ Faction    Property pTweakCityOutFaction      	Auto Const
 Faction    Property pTweakStandardOutFitFaction	Auto Const
 Faction    Property pTweakHangoutFaction		Auto Const
 Faction    Property pTweakNoIdleChatter			Auto Const
+Faction	   Property pTweakNoRelaxFaction		Auto Const
 
 Quest      Property pTweakCOMSpouse				Auto Const
 
 ActorBase  Property CompanionDeacon				Auto Const
 ActorBase  Property BoSPaladinDanse				Auto Const
+ActorBase  Property pTweakCompanionNate			Auto Const
+ActorBase  Property pTweakCompanionNora			Auto Const
+ActorValue Property pTweakSkipDistance			Auto Const
+ActorValue Property pSkillMagAV08				Auto Const ; If 1.32 means AFT saved the NPC on uninstall...
+ActorValue Property pTweakNextHealAllowed		Auto Const
 
 ; CommentSync Control:
 GlobalVariable	Property pTweakCommentSynch		Auto Const
@@ -329,10 +336,31 @@ Function OnGameLoaded(bool firstTime=false)
 	; ReleaseSpinLock(pTweakMutexCompanions, true, "OnGameLoaded")
 	
 	if (firstTime)
-		if (pCompanion.GetActorReference())
-			; Make sure pCompanion is in the followers list (Bails fast if that is the case)
-			trace("OnInit : Calling SetCompanion")
-			SetCompanion(pCompanion.GetActorReference())
+		trace("OnGameLoaded() FirstTime: Checking Companion")
+		Actor npc = pCompanion.GetActorReference()
+		if (!npc)
+			npc = pDogmeatCompanion.GetActorReference()
+		endIf
+		
+		if (npc)
+			trace("Companion [" + npc + "] Detected")
+			if IsCoreCompanion(npc)
+				trace("Core Companion Detected. Calling SetCompanion()")
+				; Make sure pCompanion is in the followers list (Bails fast if that is the case)
+				trace("OnInit : Calling SetCompanion")
+				SetCompanion(npc)
+			else
+				trace("Companion is NOT core Companion. Marking them for Follow Only")
+				if (!npc.IsInFaction(pSalemFaction))
+					npc.AddToFaction(pSalemFaction)
+				endif
+				if (!npc.IsInFaction(pDanversFaction))
+					npc.AddToFaction(pDanversFaction)
+				endif
+				SetCompanion(npc)			
+			endif
+		else
+			trace("No Companion in the Companion Slot(s).")		
 		endIf
 	else
 		; RotateCompanion() fixes pCompanion/Follower list sync issues as well as rotating 
@@ -376,6 +404,12 @@ int Function v10Update()
 				imported += 1
 			endIf
 		else
+		
+			; Note, there is a window where you have asked dogmeat to come with you but have
+			; not reached Concord. Dogmeat is not tracked by pActiveCompanions, but in this
+			; scenario, he would be in the Companion slot. So we allow that handler to 
+			; handle him.
+			
 			Trace("Skipping dogmeat. Player has not reached Concord")
 		endIf		
 		pTweakUpdateProgress100.show()
@@ -385,15 +419,17 @@ int Function v10Update()
 	
 	import_processed = 0
 	import_max_time  = 20
-	
+	int len = pActiveCompanions.GetCount()
 	StartTimer(2.0, TIMER_MONITOR_IMPORT)
-	while (import_processed < pActiveCompanions.GetCount())
+	while (import_processed < len)
 		Actor npc = pActiveCompanions.GetAt(import_processed) as Actor
 		if !npc.IsInFaction(pTweakFollowerFaction) && !npc.IsInFaction(pDisallowedCompanionFaction)
 			Trace("Calling Import [" + npc + "]")
-			if (pTweakFollowerScript.ImportFollower(npc, true))
-				imported += 1
-			endIf
+			if (1.32 == npc.GetValue(pSkillMagAV08) || IsCoreCompanion(npc))
+				if (pTweakFollowerScript.ImportFollower(npc, true))
+					imported += 1
+				endIf
+			endif
 		endIf
 		import_processed += 1
 		Trace("v10Update : import_processed [" + import_processed + "]")
@@ -420,6 +456,56 @@ int Function v10Update()
 		
 EndFunction
 
+Function UnManage(Actor npc)
+	ReferenceAlias npcRef = FindAlias(npc)
+	if npcRef
+		AddKeywords(npc)
+		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
+		CompanionDataToggle(npcRef, false, false)
+		npc.StopCombatAlarm()
+		if npc.IsInFaction(pCurrentCompanionFaction)
+			npc.RemoveFromFaction(pCurrentCompanionFaction)
+		endIf
+		pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)
+		npcRef.Clear()
+	endif
+EndFunction
+
+; Despite being part of the AFT Reset process, we need to time things correctly
+; with TweakFollowerScript to ensure we keep NPCs meeting certain criteria. 
+; So this is not called from here, but rather from TweakFollowerScripts
+; AftReset Handler....
+Function ClearNonCoreFromActive()
+	int len = pActiveCompanions.GetCount()
+	int i = 0
+	Actor[] keep = new Actor[0]
+	
+	while (i < len)
+		Actor npc = pActiveCompanions.GetAt(i) as Actor
+		if npc && !npc.IsDead() && IsCoreCompanion(npc)
+			npc.SetValue(pSkillMagAV08,1.32)
+			keep.add(npc)
+		endif
+		i += 1	
+	endwhile
+	pActiveCompanions.RemoveAll()
+	
+	len = keep.Length
+	i = 0
+	while (i < len)
+		pActiveCompanions.AddRef(keep[i])
+		i += 1
+	endWhile
+EndFunction
+
+; Called from TweakFollowerScript during uninstall.
+Function AddtoActiveCollection(Actor npc)
+	if npc
+		npc.SetValue(pSkillMagAV08,1.32)
+		pActiveCompanions.AddRef(npc)
+	endif
+EndFunction
+
 Function AftReset()
 	trace("============= AftReset() ================")
 	
@@ -427,93 +513,39 @@ Function AftReset()
 	CancelTimer(TIMER_MONITOR_IMPORT)
 	CancelTimer(TIMER_PLAYER_WAKEUP)
 
-	Actor player = Game.GetPlayer()
-	Actor npc
-	npc = pCompanion.GetActorReference()
+	Actor npc = pCompanion.GetActorReference()
 	if npc
 		pCompanion.Clear()
-	endIf
+	endIf	
 	npc = pCompanion1.GetActorReference()	
 	if npc
-		AddKeywords(npc)
-		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
-		CompanionDataToggle(pCompanion1, false, false)
-		npc.StopCombatAlarm()
-		if npc.IsInFaction(pCurrentCompanionFaction)
-			; UnManaged NPC support
-			npc.RemoveFromFaction(pCurrentCompanionFaction)
-		endIf
-		pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)								
-		pCompanion1.Clear()		
+		UnManage(npc)
 	endIf
 	npc = pCompanion2.GetActorReference()	
 	if npc
-		AddKeywords(npc)
-		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
-		CompanionDataToggle(pCompanion2, false, false)
-		npc.StopCombatAlarm()
-		if npc.IsInFaction(pCurrentCompanionFaction)
-			; UnManaged NPC support
-			npc.RemoveFromFaction(pCurrentCompanionFaction)
-		endIf
-		pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)								
-		pCompanion2.Clear()
+		UnManage(npc)
 	endIf
 	npc = pCompanion3.GetActorReference()	
 	if npc
-		AddKeywords(npc)
-		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
-		CompanionDataToggle(pCompanion3, false, false)
-		npc.StopCombatAlarm()
-		if npc.IsInFaction(pCurrentCompanionFaction)
-			; UnManaged NPC support
-			npc.RemoveFromFaction(pCurrentCompanionFaction)
-		endIf
-		pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)								
-		pCompanion3.Clear()
+		UnManage(npc)
 	endIf
 	npc = pCompanion4.GetActorReference()	
 	if npc
-		AddKeywords(npc)
-		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
-		CompanionDataToggle(pCompanion4, false, false)
-		npc.StopCombatAlarm()
-		if npc.IsInFaction(pCurrentCompanionFaction)
-			; UnManaged NPC support
-			npc.RemoveFromFaction(pCurrentCompanionFaction)
-		endIf
-		pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)								
-		pCompanion4.Clear()
+		UnManage(npc)
 	endIf
 	npc = pCompanion5.GetActorReference()	
 	if npc
-		AddKeywords(npc)
-		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
-		CompanionDataToggle(pCompanion5, false, false)
-		npc.StopCombatAlarm()
-		if npc.IsInFaction(pCurrentCompanionFaction)
-			; UnManaged NPC support
-			npc.RemoveFromFaction(pCurrentCompanionFaction)
-		endIf
-		pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)								
-		pCompanion5.Clear()
+		UnManage(npc)
 	endIf
 	npc = pDogmeatCompanion.GetActorReference()	
 	if npc
-		AddKeywords(npc)
-		; DAS.RemoveFromFaction(pTweakWaitingFaction)			
-		npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
-
-		CompanionDataToggle(pDogmeatCompanion, false, false)
-		npc.StopCombatAlarm()
-
-		pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)			
-		pDogmeatCompanion.Clear()		
+		UnManage(npc)
 	endIf
+	
 	pPlayerHasActiveDogmeatCompanion.SetValue(0)
 	pPlayerHasActiveCompanion.SetValue(0)
-	
 		
+	Actor player = Game.GetPlayer()
 	UnRegisterForPlayerSleep()
 	UnRegisterForHitEvent(player)
 	UnregisterForRemoteEvent(player,"OnLocationChange")
@@ -1002,6 +1034,12 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 			LockSendAffinityEvent = false
 			RETURN false
 		endIf
+	elseif (Target && Target.GetDistance(Game.GetPlayer()) < 180)
+		float nextAllowed = Target.GetValue(pTweakNextHealAllowed)
+		if nextAllowed < Utility.GetCurrentGameTime()		
+			Target.SetValue(pTweakNextHealAllowed, (Utility.GetCurrentGameTime() + 0.5))
+			TryToLike(Target as Actor)
+		endif
 	endif
 		
 	GlobalVariable CoolDown = CurrentAffinityEventData.CoolDownDays
@@ -1539,6 +1577,35 @@ Function AffinityTalkHelper(Actor npc, keyword EventKeyword, GlobalVariable  Eve
 	
 EndFunction
 
+Function TryToLike(Actor npc)
+	Trace("TryToLike for [" + npc + "]")
+	CompanionActorScript CAS = npc as CompanionActorScript
+	if CAS
+		Trace(" - Companion Actor detected")
+		Keyword EventKeyword = CAS.LikesEvent
+		FollowersScript:AffinityEventData CurrentAffinityEventData = FollowersScript.GetAffinityEventData(EventKeyword)
+		if CurrentAffinityEventData
+			Trace(" - GetAffinityEventData Found Event")
+			ActorValue associatedActorValue = CurrentAffinityEventData.AssociatedActorValue
+			GlobalVariable EventSize        = CurrentAffinityEventData.EventSize
+			CompanionActorScript:EventData AffinityEventData = CAS.GetEventDataByKeyword(CAS.EventData_Array, CAS.LikesEvent)			
+			if AffinityEventData
+				Trace(" - CAS.GetEventDataByKeyword Found Event")
+				CAS.TryToModAffinity(AffinityEventData, EventSize)
+				CAS.TryToSetTraitValues(associatedActorValue, EventSize, ShouldAlsoSetAffinity = false)
+				TryToShowMessage(AffinityEventData, CAS, 1.0)
+			else
+				Trace(" - CAS.GetEventDataByKeyword did not find Event")
+			endif			
+		else
+			Trace(" - GetAffinityEventData returned None (unknown keyword)")
+		endif
+	else
+		Trace(" - Not CompanionActor. Bailing")
+	endif
+EndFunction
+
+
 bool Function IsActorInLocationWhereMurderShouldBeIgnored(actor ActorToTest, Location[] LocationsToIgnoreMurderIn)
 
 	Trace("IsActorInLocationWhereMurderShouldBeIgnored()")
@@ -2018,8 +2085,10 @@ Function SetCompanion(Actor ActorToMakeCompanion, bool SetCompanion = true, bool
 	
 	;used primarily to conditionalize dialogue
 	ActorToMakeCompanion.addToFaction(pHasBeenCompanionFaction)
-	
-	pFollowers.FollowerSetDistanceMedium(ActorToMakeCompanion)
+	if (0.0 == ActorToMakeCompanion.GetValue(pTweakSkipDistance))
+		pFollowers.FollowerSetDistanceMedium(ActorToMakeCompanion)
+		ActorToMakeCompanion.SetValue(pTweakSkipDistance, 1.0)
+	endif
 	
 	; Update actor values to trigger AI (See packages on Reference Aliases)
 	FollowerFollow(ActorToMakeCompanion)
@@ -2142,6 +2211,10 @@ function SetDogmeatCompanion(Actor ActorToMakeCompanion = None)
 	if pActiveCompanions.find(ActorToMakeCompanion) < 0
 		pActiveCompanions.addRef(ActorToMakeCompanion)
 	endIf
+
+	if !ActorToMakeCompanion.IsInFaction(pCurrentCompanionFaction)
+		ActorToMakeCompanion.AddToFaction(pCurrentCompanionFaction)
+	endIf
 	
 	; This should Make Teammate, NPC not show up on VATS, ignore friendly fire, etc...
 	CompanionDataToggle(pDogmeatCompanion, true, canDoFavor = true, givePlayerXP = true) ;canDoFavor is param that forces the no-dialogue command mode
@@ -2149,7 +2222,11 @@ function SetDogmeatCompanion(Actor ActorToMakeCompanion = None)
 	;used primarily to conditionalize dialogue
 	ActorToMakeCompanion.addToFaction(pHasBeenCompanionFaction)
 	
-	pFollowers.FollowerSetDistanceMedium(ActorToMakeCompanion)
+	if (0.0 == ActorToMakeCompanion.GetValue(pTweakSkipDistance))
+		pFollowers.FollowerSetDistanceMedium(ActorToMakeCompanion)
+		ActorToMakeCompanion.SetValue(pTweakSkipDistance, 1.0)
+	endif
+	
 	FollowerFollow(ActorToMakeCompanion)
 	
 	; Affinity and Situational awareness don't apply to dog since all it can do is bark.
@@ -2462,21 +2539,25 @@ Function DismissDogmeatCompanion(bool ShowLocationAssignmentListIfAvailable = tr
 		if DAS && HomeLoc != None
 			DAS.HomeLocation = HomeLoc
 		endIf
+	endif
 
 		
-		; DAS.RemoveFromFaction(pTweakWaitingFaction)			
-		DAS.SetValue(Game.GetCommonProperties().FollowerState, 0)
+	; DAS.RemoveFromFaction(pTweakWaitingFaction)			
+	npc.SetValue(Game.GetCommonProperties().FollowerState, 0)
 
-		pTweakFollowerScript.EventFollowerDismissed(DAS)			                 
-		CompanionDataToggle(pDogmeatCompanion, false, false)
-		DAS.StopCombatAlarm()
-
-		pFollowers.SendCompanionChangeEvent((DAS as Actor), IsNowCompanion = False)			
-		pPlayerHasActiveDogmeatCompanion.SetValue(0)
-		pDogmeatCompanion.Clear()
-		
+	pTweakFollowerScript.EventFollowerDismissed(npc)
+	CompanionDataToggle(pDogmeatCompanion, false, false)
+	npc.StopCombatAlarm()
+	
+	if npc.IsInFaction(pCurrentCompanionFaction)
+		; UnManaged NPC support
+		npc.RemoveFromFaction(pCurrentCompanionFaction)
 	endIf
-
+	
+	pFollowers.SendCompanionChangeEvent(npc, IsNowCompanion = False)
+	pPlayerHasActiveDogmeatCompanion.SetValue(0)
+	pDogmeatCompanion.Clear()
+	
 EndFunction
 
 Function TryToTeleportCompanion(ObjectReference TeleportDestinationRef, bool ShouldPlayTeleportInEffect = true, bool ShouldPlayTeleportOutEffect = true)
@@ -3197,76 +3278,160 @@ int Function CountFilledAliases()
 endFunction
 
 ReferenceAlias Function FindFreeAlias()
+	Trace("FindFreeAlias()")
+	
 	; Need to find this many free aliases before we can return...
-	int min_needed = (5 - pTweakFollowerLimit.GetValueInt())
+	int tlimit = pTweakFollowerLimit.GetValueInt()
+	if 0 == tlimit
+		Trace("Bad TweakFollowerLimit. Trying Float")
+		tlimit = (pTweakFollowerLimit.GetValue() as Int)
+		if 0 == tlimit
+			Trace("Bad TweakFollowerLimit. Trying Cast")
+			GlobalVariable lTweakFollowerLimit = Game.GetFormFromFile(0x0100079D,"AmazingFollowerTweaks.esp") as GlobalVariable
+			if lTweakFollowerLimit
+				Trace("Found Global Variable")
+				tlimit = (lTweakFollowerLimit.GetValue() as Int)
+			else
+				Trace("GlobalVariable TweakFollowerLimit (0x0100079D) Not found in AmazingFollowerTweaks.esp")
+			endif
+		endif
+	endif
+
+	if 0 == tlimit
+		Trace("Bad Value (0 not valid). Using Default value of 5")
+		tlimit = 5
+	endif
+	
+	Trace("TweakFollowerLimit: [" + tlimit + "]")
+	int min_needed = (5 - tlimit)
 	int free_found = 0
 
-	if (!pCompanion1.GetReference())
+	Trace("FindFreeAlias: min_needed = [" + min_needed + "]")
+	ObjectReference oCompanion1 = pCompanion1.GetReference()
+	if (!oCompanion1)
+		Trace("oCompanion1 appears empty")
 		if (free_found == min_needed)
 			return pCompanion1
 		endIf
 		free_found += 1
+	else
+		Trace("pCompanion1 Contains [" + (oCompanion1 as Actor) + "]")	
 	endIf
-	if (!pCompanion2.GetReference())
+	ObjectReference oCompanion2 = pCompanion2.GetReference()
+	if (!oCompanion2)
+		Trace("oCompanion2 appears empty")
 		if (free_found == min_needed)
 			return pCompanion2
 		endIf
 		free_found += 1
+	else
+		Trace("pCompanion2 Contains [" + (oCompanion2 as Actor) + "]")
 	endIf
-	if (!pCompanion3.GetReference())
+	ObjectReference oCompanion3 = pCompanion3.GetReference()	
+	if (!oCompanion3)
+		Trace("pCompanion3 appears empty")
 		if (free_found == min_needed)
 			return pCompanion3
 		endIf
 		free_found += 1
+	else
+		Trace("pCompanion3 Contains [" + (oCompanion3 as Actor) + "]")
 	endIf
-	if (!pCompanion4.GetReference())
+	ObjectReference oCompanion4 = pCompanion4.GetReference()
+	if (!oCompanion4)
+		Trace("pCompanion4 appears empty")
 		if (free_found == min_needed)
 			return pCompanion4
 		endIf
 		free_found += 1
+	else
+		Trace("pCompanion4 Contains [" + (oCompanion4 as Actor) + "]")
 	endIf
-	if (!pCompanion5.GetReference())
+	ObjectReference oCompanion5 = pCompanion5.GetReference()
+	if (!oCompanion5)
+		Trace("pCompanion5 appears empty")
 		if (free_found == min_needed)
 			return pCompanion5
 		endIf
+	else
+		Trace("pCompanion5 Contains [" + (oCompanion5 as Actor) + "]")
 	endIf
 	return None	
 endFunction
 
 ReferenceAlias Function FindFilledAlias()
+	Trace("FindFilledAlias()")
 
-	Actor p1 = pCompanion1.GetActorReference()
-	if (p1 && !p1.IsInFaction(pTweakRotateLockFollowerFaction))
+	ObjectReference p1 = pCompanion1.GetReference()
+	if p1
+		if (!(p1 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion1
+		else
+			Trace("pCompanion1 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion1 appears empty")
+	endIf
+	ObjectReference p2 = pCompanion2.GetReference()
+	if (p2)
+		if (!(p2 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion2
+		else
+			Trace("pCompanion2 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion2 appears empty")
+	endIf
+	ObjectReference p3 = pCompanion3.GetReference()
+	if (p3)
+		if (!(p3 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion3
+		else
+			Trace("pCompanion3 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion3 appears empty")
+	endIf
+	ObjectReference p4 = pCompanion4.GetReference()
+	if (p4)
+		if (!(p4 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion4
+		else
+			Trace("pCompanion4 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion4 appears empty")
+	endIf
+	ObjectReference p5 = pCompanion5.GetReference()
+	if (p5)
+		if (!(p5 as Actor).IsInFaction(pTweakRotateLockFollowerFaction))
+			return pCompanion5
+		else
+			Trace("pCompanion5 is filled but is in the TweakRotatelockFollowerFaction")	
+		endif
+	else
+		Trace("pCompanion5 appears empty")
+	endIf
+	
+	Trace("No hits, returning first available.")	
+	if (p1)
+		Trace("returning pCompanion1")
 		return pCompanion1
-	endIf
-	Actor p2 = pCompanion2.GetActorReference()
-	if (p2 && !p2.IsInFaction(pTweakRotateLockFollowerFaction))
+	elseif (p2)
+		Trace("returning pCompanion2")
 		return pCompanion2
-	endIf
-	Actor p3 = pCompanion3.GetActorReference()
-	if (p3 && !p3.IsInFaction(pTweakRotateLockFollowerFaction))
+	elseif (p3)
+		Trace("returning pCompanion3")
 		return pCompanion3
-	endIf
-	Actor p4 = pCompanion4.GetActorReference()
-	if (p4 && !p4.IsInFaction(pTweakRotateLockFollowerFaction))
+	elseif (p4)
+		Trace("returning pCompanion4")
 		return pCompanion4
-	endIf
-	Actor p5 = pCompanion5.GetActorReference()
-	if (p5 && !p5.IsInFaction(pTweakRotateLockFollowerFaction))
+	elseif (p5)
+		Trace("returning pCompanion5")
 		return pCompanion5
 	endIf
 	
-	if (p1)
-		return pCompanion1
-	elseif (p2)
-		return pCompanion2
-	elseif (p3)
-		return pCompanion3
-	elseif (p4)
-		return pCompanion4
-	elseif (p5)
-		return pCompanion5
-	endIf
+	Trace("returning None. All slots empty")
 	return None	
 endFunction
 
@@ -3317,17 +3482,19 @@ Event OnPlayerSleepStart(float afSleepStartTime, float afDesiredSleepEndTime, Ob
 	Actor RomanticOne = InfatuatedFollowers[0]
 	Trace("OnPlayerSleepStart : Using " + RomanticOne)
 	
-	RomanticOne.AddKeyword(FollowersCompanionSleepNearPlayerFlag)
-	pSleepCompanionBed.ForceRefTo(akBed)
-	pSleepCompanion.ForceRefTo(RomanticOne)
-	RomanticOne.SetPosition(akBed.X,akBed.Y,akBed.Z)
+	if !RomanticOne.IsDoingFavor()
+		RomanticOne.AddKeyword(FollowersCompanionSleepNearPlayerFlag)
+		pSleepCompanionBed.ForceRefTo(akBed)
+		pSleepCompanion.ForceRefTo(RomanticOne)
+		RomanticOne.SetPosition(akBed.X,akBed.Y,akBed.Z)
 
-	if (RomanticOne.IsInFaction(pTweakCombatOutFitFaction) || RomanticOne.IsInFaction(pTweakCampOutFitFaction) || RomanticOne.IsInFaction(pTweakCityOutFaction) || RomanticOne.IsInFaction(pTweakStandardOutFitFaction))
-		RomanticOne.UnequipAll()
-	endIf
-		
-	RomanticOne.SnapIntoInteraction(akBed)	
-	RomanticOne.EvaluatePackage()
+		if (RomanticOne.IsInFaction(pTweakCombatOutFitFaction) || RomanticOne.IsInFaction(pTweakCampOutFitFaction) || RomanticOne.IsInFaction(pTweakCityOutFaction) || 	RomanticOne.IsInFaction(pTweakStandardOutFitFaction))
+			RomanticOne.UnequipAll()
+		endIf
+	
+		RomanticOne.SnapIntoInteraction(akBed)
+		RomanticOne.EvaluatePackage()
+	endif
 	
 	if (1 == InfatuatedFollowers.length)
 		StartTimer(24,TIMER_PLAYER_WAKEUP)
@@ -3336,20 +3503,22 @@ Event OnPlayerSleepStart(float afSleepStartTime, float afDesiredSleepEndTime, Ob
 	
 	Actor RomanticTwo = InfatuatedFollowers[1]
 	Trace("OnPlayerSleepStart : Using " + RomanticTwo)
-			
-	RomanticTwo.AddKeyword(FollowersCompanionSleepNearPlayerFlag)
-	pSleepCompanion2.ForceRefTo(RomanticTwo)
-	RomanticTwo.SetPosition(akBed.X,akBed.Y,akBed.Z)
-
-	if (RomanticTwo.IsInFaction(pTweakCombatOutFitFaction) || RomanticTwo.IsInFaction(pTweakCampOutFitFaction) || RomanticTwo.IsInFaction(pTweakCityOutFaction) || RomanticTwo.IsInFaction(pTweakStandardOutFitFaction))
-		RomanticTwo.UnequipAll()
-	endIf
 	
-	Keyword AnimFurnNPC2        = Game.GetForm(0x0019EDD9) as Keyword
-	RomanticTwo.AddKeyword(AnimFurnNPC2)	
-	; Utility.WaitMenuMode(0.03)
-	; RomanticOne.SnapIntoInteraction(akBed)	
-	RomanticTwo.EvaluatePackage()
+	if !RomanticTwo.IsDoingFavor()
+		RomanticTwo.AddKeyword(FollowersCompanionSleepNearPlayerFlag)
+		pSleepCompanion2.ForceRefTo(RomanticTwo)
+		RomanticTwo.SetPosition(akBed.X,akBed.Y,akBed.Z)
+
+		if (RomanticTwo.IsInFaction(pTweakCombatOutFitFaction) || RomanticTwo.IsInFaction(pTweakCampOutFitFaction) || RomanticTwo.IsInFaction(pTweakCityOutFaction) || RomanticTwo.IsInFaction(pTweakStandardOutFitFaction))
+			RomanticTwo.UnequipAll()
+		endIf
+	
+		Keyword AnimFurnNPC2        = Game.GetForm(0x0019EDD9) as Keyword
+		RomanticTwo.AddKeyword(AnimFurnNPC2)	
+		; Utility.WaitMenuMode(0.03)
+		; RomanticOne.SnapIntoInteraction(akBed)	
+		RomanticTwo.EvaluatePackage()
+	endif
 	StartTimer(24,TIMER_PLAYER_WAKEUP)
 EndEvent
 
@@ -3383,7 +3552,9 @@ Function OnPlayerSleepEnd()
 		if (pTweakFollowerScript)
 			pTweakFollowerScript.RestoreTweakOutfit(RomanticOne)
 		endIf
-		RomanticOne.EvaluatePackage() ; So they don't crawl back into bed...
+		if !RomanticOne.IsDoingFavor()		
+			RomanticOne.EvaluatePackage() ; So they don't crawl back into bed...
+		endif
 	endIf	
 	Actor RomanticTwo = pSleepCompanion2.GetActorReference()
 	if (RomanticTwo)
@@ -3409,7 +3580,9 @@ Function OnPlayerSleepEnd()
 		if (pTweakFollowerScript)
 			pTweakFollowerScript.RestoreTweakOutfit(RomanticTwo)
 		endIf
-		RomanticTwo.EvaluatePackage()  ; So they don't crawl back into bed...
+		if !RomanticTwo.IsDoingFavor()		
+			RomanticTwo.EvaluatePackage()  ; So they don't crawl back into bed...
+		endif
 	endIf
 	pSleepCompanionBed.clear()
 EndFunction
@@ -3744,6 +3917,61 @@ Function UpdateIdleCoolDownDismissed(float min, float max)
 	
 EndFunction
 
+Function EVPLoiteringFollowers(bool now=false)
+	Trace("EVPLoiteringFollowers")
+
+	Actor test = None
+	if pDogmeatCompanion
+		test = pDogmeatCompanion.GetActorReference()
+		if test && !test.IsInFaction(pTweakNoRelaxFaction) && !test.IsDoingFavor()
+			if (now || Utility.RandomInt(0, 100) > 25)
+				test.EvaluatePackage()
+			endif
+		endif
+	endif
+	if pCompanion1
+		test = pCompanion1.GetActorReference()
+		if test && !test.IsInFaction(pTweakNoRelaxFaction) && !test.IsDoingFavor()
+			if (now || Utility.RandomInt(0, 100) > 25)
+				test.EvaluatePackage()
+			endif
+		endif
+	endif
+	if pCompanion2
+		test = pCompanion2.GetActorReference()
+		if test && !test.IsInFaction(pTweakNoRelaxFaction)  && !test.IsDoingFavor()
+			if (now || Utility.RandomInt(0, 100) > 25)
+				test.EvaluatePackage()
+			endif
+		endif
+	endif
+	if pCompanion3
+		test = pCompanion3.GetActorReference()
+		if test && !test.IsInFaction(pTweakNoRelaxFaction)  && !test.IsDoingFavor()
+			if (now || Utility.RandomInt(0, 100) > 25)
+				test.EvaluatePackage()
+			endif
+		endif
+	endif
+	if pCompanion4
+		test = pCompanion4.GetActorReference()
+		if test && !test.IsInFaction(pTweakNoRelaxFaction)  && !test.IsDoingFavor()
+			if (now || Utility.RandomInt(0, 100) > 25)
+				test.EvaluatePackage()
+			endif
+		endif
+	endif
+	if pCompanion5
+		test = pCompanion5.GetActorReference()
+		if test && !test.IsInFaction(pTweakNoRelaxFaction)  && !test.IsDoingFavor()
+			if (now || Utility.RandomInt(0, 100) > 25)
+				test.EvaluatePackage()
+			endif
+		endif
+	endif
+
+EndFunction
+
 Function UpdateIdleCoolDownActive(float min, float max)
 
 	pTweakIdleCooldownActiveMin.SetValue(min)
@@ -3764,6 +3992,76 @@ Function UpdateIdleCoolDownActive(float min, float max)
 	
 EndFunction
 
+bool Function IsCoreCompanion(Actor npc)
+	ActorBase base  = npc.GetActorBase()	
+	if (base == Game.GetForm(0x00079249) as ActorBase)     ; 1 ---=== Cait ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x000179FF) as ActorBase) ; 2 ---=== Codsworth ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00027683) as ActorBase) ; 4 ---=== Danse ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00045AC9) as ActorBase) ; 5 ---=== Deacon ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x0001D15C) as ActorBase) ; 6 ---=== Dogmeat ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
+		return true
+	endif
+	if (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
+		return true
+	endif
+	if (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x00002F1E) as ActorBase) ; 10 ---=== Piper ===---	
+		return true
+	endif
+	if (base == Game.GetForm(0x00019FD9) as ActorBase) ; 11 ---=== Preston ===---
+		return true
+	endif
+    if (base == Game.GetForm(0x00027682) as ActorBase) ; 12 ---=== Strong ===---
+		return true
+	endif
+	if (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
+		return true
+	endif
+	if (base == pTweakCompanionNate)	
+		return true
+	endif
+	if (base == pTweakCompanionNora)	
+		return true
+	endif
+	int ActorBaseID = base.GetFormID()
+	if (ActorBaseID < 0x01000000)
+		return false
+	endif
+	int ActorBaseMask
+	if ActorBaseID > 0x80000000			
+		ActorBaseMask = (ActorBaseID - 0x80000000) % (0x01000000)
+	else
+		ActorBaseMask = ActorBaseID % (0x01000000)
+	endif
+			
+	; Now compare the MASK
+	if     0x0000FD5A == ActorBaseMask ; Ada
+		return true
+	endif
+	if 0x00006E5B == ActorBaseMask ; Longfellow
+		return true
+	endif
+	if 0x0000881D == ActorBaseMask ; Porter Gage
+		return true
+	endif
+	return false
+EndFunction
 
 Int Function GetPluginID(int formid)
 	int fullid = formid

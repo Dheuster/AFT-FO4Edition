@@ -335,7 +335,7 @@ Event ReferenceAlias.OnCommandModeGiveCommand(ReferenceAlias akSender, int aeCom
 	else
 		bool bFoundCommand = false
 		Actor SenderActor = akSender.GetActorReference()
-		if (pCompanion1 && SenderActor == pCompanion1.GetActorReference())
+		if (pCompanion1     && SenderActor == pCompanion1.GetActorReference())
 			bFoundCommand = true
 		elseif (pCompanion2 && SenderActor == pCompanion2.GetActorReference())
 			bFoundCommand = true
@@ -347,19 +347,21 @@ Event ReferenceAlias.OnCommandModeGiveCommand(ReferenceAlias akSender, int aeCom
 			bFoundCommand = true
 		endif
 		if 	(bFoundCommand)
-			if (akTarget.GetBaseObject() is Container || akTarget.GetBaseObject() is Door) && akTarget.IsLocked() && SenderActor.HasKeyword(Followers_Command_LockPick_Allowed)
-				SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
-				Command_LockPick_Scene.stop()
-				CommandActor.ForceRefTo(SenderActor)
-				CommandTarget.ForceRefTo(akTarget)
-				Command_LockPick_Scene.start()
-			elseif akTarget.GetBaseObject() is Terminal && akTarget.IsLocked() && SenderActor.HasKeyword(Followers_Command_HackTerminal_Allowed)
-				SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
-				Command_HackTerminal_Scene.stop()
-				CommandActor.ForceRefTo(akSender.GetReference())
-				CommandTarget.ForceRefTo(akTarget)
-				Command_HackTerminal_Scene.start()
-			endif				
+			if (akTarget)
+				if (akTarget.GetBaseObject() is Container || akTarget.GetBaseObject() is Door) && akTarget.IsLocked() && SenderActor.HasKeyword(Followers_Command_LockPick_Allowed)
+					SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
+					Command_LockPick_Scene.stop()
+					CommandActor.ForceRefTo(SenderActor)
+					CommandTarget.ForceRefTo(akTarget)
+					Command_LockPick_Scene.start()
+				elseif (akTarget.GetBaseObject() is Terminal && akTarget.IsLocked() && SenderActor.HasKeyword(Followers_Command_HackTerminal_Allowed))
+					SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
+					Command_HackTerminal_Scene.stop()
+					CommandActor.ForceRefTo(akSender.GetReference())
+					CommandTarget.ForceRefTo(akTarget)
+					Command_HackTerminal_Scene.start()
+				endif
+			endif
 		endif
 	endif
 EndEvent
@@ -1514,7 +1516,7 @@ Function HandleTimer_LoiterSample()
 		Trace(self, "NotSitting: " + NotSitting)
 	endif
 		
-	bool shouldEVPFollowers
+	bool shouldEVPFollowers = false
 	if ( Traveled || LoiterCoolingDown || InCombat || Sneaking || Sprinting || WeaponOut ) && NotSitting
 		if (isPlayerLoitering == true)
 			traceconditional(self, "*** PLAYER NO LONGER LOITERING ***", DebugTrace_Loitering)
@@ -1538,44 +1540,61 @@ Function HandleTimer_LoiterSample()
 	endif
 	
 	if shouldEVPFollowers
-	
-		; 25% chance that any given follower will not immediatly relax, 
-		; but wait for the next AI heartbeat (about 15 seconds)
-		
-		int roll = Utility.RandomInt(0, 100)
-		if (roll > 25)
-			if DogmeatCompanion.GetActorReference()
-				DogmeatCompanion.GetActorReference().EvaluatePackage()
+		bool now = !isPlayerLoitering
+		AFT:TweakDFScript DFScript = ((self as Quest) as AFT:TweakDFScript)
+		if DFScript
+			DFScript.EVPLoiteringFollowers(now)
+		else
+			; 25% chance that any given follower will not immediatly relax, 
+			; but wait for the next AI heartbeat (about 15 seconds)
+			Actor test = None
+			if DogmeatCompanion
+				test = DogmeatCompanion.GetActorReference()
+				if test && !test.IsDoingFavor()
+					if (now || Utility.RandomInt(0, 100) > 25)
+						test.EvaluatePackage()
+					endif
+				endif
 			endif
-		endif
-		roll = Utility.RandomInt(0, 100)
-		if (roll > 25)
-			if (pCompanion1 && pCompanion1.GetActorReference())
-				pCompanion1.GetActorReference().EvaluatePackage()
+			if pCompanion1
+				test = pCompanion1.GetActorReference()
+				if test && !test.IsDoingFavor()
+					if (now || Utility.RandomInt(0, 100) > 25)
+						test.EvaluatePackage()
+					endif
+				endif
 			endif
-		endif
-		roll = Utility.RandomInt(0, 100)
-		if (roll > 25)
-			if (pCompanion2 && pCompanion2.GetActorReference())
-				pCompanion2.GetActorReference().EvaluatePackage()
+			if pCompanion2
+				test = pCompanion2.GetActorReference()
+				if test && !test.IsDoingFavor()
+					if (now || Utility.RandomInt(0, 100) > 25)
+						test.EvaluatePackage()
+					endif
+				endif
 			endif
-		endif
-		roll = Utility.RandomInt(0, 100)
-		if (roll > 25)
-			if (pCompanion3 && pCompanion3.GetActorReference())
-				pCompanion3.GetActorReference().EvaluatePackage()
+			if pCompanion3
+				test = pCompanion3.GetActorReference()
+				if test && !test.IsDoingFavor()
+					if (now || Utility.RandomInt(0, 100) > 25)
+						test.EvaluatePackage()
+					endif
+				endif
 			endif
-		endif
-		roll = Utility.RandomInt(0, 100)
-		if (roll > 25)
-			if (pCompanion4 && pCompanion4.GetActorReference())
-				pCompanion4.GetActorReference().EvaluatePackage()
+			if pCompanion4
+				test = pCompanion4.GetActorReference()
+				if test && !test.IsDoingFavor()
+					if (now || Utility.RandomInt(0, 100) > 25)
+						test.EvaluatePackage()
+					endif
+				endif
 			endif
-		endif
-		roll = Utility.RandomInt(0, 100)
-		if (roll > 25)
-			if (pCompanion5 && pCompanion5.GetActorReference())
-				pCompanion5.GetActorReference().EvaluatePackage()
+			if pCompanion5
+				test = pCompanion5.GetActorReference()
+				if test && !test.IsDoingFavor()
+					if (now || Utility.RandomInt(0, 100) > 25)
+						test.EvaluatePackage()
+					endif
+				endif
 			endif
 		endif
 	endif

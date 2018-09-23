@@ -84,6 +84,81 @@ InputEnableLayer ILayer
 Event OnQuestInit()
 
 	Trace("TweakCOMSpouse Initialized!")
+	Actor player = Game.getPlayer()
+	
+	; 1.20 : Recover Spouse on re-install
+	ActorValue CISROMANTIC = Game.GetForm(0x002486EC) as ActorValue ; CCE_TestCompanionChatEvent (SkillMagAV08)
+	
+	float recover = player.GetValue(CISROMANTIC)
+	if (recover == 1.23 || recover == 2.34 || recover == 3.45 || recover == 4.56)
+	
+		SanctuaryCommentMade = true
+		HouseCommentMade     = true
+		SpeakLineNearPod     = false
+
+		ActorValue CAFFINITY   = Game.GetForm(0x000ADC8C) as ActorValue ; MS16FahrenheitShieldDamage
+		ActorValue CSELFISH    = Game.GetForm(0x000C9B0E) as ActorValue ; Dogmeat_clickedPreMolerat
+		ActorValue CMEAN       = Game.GetForm(0x00066514) as ActorValue ; EMSystemSleeping
+		ActorValue CVIOLENT    = Game.GetForm(0x00084287) as ActorValue ; CompStrongBerserkAV
+		ActorValue CNICE       = Game.GetForm(0x00248491) as ActorValue ; PA_Unarmed_AV
+		ActorValue CGENEROUS   = Game.GetForm(0x000B9635) as ActorValue ; FWIsAttacker
+		ActorValue CPEACEFUL   = Game.GetForm(0x000DCE0F) as ActorValue ; TerminalVariable01
+		
+		ActorValue CA_Trait_Selfish  = Game.GetForm(0x000A1B1D) as ActorValue
+		ActorValue CA_Trait_Mean     = Game.GetForm(0x000A1B1F) as ActorValue
+		ActorValue CA_Trait_Violent  = Game.GetForm(0x000A1B21) as ActorValue
+		ActorValue CA_Trait_Peaceful = Game.GetForm(0x000A1B20) as ActorValue
+		ActorValue CA_Trait_Nice     = Game.GetForm(0x000A1B1E) as ActorValue
+		ActorValue CA_Trait_Generous = Game.GetForm(0x000A1B1C) as ActorValue
+		
+		if (recover == 1.23 || recover == 3.45)
+			SpawnSpouse(true)
+			; previously current follower
+		else
+			SpawnSpouse(false)
+		endIf
+		
+		Actor Spouse = pSpouse.GetActorReference()
+		if Spouse
+		
+			Spouse.SetValue(CA_Trait_Selfish,  player.GetValue(CSELFISH))
+			Spouse.SetValue(CA_Trait_Mean,     player.GetValue(CMEAN))
+			Spouse.SetValue(CA_Trait_Violent,  player.GetValue(CVIOLENT))
+			Spouse.SetValue(CA_Trait_Peaceful, player.GetValue(CPEACEFUL))
+			Spouse.SetValue(CA_Trait_Nice,     player.GetValue(CNICE))
+			Spouse.SetValue(CA_Trait_Generous, player.GetValue(CGENEROUS))
+			float prevAffinity = player.GetValue(CAFFINITY)
+			Spouse.SetValue(pCA_Affinity,       prevAffinity)
+
+			if (prevAffinity > 249)
+				SetCurrentStageID(407)
+			endIf
+			if (prevAffinity > 499)
+				SetCurrentStageID(420)
+			endIf
+			if (prevAffinity > 749)
+				SetCurrentStageID(497)			
+			endIf
+			if (prevAffinity > 999)
+				if (recover == 1.23 || recover == 2.34)
+					SetCurrentStageID(525)
+					CompanionActorScript cas = Spouse as CompanionActorScript
+					cas.RomanceSuccess()
+				else
+					SetCurrentStageID(522)
+					CompanionActorScript cas = Spouse as CompanionActorScript
+					cas.RomanceDeclined(true)
+				endif
+			endIf			
+		endif
+		
+		; ['I feel like I missed something.','COMCait','000EE445'] (975941)
+		Topic MissedSomething     = Game.GetForm(0x000EE445) as Topic
+		Spouse.Say(MissedSomething,Spouse,false,Game.GetPlayer())
+		
+		return
+	endif
+			
 	SanctuaryCommentMade = false
 	HouseCommentMade     = false
 	
@@ -92,7 +167,6 @@ Event OnQuestInit()
 	; If early in the game, set flag to wait and speak line after player takes
 	; ring. Otherwise, speak it when they get close the spouse corpse...
 	
-	Actor player = Game.getPlayer()
 	if (MQ102.GetCurrentStageID() < 10) && 0 == player.GetItemCount(pArmor_SpouseWeddingRing)
 		Trace("Registering for OnItemAdded Scene")
 		AddInventoryEventFilter(pArmor_SpouseWeddingRing)
@@ -1547,6 +1621,7 @@ Function ExitVaultReactionFinished()
 	
 	UnRegisterForRemoteEvent(theSpouse, "OnLoad")
 	
+	theSpouse.AllowCompanion(false)
 	if IsStageDone(38)
 		theSpouse.SetAvailableToBeCompanion()
 		theSpouse.AddToFaction(pHasBeenCompanionFaction)
@@ -1708,6 +1783,127 @@ Function ResetAffinityScene()
 		Trace("Spouse Not Defined yet")	
 	endif
 EndFunction
+
+Function SpawnSpouse(bool currentCompanion=true)
+
+	Actor pc = Game.GetPlayer()
+	
+	int spouseGender = 1
+	if MQ102SpouseCorpseMaleREF && MQ102SpouseCorpseMaleREF.IsEnabled()
+		spouseGender = 0
+		if (MQ102SpouseCorpseMaleREF as Actor)
+			if !(MQ102SpouseCorpseMaleREF as Actor).IsInFaction(pCurrentCompanionFaction)
+				MQ102SpouseCorpseMaleREF.Disable()
+			endif
+		else
+			MQ102SpouseCorpseMaleREF.Disable()
+		endif
+	elseif MQ102SpouseCorpseFemaleREF && MQ102SpouseCorpseFemaleREF.IsEnabled()
+		spouseGender = 1
+		if (MQ102SpouseCorpseFemaleREF as Actor)
+			if !(MQ102SpouseCorpseFemaleREF as Actor).IsInFaction(pCurrentCompanionFaction)
+				MQ102SpouseCorpseFemaleREF.Disable()
+			endif			
+		else
+			MQ102SpouseCorpseFemaleREF.Disable()
+		endif
+	elseif (1 == (pc.GetBaseObject() as ActorBase).GetSex())
+		; The PLAYER is female, so assume MALE Spouse
+		spouseGender = 0
+	else
+		; If all else fails, assume female spouse...
+		spouseGender = 1
+	endif
+		
+	Actor theSpouse
+	float[] posdata = TraceCircle(pc, -125)
+	Form InvisibleGeneric01 = Game.GetForm(0x00024571)
+	ObjectReference spawnMarker = pc.PlaceAtMe(InvisibleGeneric01)
+	spawnMarker.SetPosition(posdata[0],posdata[1],posdata[2])
+	spawnMarker.MoveToNearestNavmeshLocation()
+	Utility.wait(0.1)
+	
+	; After the pc leaves the vaule, the cameras will not work 
+	; until the player moves. It may be related to the fact that the spawnmarker
+	; is on an elevator platform. 
+
+	
+	; Gender : 0 = male, 1 = female, -1 = None
+	if (0 == spouseGender)
+	
+		Actor Nate = pTweakCompanionNate.GetUniqueActor()
+		if !Nate
+			; We create the spouse on the fly because if we hard code
+			; into the game, they dont pick up changes to the ActorBase
+			Trace("Creating Nate")		
+			Nate = spawnMarker.PlaceActorAtMe(pTweakCompanionNate)
+		else
+			Trace("Nate already exists")	
+			Nate.MoveTo(spawnMarker)
+		endif
+		if Nate
+			theSpouse = Nate
+		else
+			Trace("Nate Creation Failure")
+		endif
+	else
+			
+		Actor Nora = pTweakCompanionNora.GetUniqueActor()
+		if !Nora
+			Trace("Creating Nora")		
+			Nora = spawnMarker.PlaceActorAtMe(pTweakCompanionNora)
+			; We create the spouse on the fly because if we hard code
+			; into the game, they dont pick up changes to the ActorBase
+		else
+			Trace("Nora already exists")		
+			Nora.MoveTo(spawnMarker)
+		endif
+		if Nora
+			theSpouse = Nora
+		else
+			Trace("Nora Creation Failure")
+		endif
+	
+	endif
+	
+	if theSpouse
+		pSpouse.ForceRefTo(theSpouse)
+		
+		theSpouse.SetValue(pCA_Affinity, 5.0)
+		
+		if (currentCompanion)
+			SetCurrentStageID(39)
+			theSpouse.SetCompanion()	
+		else
+			SetCurrentStageID(38)
+			theSpouse.SetAvailableToBeCompanion()
+			theSpouse.AddToFaction(pHasBeenCompanionFaction)	
+		endIf
+	
+		if !Min02.IsStageDone(100)
+			If Min02.IsRunning()
+				RegisterForRemoteEvent(Min02, "OnStageSet") 
+			else
+				RegisterForRemoteEvent(Min02, "OnQuestInit") 
+			endif
+		endif
+		if !MQ206.IsStageDone(400)
+			If MQ206.IsRunning()
+				RegisterForRemoteEvent(MQ206, "OnStageSet") 
+			else
+				RegisterForRemoteEvent(MQ206, "OnQuestInit") 
+			endif
+		endif	
+		if !MQ207.IsStageDone(1)
+			If MQ207.IsRunning()
+				RegisterForRemoteEvent(MQ207, "OnStageSet") 
+			else
+				RegisterForRemoteEvent(MQ207, "OnQuestInit") 
+			endif
+		endif
+	endif
+	
+endFunction
 
 ; AngleOffset:
 ;   90     = Player/Objects left. 

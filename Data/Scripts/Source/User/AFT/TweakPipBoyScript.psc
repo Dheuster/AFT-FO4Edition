@@ -12,6 +12,7 @@ Scriptname AFT:TweakPipBoyScript extends Quest Conditional
 ReferenceAlias  Property pAftSettingsHolotape Auto Const
 
 Actor    Property TerminalTarget           Auto Conditional
+Actor	 Property TerminalTargetPrev	   Auto  ; Previous Follower that AFT wasus
 ; Actor    Property pCodsworthRef            Auto Const
 
 Int		Property TerminalTargetId         			Auto Conditional ; TweakNamesFaction rank of Terminal Target
@@ -139,6 +140,9 @@ Faction	 Property pSalemFaction				Auto Const
 Faction  Property pTweakIgnoredFaction		Auto Const
 Faction  Property pTweakRangedFaction		Auto Const
 
+Faction  Property pTweakSettlerFaction      Auto Const
+Faction  Property WorkshopNPCFaction		Auto Const
+
 GlobalVariable Property pTweakMarkedForIgnore Auto Const
 
 Potion   Property pTweakActivateAFT           Auto Const
@@ -164,6 +168,7 @@ Terminal Property pTweakVisualFailPosed       Auto Const ; 2
 Terminal Property pTweakVisualFailPowerArmor  Auto Const ; 3 
 Terminal Property pTweakVisualFailCombat      Auto Const ; 4
 Terminal Property pTweakVisualFailScene       Auto Const ; 5
+Terminal Property pTweakOutfitTerminal		  Auto Const
 
 Terminal Property pTweakFailDisallowed       Auto Const ; 5
 Terminal Property pTweakFailPotential        Auto Const ; 5
@@ -193,6 +198,8 @@ GlobalVariable Property pTweakCombatStyle Auto Const ; 0 = Default, 1 = Gunsling
 GlobalVariable Property pTweakOutfitManaged Auto Const
 GlobalVariable Property pTweakTargetHasHomeOutfit Auto Const
 GlobalVariable Property pTweakTargetHasSwimOutfit Auto Const
+GlobalVariable Property pTweakTargetIsAFTSettler Auto Const
+GlobalVariable Property pTweakTargetUseCombatWeap Auto Const
 
 GlobalVariable Property pTweakSpecialStr	Auto Const
 GlobalVariable Property pTweakSpecialPer	Auto Const
@@ -277,6 +284,7 @@ Faction Property PotentialCompanionFaction	Auto Const
 Faction Property pHasBeenCompanionFaction	Auto Const
 Faction Property pCurrentCompanionFaction	Auto Const
 Faction Property TweakAllowFriendlyFire  	Auto Const
+Faction Property pTweakUseCombatWeaponFaction Auto Const
 
 ; Changing Curie Appearance
 ; LeveledActor   Property pTweakCharCurie2 Auto Const ; Empty Leveled Actor Script
@@ -325,6 +333,7 @@ FormList Property pTweakNewBodyData Auto Const
 Topic Property WorkshopVendorSharedTopicB Auto Const
 Perk Property pTweakRangedDmgBoost Auto Const
 
+Quest Property TweakSettlers Auto Const
 ; 227 Properties....
 
 ActorBase[] pHasBody
@@ -399,6 +408,7 @@ Function ResetVariables()
 	TerminalTargetHasCombatOutfit		= false
 	pTweakTargetHasHomeOutfit.SetValue(0)
 	pTweakTargetHasSwimOutfit.SetValue(0)
+	pTweakTargetIsAFTSettler.SetValue(0)
 	TerminalTargetHasCityOutfit			= false
 	TerminalTargetHasCampOutfit			= false
 	TerminalTargetHasStandardOutfit		= false
@@ -904,11 +914,13 @@ endFunction
 ; STANDARD  = 5 const
 ; SNAPSHOT  = 6 const ; Used externally by things like the bathroom.
 ; LASTKNOWN = 7 const
-Function CombatOutfitReset()
+Function CombatOutfitReset(bool backToPip=False)
+	Utility.waitmenumode(0.1)
 
 	Trace("CombatOutfitReset()")
 	if (Utility.IsInMenuMode())
-		Var[] params = new Var[0]
+		Var[] params = new Var[1]
+		params[0] = backToPip
 		self.CallFunctionNoWait("CombatOutfitReset", params)
 		return
 	endIf
@@ -919,13 +931,19 @@ Function CombatOutfitReset()
 		TerminalTargetHasCombatOutfit = false
 	endIf
 
+	if backToPip
+		pTweakOutfitTerminal.ShowOnPipBoy()
+	endIf
+
 endFunction
 
-Function SwimOutfitReset()
+Function SwimOutfitReset(bool backToPip=False)
+	Utility.waitmenumode(0.1)
 
 	Trace("SwimOutfitReset()")
 	if (Utility.IsInMenuMode())
-		Var[] params = new Var[0]
+		Var[] params = new Var[1]
+		params[0] = backToPip
 		self.CallFunctionNoWait("SwimOutfitReset", params)
 		return
 	endIf
@@ -935,14 +953,20 @@ Function SwimOutfitReset()
 		pTweakFollowerScript.ClearTweakOutfit(TerminalTarget, 8)
 		pTweakTargetHasSwimOutfit.SetValue(0)
 	endIf
+
+	if backToPip
+		pTweakOutfitTerminal.ShowOnPipBoy()
+	endIf
 	
 endFunction
 	
-Function HomeOutfitReset()
+Function HomeOutfitReset(bool backToPip=False)
+	Utility.waitmenumode(0.1)
 
 	Trace("HomeOutfitReset()")
 	if (Utility.IsInMenuMode())
-		Var[] params = new Var[0]
+		Var[] params = new Var[1]
+		params[0] = backToPip
 		self.CallFunctionNoWait("HomeOutfitReset", params)
 		return
 	endIf
@@ -953,13 +977,19 @@ Function HomeOutfitReset()
 		pTweakTargetHasHomeOutfit.SetValue(0)
 	endIf
 
+	if backToPip
+		pTweakOutfitTerminal.ShowOnPipBoy()
+	endIf
+	
 endFunction
 
-Function CityOutfitReset()
+Function CityOutfitReset(bool backToPip=False)
+	Utility.waitmenumode(0.1)
 
 	Trace("CityOutfitReset()")
 	if (Utility.IsInMenuMode())
-		Var[] params = new Var[0]
+		Var[] params = new Var[1]
+		params[0] = backToPip
 		self.CallFunctionNoWait("CityOutfitReset", params)
 		return
 	endIf
@@ -970,13 +1000,19 @@ Function CityOutfitReset()
 		TerminalTargetHasCityOutfit = false
 	endIf
 
+	if backToPip
+		pTweakOutfitTerminal.ShowOnPipBoy()
+	endIf
+	
 endFunction
 
-Function CampOutfitReset()
+Function CampOutfitReset(bool backToPip=False)
+	Utility.waitmenumode(0.1)
 
 	Trace("CampOutfitReset()")
 	if (Utility.IsInMenuMode())
-		Var[] params = new Var[0]
+		Var[] params = new Var[1]
+		params[0] = backToPip
 		self.CallFunctionNoWait("CampOutfitReset", params)
 		return
 	endIf
@@ -987,13 +1023,19 @@ Function CampOutfitReset()
 		TerminalTargetHasCampOutfit = false
 	endIf
 	
+	if backToPip
+		pTweakOutfitTerminal.ShowOnPipBoy()
+	endIf
+
 endFunction
 
-Function StandardOutfitReset()
+Function StandardOutfitReset(bool backToPip=False)
+	Utility.waitmenumode(0.1)
 
 	Trace("StandardOutfitReset()")
 	if (Utility.IsInMenuMode())
-		Var[] params = new Var[0]
+		Var[] params = new Var[1]
+		params[0] = backToPip
 		self.CallFunctionNoWait("StandardOutfitReset", params)
 		return
 	endIf
@@ -1002,6 +1044,10 @@ Function StandardOutfitReset()
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.ClearTweakOutfit(TerminalTarget, 5)
 		TerminalTargetHasStandardOutfit = false
+	endIf
+	
+	if backToPip
+		pTweakOutfitTerminal.ShowOnPipBoy()
 	endIf
 	
 endFunction
@@ -1336,6 +1382,27 @@ Function ToggleReadyWeapon(bool backToPip=True)
 		pTweakSettingsAITerminal.ShowOnPipBoy()
 	endIf
 	
+EndFunction
+
+Function ToggleForceCombatOutfitWeapon()
+	Utility.waitmenumode(0.1)
+	
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("ToggleForceCombatOutfitWeapon", params)
+		return
+	endIf
+
+	if (TerminalTarget)
+		bool current = TerminalTarget.IsInFaction(pTweakUseCombatWeaponFaction)
+		if current
+			TerminalTarget.RemoveFromFaction(pTweakUseCombatWeaponFaction)
+			pTweakTargetUseCombatWeap.SetValue(0.0)
+		else
+			TerminalTarget.AddToFaction(pTweakUseCombatWeaponFaction)
+			pTweakTargetUseCombatWeap.SetValue(1.0)
+		endIf
+	endIf
 EndFunction
 
 Function ToggleScoutAhead(bool backToPip=True)
@@ -1685,6 +1752,7 @@ Actor PreviousTerminalTarget
 Function Test()
 
 	Trace("Test()")
+	
 	if (Utility.IsInMenuMode())
 		Var[] params = new Var[0]
 		self.CallFunctionNoWait("Test", params)
@@ -1902,6 +1970,12 @@ Function EvaluateTerminalTarget()
 			pTweakOutfitManaged.SetValue(0.0)
 		endIf
 		
+		If TerminalTarget.IsInFaction(pTweakUseCombatWeaponFaction)
+			pTweakTargetUseCombatWeap.SetValue(1.0)
+		else
+			pTweakTargetUseCombatWeap.SetValue(0.0)
+		endIf
+		
 		If TerminalTarget.IsInFaction(pTweakRangedFaction)
 			pTweakScoutAhead.SetValue(1.0)
 		else
@@ -1923,6 +1997,13 @@ Function EvaluateTerminalTarget()
 		else
 			pTweakTargetHasSwimOutfit.SetValue(0)
 		endIf
+		if (TerminalTarget.IsInFaction(pTweakSettlerFaction))
+			pTweakTargetIsAFTSettler.SetValue(1)
+		elseif (TerminalTarget.IsInFaction(WorkshopNPCFaction))
+			pTweakTargetIsAFTSettler.SetValue(2)
+		else		
+			pTweakTargetIsAFTSettler.SetValue(0)
+		endif
 		
 		if (TerminalTarget.IsInFaction(pTweakCityOutFaction))
 			TerminalTargetHasCityOutfit = true
@@ -2752,6 +2833,7 @@ Function ActivateAft(Actor npc = None)
 				handleCommand(theCommand)
 			endIf
 		else
+			Trace("TweakChangeAppearance Active")
 			TweakChangeAppearance pTweakChangeAppearance = (pTweakFollower as TweakChangeAppearance)
 			if pTweakChangeAppearance
 				; End Move Pose State
@@ -2769,6 +2851,7 @@ EndFunction
 Function handleCommand(float theCommand)
 
 	pTweakCommand.SetValue(0.0)
+	Trace("handleCommand(" +  theCommand + ")")
 
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 
@@ -3146,6 +3229,7 @@ Function handleCommand(float theCommand)
 
 		else ; theCommand >= 104
 		
+			trace("theCommand >= 104")
 			; Settings:
 			; -----------
 			
@@ -3155,6 +3239,8 @@ Function handleCommand(float theCommand)
 				RetreatRelay()
 			elseif 129 == theCommand ; All Attack
 				AttackRelay()
+			elseif 131 == theCommand ; CommandMode
+				ToggleCommandMode()			
 			elseif 122 == theCommand ; Toggle Mortality
 				ToggleEssential(false)
 			elseif 123 == theCommand ; Edit Special Attributes
@@ -3392,7 +3478,24 @@ Function ToggleAFTgnored()
 	endIf
 	
 endFunction
+
+Function UnMakeSettler()
+	Trace("UnMakeSettler() Called")
 	
+	if (Utility.IsInMenuMode())
+		self.CallFunctionNoWait("UnMakeSettler", new Var[0])
+		return
+	endIf
+	
+	if (TerminalTarget.IsInFaction(pTweakSettlerFaction))
+		AFT:TweakSettlersScript TWScript = TweakSettlers as AFT:TweakSettlersScript
+		if TWScript
+			TWScript.UnMakeSettler(TerminalTarget)
+		endif
+	endif
+	
+endFunction
+
 ; Terminal Target has a value, but NPC is None
 Function ImportNPCRelay(int itype = 0)
 	Trace("ImportNPCRelay() Called")
@@ -3418,6 +3521,11 @@ Function ImportNPCRelay(int itype = 0)
 		return
 	endIf
 	
+	bool doIt = false	
+	FollowersScript pFollowersScript = (pFollowers AS FollowersScript)
+	AFT:TweakSettlersScript TWScript = TweakSettlers as AFT:TweakSettlersScript
+
+	
 	if (0 == itype) ; Full Import (AI Override)
 		if TerminalTarget.IsInFaction(pSalemFaction)
 			TerminalTarget.RemoveFromFaction(pSalemFaction)
@@ -3425,6 +3533,11 @@ Function ImportNPCRelay(int itype = 0)
 		if (TerminalTarget.IsInFaction(pDanversFaction))
 			TerminalTarget.RemoveFromFaction(pDanversFaction)			
 		endif
+		if (pFollowersScript && TerminalTarget)
+			doIt = true
+		else
+			Trace("Unable to Cast Followers to FollowersScript")
+		endIf
 	elseif (1 == itype) ; Don't mess with AI
 		; Add to Salem Faction
 		if (TerminalTarget.IsInFaction(pDanversFaction))
@@ -3433,6 +3546,11 @@ Function ImportNPCRelay(int itype = 0)
 		if (!TerminalTarget.IsInFaction(pSalemFaction))
 			TerminalTarget.AddToFaction(pSalemFaction)
 		endif
+		if (pFollowersScript && TerminalTarget)
+			doIt = true
+		else
+			Trace("Unable to Cast Followers to FollowersScript")
+		endIf
 	elseif (2 == itype) ; Just a follower
 		; Add to DanversFaction
 		if (!TerminalTarget.IsInFaction(pSalemFaction))
@@ -3441,10 +3559,26 @@ Function ImportNPCRelay(int itype = 0)
 		if (!TerminalTarget.IsInFaction(pDanversFaction))
 			TerminalTarget.AddToFaction(pDanversFaction)
 		endif
+		if (pFollowersScript && TerminalTarget)
+			doIt = true
+		else
+			Trace("Unable to Cast Followers to FollowersScript")
+		endIf
+	elseif (3 == itype) ; Make Settler
+		if TerminalTarget.IsInFaction(pSalemFaction)
+			TerminalTarget.RemoveFromFaction(pSalemFaction)
+		endIf
+		if (TerminalTarget.IsInFaction(pDanversFaction))
+			TerminalTarget.RemoveFromFaction(pDanversFaction)			
+		endif
+		if (TWScript && TerminalTarget)
+			doIt = true
+		else
+			Trace("Unable to Cast TweakSettlers to TweakSettlersScript")
+		endIf
 	endif
 	
-	FollowersScript pFollowersScript = (pFollowers AS FollowersScript)
-	if (pFollowersScript && TerminalTarget)
+	if doIt
 		Actor pc = Game.GetPlayer()
 		Topic theTopic = ComeAlongTopics[0] ; "Come with me. I need your help."
 		if theTopic
@@ -3463,11 +3597,18 @@ Function ImportNPCRelay(int itype = 0)
 			TerminalTarget.Say(WorkshopVendorSharedTopicB, TerminalTarget, false, Game.GetPlayer())
 		endIf
 		
-		pFollowersScript.SetCompanion(TerminalTarget)
-	else
-		Trace("Unable to Cast Followers to FollowersScript")
-	endIf
-	
+		if (itype < 3)
+			if TerminalTarget.IsInFaction(pTweakSettlerFaction)
+				; Do we need to remove first?
+				TWScript.UnMakeSettler(TerminalTarget)
+			endif
+			pFollowersScript.SetCompanion(TerminalTarget)		
+		else
+			TWScript.MakeSettler(TerminalTarget)
+		endif
+		
+	endif
+		
 EndFunction
 
 Function ChangeExpressionRelay()
@@ -5058,6 +5199,60 @@ Function BehindMeRelay()
 	
 EndFunction
 
+Function SummonAll()
+
+	Trace("SummonAll()")
+	Utility.waitmenumode(0.1)
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("SummonAll", params)
+		return
+	endIf
+	
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+		pTweakFollowerScript.SummonAll()
+	else
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
+	endIf
+
+EndFunction
+	
+Function ToggleCommandMode()
+	Trace("ToggleCommandMode()")
+	Utility.waitmenumode(0.1)
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("ToggleCommandMode", params)
+		return
+	endIf
+
+	Actor target = TerminalTarget
+	if !target
+		Trace("Terminal Target is None. Checking Previous Target")
+		if TerminalTargetPrev
+			Trace("Using Previous Target")
+			target = TerminalTargetPrev
+		else
+			Trace("previous Target is None. Bailing")
+			return
+		endif		
+	endIf
+	
+	if target.IsInFaction(pCurrentCompanionFaction)
+		if target.IsDoingFavor()
+			Trace("Already in Command Mode State. Cancelling")
+			target.setDoingFavor(false)
+		else
+			Trace("Activating Command Mode")
+			target.setDoingFavor()
+		endif
+		TerminalTargetPrev = target	
+	else
+		Trace("previous Target not current companion. Bailing")
+		TerminalTargetPrev = None
+	endIf
+EndFunction
 
 Function SummonRelay()
 	

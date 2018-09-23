@@ -3,6 +3,7 @@ Scriptname AFT:TweakTargetRelayScript extends activemagiceffect
 
 Quest    Property pTweakPipBoy      Auto Const
 SPELL    Property pTweakManageNPC   Auto Const
+Potion   Property pTweakActivateAFT	Auto Const
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)
 	TweakPipBoyScript pTweakPipBoyScript =  (pTweakPipBoy as TweakPipBoyScript)
@@ -31,6 +32,11 @@ Event OnEffectStart(Actor akTarget, Actor akCaster)
 		endif
 		
 		pTweakPipBoyScript.ActivateAFT()
+	else
+		Actor pc = Game.GetPlayer()
+		if (pc.GetItemCount(pTweakActivateAFT) <= 0)
+			pc.AddItem( pTweakActivateAFT,1,true)
+		endIf		
 	endif
 endEvent
 	

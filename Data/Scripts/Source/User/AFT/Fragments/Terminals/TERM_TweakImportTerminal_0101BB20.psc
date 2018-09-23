@@ -51,7 +51,6 @@ Function Fragment_Terminal_06(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    ; Inventory management "Snapshot" will likely require us to not be in MenuMode...
     pTweakPipBoyScript.ImportNPCRelay(1)
 endif
 ;END CODE
@@ -63,8 +62,29 @@ Function Fragment_Terminal_07(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    ; Inventory management "Snapshot" will likely require us to not be in MenuMode...
     pTweakPipBoyScript.ImportNPCRelay(2)
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_08
+Function Fragment_Terminal_08(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.ImportNPCRelay(3)
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_09
+Function Fragment_Terminal_09(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.UnMakeSettler()
 endif
 ;END CODE
 EndFunction
