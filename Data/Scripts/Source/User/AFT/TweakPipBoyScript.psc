@@ -314,6 +314,8 @@ GlobalVariable Property pTweakRestoreAFTItems Auto Const
 
 GlobalVariable Property pTweakScoutAhead	Auto Const
 
+GlobalVariable Property TweakAllowHealSelf	Auto Const
+GlobalVariable Property TweakAllowHealOther	Auto Const
 
 
 ActorValue	Property pFavorsPerDay			Auto Const
@@ -1385,13 +1387,6 @@ Function ToggleReadyWeapon(bool backToPip=True)
 EndFunction
 
 Function ToggleForceCombatOutfitWeapon()
-	Utility.waitmenumode(0.1)
-	
-	if (Utility.IsInMenuMode())
-		Var[] params = new Var[0]
-		self.CallFunctionNoWait("ToggleForceCombatOutfitWeapon", params)
-		return
-	endIf
 
 	if (TerminalTarget)
 		bool current = TerminalTarget.IsInFaction(pTweakUseCombatWeaponFaction)
@@ -1632,6 +1627,7 @@ Function ChangeRace(int option)
 	Trace("Done")
 	
 EndFunction
+
 
 Function ToggleIgnoreFriendlyHits(bool backToPip=True)
 	Utility.waitmenumode(0.1)
@@ -1999,7 +1995,7 @@ Function EvaluateTerminalTarget()
 		endIf
 		if (TerminalTarget.IsInFaction(pTweakSettlerFaction))
 			pTweakTargetIsAFTSettler.SetValue(1)
-		elseif (TerminalTarget.IsInFaction(WorkshopNPCFaction))
+		elseif (TerminalTarget as WorkshopNPCScript) ; .IsInFaction(WorkshopNPCFaction)
 			pTweakTargetIsAFTSettler.SetValue(2)
 		else		
 			pTweakTargetIsAFTSettler.SetValue(0)
@@ -3106,26 +3102,26 @@ Function handleCommand(float theCommand)
 			
 				; Info:
 				; -----
-				if 61 == theCommand ; Info Relationship
+				if 61.0 == theCommand ; Info Relationship
 					Info(2)
 					
-				elseif 59 == theCommand ; All Info
+				elseif 59.0 == theCommand ; All Info
 					Info(0)
-				elseif 60 == theCommand ; Info Stats
+				elseif 60.0 == theCommand ; Info Stats
 					Info(1)
-				elseif 62 == theCommand ; Info AI
+				elseif 62.0 == theCommand ; Info AI
 					Info(3)
-				elseif 63 == theCommand ; Info Traits
+				elseif 63.0 == theCommand ; Info Traits
 					Info(4)
-				elseif 64 == theCommand ; Info Reactions
+				elseif 64.0 == theCommand ; Info Reactions
 					Info(9)
-				elseif 65 == theCommand ; Info Effects
+				elseif 65.0 == theCommand ; Info Effects
 					Info(5)
-				elseif 66 == theCommand ; Info Perks
+				elseif 66.0 == theCommand ; Info Perks
 					Info(6)
-				elseif 67 == theCommand ; Info Factions
+				elseif 67.0 == theCommand ; Info Factions
 					Info(7)
-				elseif 68 == theCommand ; Info Keywords
+				elseif 68.0 == theCommand ; Info Keywords
 					Info(8)
 				endIf
 			endIf			
@@ -3133,97 +3129,97 @@ Function handleCommand(float theCommand)
 		
 	else ; theCommand >= 69
 	
-		if theCommand < 104
+		if theCommand < 104.0
 
 			; Appearance:
 			; -----------
 
-			if 69 == theCommand ; Pose
+			if 69.0 == theCommand ; Pose
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4)
 					PoseRelay()
 				endIf
-			elseif 70 == theCommand ; Pose Stop 
+			elseif 70.0 == theCommand ; Pose Stop 
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4)
 					StopPoseRelay()
 				endIf
-			elseif 71 == theCommand ; Pose Move
+			elseif 71.0 == theCommand ; Pose Move
 				MovePosedRelay()
-			elseif 72 == theCommand ; Scale 200%
+			elseif 72.0 == theCommand ; Scale 200%
 				ScaleRelay(2.0)
-			elseif 73 == theCommand ; Scale 150%
+			elseif 73.0 == theCommand ; Scale 150%
 				ScaleRelay(1.5)
-			elseif 74 == theCommand ; Scale 125%
+			elseif 74.0 == theCommand ; Scale 125%
 				ScaleRelay(1.25)
-			elseif 75 == theCommand ; Scale 105%
+			elseif 75.0 == theCommand ; Scale 105%
 				ScaleRelay(1.05)
-			elseif 76 == theCommand ; Scale 95%
+			elseif 76.0 == theCommand ; Scale 95%
 				ScaleRelay(0.95)
-			elseif 77 == theCommand ; Scale 80%
+			elseif 77.0 == theCommand ; Scale 80%
 				ScaleRelay(0.80)
-			elseif 78 == theCommand ; Scale 66%
+			elseif 78.0 == theCommand ; Scale 66%
 				ScaleRelay(0.66)
-			elseif 79 == theCommand ; Scale 50%
+			elseif 79.0 == theCommand ; Scale 50%
 				ScaleRelay(0.5)
-			elseif 80 == theCommand ; Reset Scale
+			elseif 80.0 == theCommand ; Reset Scale
 				ScaleRelay(0)	
-			elseif 81 == theCommand ; Parts Hair
+			elseif 81.0 == theCommand ; Parts Hair
 				AppearanceHint()
 				HairPartsRelay()
-			elseif 82 == theCommand ; Parts Eyes
+			elseif 82.0 == theCommand ; Parts Eyes
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4)
 					AppearanceHint()
 					EyePartsRelay()
 				endIf
-			elseif 83 == theCommand ; Parts Beard
+			elseif 83.0 == theCommand ; Parts Beard
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4)
 					AppearanceHint()
 					BeardPartsRelay()
 				endIf
-			elseif 84 == theCommand ; Parts Head
+			elseif 84.0 == theCommand ; Parts Head
 				if (TerminalTargetRace == 1 || TerminalTargetRace == 2 || TerminalTargetRace == 4 || TerminalTargetOID == 9)
 					AppearanceHint()
 					HeadPartsRelay()
 				endIf
-			elseif 85 == theCommand ; Set Race Human\Synth
+			elseif 85.0 == theCommand ; Set Race Human\Synth
 				ChangeRace(0)
-			elseif 86 == theCommand ; Set Race Ghoul
+			elseif 86.0 == theCommand ; Set Race Ghoul
 				ChangeRace(1)
-			elseif 87 == theCommand ; Set Race Supermutant
+			elseif 87.0 == theCommand ; Set Race Supermutant
 				ChangeRace(2)
-			elseif 88 == theCommand ; Set Race Synth Gen1
+			elseif 88.0 == theCommand ; Set Race Synth Gen1
 				ChangeRace(3)
-			elseif 89 == theCommand ; Set Race Synth Gen2
+			elseif 89.0 == theCommand ; Set Race Synth Gen2
 				ChangeRace(4)
-			elseif 90 == theCommand ; Set Race Dog
+			elseif 90.0 == theCommand ; Set Race Dog
 				ChangeRace(5)
-			elseif 91 == theCommand ; Set Race Rabid Dog
+			elseif 91.0 == theCommand ; Set Race Rabid Dog
 				ChangeRace(6)
-			elseif 92 == theCommand ; Set Race FEVDog
+			elseif 92.0 == theCommand ; Set Race FEVDog
 				ChangeRace(7)
-			elseif 93 == theCommand ; Set Race Eyebot
+			elseif 93.0 == theCommand ; Set Race Eyebot
 				ChangeRace(8)
-			elseif 94 == theCommand ; Set Race Handybot
+			elseif 94.0 == theCommand ; Set Race Handybot
 				ChangeRace(9)
-			elseif 95 == theCommand ; Set Race Protectron
+			elseif 95.0 == theCommand ; Set Race Protectron
 				ChangeRace(10)
-			elseif 96 == theCommand ; Set Race SentryBot
+			elseif 96.0 == theCommand ; Set Race SentryBot
 				ChangeRace(11)
-			elseif 97 == theCommand ; Set Race Assaultron
+			elseif 97.0 == theCommand ; Set Race Assaultron
 				ChangeRace(12)
-			elseif 98 == theCommand ; Set Race Deathclaw
+			elseif 98.0 == theCommand ; Set Race Deathclaw
 				ChangeRace(13)
-			elseif 99 == theCommand ; Set Race Behemoth
+			elseif 99.0 == theCommand ; Set Race Behemoth
 				ChangeRace(14)
-			elseif 100 == theCommand ; Sculpt
+			elseif 100.0 == theCommand ; Sculpt
 				AppearanceHint()
 				SculptRelay()
-			elseif 101 == theCommand ; New Body
+			elseif 101.0 == theCommand ; New Body
 				if 1 == TerminalTargetHasBody
 					NewBodyRelay()
 				endIf
-			elseif 102 == theCommand ; Posture
+			elseif 102.0 == theCommand ; Posture
 				ChangePostureRelay()
-			elseif 103 == theCommand ; Expression
+			elseif 103.0 == theCommand ; Expression
 				ChangeExpressionRelay()
 			endIf
 
@@ -3235,56 +3231,58 @@ Function handleCommand(float theCommand)
 			
 			if 125.0 == theCommand
 				GatherLooseItems()
-			elseif 128 == theCommand ; All Retreat
+			elseif 128.0 == theCommand ; All Retreat
 				RetreatRelay()
-			elseif 129 == theCommand ; All Attack
+			elseif 129.0 == theCommand ; All Attack
 				AttackRelay()
-			elseif 131 == theCommand ; CommandMode
+			elseif 131.0 == theCommand ; CommandMode
 				ToggleCommandMode()			
-			elseif 122 == theCommand ; Toggle Mortality
+			elseif 132.0 == theCommand ; Force/Unforce Combat Outfit Weapon
+				ToggleForceCombatOutfitWeapon()					
+			elseif 122.0 == theCommand ; Toggle Mortality
 				ToggleEssential(false)
-			elseif 123 == theCommand ; Edit Special Attributes
+			elseif 123.0 == theCommand ; Edit Special Attributes
 				PrepSPECIAL()
 				pTweakSpecial.ShowOnPipBoy()
 				
 				
-			elseif 104 == theCommand ; Assign Home
+			elseif 104.0 == theCommand ; Assign Home
 				AssignHomeRelay()
-			elseif 105 == theCommand ; Toggle Ignore Dislike/Hate Reactions
+			elseif 105.0 == theCommand ; Toggle Ignore Dislike/Hate Reactions
 				ToggleNoDisapprove(false)
-			elseif 106 == theCommand ; Toggle Ignore Like/Love Reactions
+			elseif 106.0 == theCommand ; Toggle Ignore Like/Love Reactions
 				ToggleNoApprove(false)
-			elseif 107 == theCommand ; Toggle Swap Dislike/Hate Reactions
+			elseif 107.0 == theCommand ; Toggle Swap Dislike/Hate Reactions
 				ToggleConvNegToPos(false)
-			elseif 108 == theCommand ; Toggle Swap Like/Love Reactions
+			elseif 108.0 == theCommand ; Toggle Swap Like/Love Reactions
 				ToggleConvPosToNeg(false)
-			elseif 109 == theCommand ; Toggle Idle Comments
+			elseif 109.0 == theCommand ; Toggle Idle Comments
 				ToggleNoCommentIdle(false)
-			elseif 110 == theCommand ; Toggle General Comments
+			elseif 110.0 == theCommand ; Toggle General Comments
 				ToggleNoCommentGeneral(false)
-			elseif 111 == theCommand ; Toggle Approval Comments
+			elseif 111.0 == theCommand ; Toggle Approval Comments
 				ToggleNoCommentApprove(false)
-			elseif 112 == theCommand ; Toggle Disaproval Comments
+			elseif 112.0 == theCommand ; Toggle Disaproval Comments
 				ToggleNoCommentDisapprove(false)
-			elseif 113 == theCommand ; Toggle Activator Comments
+			elseif 113.0 == theCommand ; Toggle Activator Comments
 				ToggleNoCommentActivator(false)
-			elseif 114 == theCommand ; Toggle Sync PA Use
+			elseif 114.0 == theCommand ; Toggle Sync PA Use
 				ToggleSyncPA(false)
-			elseif 115 == theCommand ; Toggle Sync Weapon Use
+			elseif 115.0 == theCommand ; Toggle Sync Weapon Use
 				ToggleReadyWeapon(false)
-			elseif 116 == theCommand ; Toggle Avoid Traps
+			elseif 116.0 == theCommand ; Toggle Avoid Traps
 				ToggleAvoidTrapRelay(false)
-			elseif 117 == theCommand ; Toggle Autorelax
+			elseif 117.0 == theCommand ; Toggle Autorelax
 				ToggleAutoRelax(false)
-			elseif 118 == theCommand ; Toggle Kill Tracking
+			elseif 118.0 == theCommand ; Toggle Kill Tracking
 				ToggleTrackKills(false)
-			elseif 119 == theCommand ; Toggle Pack Mule
+			elseif 119.0 == theCommand ; Toggle Pack Mule
 				TogglePackMule(false)
-			elseif 120 == theCommand ; Toggle Unlimited Ammo
+			elseif 120.0 == theCommand ; Toggle Unlimited Ammo
 				ToggleUseAmmo(false)
-			elseif 121 == theCommand ; Toggle No PA Damage
+			elseif 121.0 == theCommand ; Toggle No PA Damage
 				ToggleNoPADamage(false)
-			elseif 124 == theCommand ; Assign Name
+			elseif 124.0 == theCommand ; Assign Name
 				AssignNameSetup()
 				pTweakSelectNameTerminal.ShowOnPipBoy()	
 			elseif 126.0 == theCommand ; Set Auto Aggression
@@ -3297,8 +3295,10 @@ Function handleCommand(float theCommand)
 						SwimOutfitReset()
 					endIf
 				endIf
-			elseif 130 == theCommand
+			elseif 130.0 == theCommand
 				ToggleScoutAhead(false)
+			elseif theCommand > 132.0 && theCommand < 171.0
+				SetVoiceOption((theCommand - 133.0) as int)
 			endIf
 			
 		endIf		
@@ -3488,9 +3488,9 @@ Function UnMakeSettler()
 	endIf
 	
 	if (TerminalTarget.IsInFaction(pTweakSettlerFaction))
-		AFT:TweakSettlersScript TWScript = TweakSettlers as AFT:TweakSettlersScript
-		if TWScript
-			TWScript.UnMakeSettler(TerminalTarget)
+		AFT:TweakSettlersScript AFTSettlers = TweakSettlers as AFT:TweakSettlersScript
+		if AFTSettlers
+			AFTSettlers.UnMakeSettler(TerminalTarget)
 		endif
 	endif
 	
@@ -3523,7 +3523,7 @@ Function ImportNPCRelay(int itype = 0)
 	
 	bool doIt = false	
 	FollowersScript pFollowersScript = (pFollowers AS FollowersScript)
-	AFT:TweakSettlersScript TWScript = TweakSettlers as AFT:TweakSettlersScript
+	AFT:TweakSettlersScript AFTSettlers = TweakSettlers as AFT:TweakSettlersScript
 
 	
 	if (0 == itype) ; Full Import (AI Override)
@@ -3571,7 +3571,7 @@ Function ImportNPCRelay(int itype = 0)
 		if (TerminalTarget.IsInFaction(pDanversFaction))
 			TerminalTarget.RemoveFromFaction(pDanversFaction)			
 		endif
-		if (TWScript && TerminalTarget)
+		if (AFTSettlers && TerminalTarget)
 			doIt = true
 		else
 			Trace("Unable to Cast TweakSettlers to TweakSettlersScript")
@@ -3598,13 +3598,9 @@ Function ImportNPCRelay(int itype = 0)
 		endIf
 		
 		if (itype < 3)
-			if TerminalTarget.IsInFaction(pTweakSettlerFaction)
-				; Do we need to remove first?
-				TWScript.UnMakeSettler(TerminalTarget)
-			endif
 			pFollowersScript.SetCompanion(TerminalTarget)		
 		else
-			TWScript.MakeSettler(TerminalTarget)
+			AFTSettlers.MakeSettler(TerminalTarget)
 		endif
 		
 	endif
@@ -4352,16 +4348,20 @@ Function TradeRelay()
 		return
 	endIf
 	
-	if (!SpeakDialogue(TerminalTarget, pTweakTopicTrade, pTweakTopicTradeModID, "pTweakTopicTrade", 60) && (0 != TerminalTargetId))
-		Trace("Calling ViewGear Manually")
-		AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
-		if (pTweakFollowerScript)
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript && (0 != TerminalTargetId))
+		pTweakFollowerScript.FixCarryWeightForTradeStart(TerminalTarget)
+		if (!SpeakDialogue(TerminalTarget, pTweakTopicTrade, pTweakTopicTradeModID, "pTweakTopicTrade", 60))
+			Trace("Calling ViewGear Manually")
 			pTweakFollowerScript.ViewGearByNameId(TerminalTargetId)
-		else
-			Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
 		endIf
-	endIf	
+		pTweakFollowerScript.FixCarryWeightForTradeEnd(TerminalTarget)
+	else
+		Trace("Unable to Cast TweakFollower to TweakFollowerScript")		
+	endIf
+	
 EndFunction
+
 
 Function EnablePAHelmetCombatRelay(bool backToPip=True)
 
@@ -4834,6 +4834,23 @@ Function ToggleNoCommentActivator(bool backToPip=True)
 	endIf
 EndFunction
 
+Function ToggleAllowHealSelf()
+	if (0.0 == TweakAllowHealSelf.GetValue())
+		TweakAllowHealSelf.SetValue(1.0)
+	else
+		TweakAllowHealSelf.SetValue(0.0)
+	endIf
+EndFunction
+
+Function ToggleAllowHealOther()
+	if (0.0 == TweakAllowHealOther.GetValue())
+		TweakAllowHealOther.SetValue(1.0)
+	else
+		TweakAllowHealOther.SetValue(0.0)
+	endIf
+EndFunction
+
+
 Function ToggleAllowMultInterjections()
 	AFT:TweakInterjectionQuestScript  pTweakInterjectionQuestScript  = pTweakInterjections as AFT:TweakInterjectionQuestScript	
 	if (0.0 == pTweakAllowMultInterjections.GetValue())
@@ -5240,6 +5257,10 @@ Function ToggleCommandMode()
 	endIf
 	
 	if target.IsInFaction(pCurrentCompanionFaction)
+		if target.IsBleedingOut() || target.IsDead()
+			Trace("Command Mode Target Bleeding Out or Dead. Bailing.")
+			return
+		endif
 		if target.IsDoingFavor()
 			Trace("Already in Command Mode State. Cancelling")
 			target.setDoingFavor(false)
@@ -5508,6 +5529,25 @@ Function TransferUnusedRelay()
 
 EndFUnction
 
+Function ToggleAllowAutonomousPickup()
+	Trace("ToggleAllowAutonomousPickup()")
+
+;	Utility.waitmenumode(0.1)
+;	if (Utility.IsInMenuMode())
+;		Var[] params = new Var[0]
+;		self.CallFunctionNoWait("TransferAllRelay", params)
+;		return
+;	endIf
+
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+		pTweakFollowerScript.ToggleAllowAutonomousRelay()
+	else
+		Trace("Unable to Cast TweakFollower to AFT:TweakFollowerScript")		
+	endIf
+
+EndFunction
+
 Function TransferAllRelay()
 
 	Trace("TransferAllRelay()")
@@ -5589,6 +5629,241 @@ Function UpdateIdleCoolDownActive(float min, float max)
 		DFScript.UpdateIdleCoolDownActive(min, max)
 	endIf
 EndFunction
+
+Function SetVoiceOption(int option = 0)
+	If !TerminalTarget
+		return
+	endIf
+	
+	; 0  = Restore Original
+	if 0 == option
+		TerminalTarget.SetOverrideVoiceType(None)
+		return
+	endif
+	
+	; 1  = BoSFemale01
+	if 1 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00077D1D) as VoiceType)
+		return
+	endif
+	
+	; 2  = BoSFemale02
+	if 2 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00077D1E) as VoiceType)
+		return
+	endif
+	
+	; 3  = BoSSquireFemale01
+	if 3 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0004413F) as VoiceType)
+		return
+	endif
+	
+	; 4  = ChildrenOfAtomFemale01
+	if 4 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0002FB81) as VoiceType)
+		return
+	endif
+	
+	; 5  = FemaleBoston
+	if 5 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00023324) as VoiceType)
+		return
+	endif
+	
+	; 6  = FemaleEvenToned
+	if 6 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00013ADD) as VoiceType)
+		return
+	endif
+	
+	; 7  = FemaleRough
+	if 7 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0000002E) as VoiceType)
+		return
+	endif
+	
+	; 8  = FemaleChild
+	if 8 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00013AE9) as VoiceType)
+		return
+	endif
+	
+	; 9  = FemaleOld
+	if 9 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000CEAA2) as VoiceType)
+		return
+	endif
+	
+	; 10 = FemaleGhoul
+	if 10 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00023322) as VoiceType)
+		return
+	endif
+	
+	; 11 = InstituteScientistFemaleVoice
+	if 11 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00122437) as VoiceType)
+		return
+	endif
+	
+	; 12 = GuardFemaleVault81
+	if 12 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000D3FBC) as VoiceType)
+		return
+	endif
+
+	; 13 = BoSMale01
+	if 13 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00077D1B) as VoiceType)
+		return
+	endif
+	
+	; 14 = BoSMale02
+	if 14 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00077D1C) as VoiceType)
+		return
+	endif
+	
+	; 15 = BoSSquireMale01
+	if 15 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000C8AA3) as VoiceType)
+		return
+	endif
+	
+	; 16 = ChildrenOfAtomMale01
+	if 16 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0002FB80) as VoiceType)
+		return
+	endif
+	
+	; 17 = ChildrenOfAtomMale02
+	if 17 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000859DC) as VoiceType)
+		return
+	endif
+	
+	; 18 = MaleBoston
+	if 18 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00023323) as VoiceType)
+		return
+	endif
+	
+	; 19 = MaleEvenToned
+	if 19 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00013AD2) as VoiceType)
+		return
+	endif
+	
+	; 20 = MaleRough
+	if 20 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0000002D) as VoiceType)
+		return
+	endif
+	
+	; 21 = MaleChild
+	if 21 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00013AE8) as VoiceType)
+		return
+	endif
+	
+	; 22 = MaleOld
+	if 22 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000CEAA3) as VoiceType)
+		return
+	endif
+	
+	; 23 = MaleGhoul
+	if 23 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00023321) as VoiceType)
+		return
+	endif
+	
+	; 24 = InstituteScientistMaleVoice
+	if 24 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00122436) as VoiceType)
+		return
+	endif
+	
+	; 25 = InstituteCourserMaleVoice
+	if 25 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0015BE1F) as VoiceType)
+		return
+	endif
+	
+	; 26 = GuardMaleDiamondCity01
+	if 26 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000AA8D3) as VoiceType)
+		return
+	endif
+	
+	; 27 = GuardMaleDiamondCity02
+	if 27 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000F61BB) as VoiceType)
+		return
+	endif
+	
+	; 28 = GuardMaleVault81
+	if 28 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000644EF) as VoiceType)
+		return
+	endif
+
+	; 29 = CrSuperMutant
+	if 29 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0006D7B7) as VoiceType)
+		return
+	endif
+	
+	; 30 = CrSuperMutant02
+	if 30 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000C7203) as VoiceType)
+		return
+	endif
+	
+	; 31 = CrSuperMutant03
+	if 31 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x000C7204) as VoiceType)
+		return
+	endif
+	
+	; 32 = RobotMrHandy
+	if 32 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x00019FE3) as VoiceType)
+		return
+	endif
+	
+	; 33 = RobotMrGutsy
+	if 33 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0006E59F) as VoiceType)
+		return
+	endif
+	
+	; 34 = RobotMsNanny
+	if 34 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0006E5A0) as VoiceType)
+		return
+	endif
+	
+	; 35 = RobotProtectron
+	if 35 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0006E5A1) as VoiceType)
+		return
+	endif
+	
+	; 36 = RobotSentryBot
+	if 36 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0006E5A3) as VoiceType)
+		return
+	endif
+	
+	; 37 = RobotAssaultron
+	if 37 == option
+		TerminalTarget.SetOverrideVoiceType(Game.GetForm(0x0006E5A2) as VoiceType)
+		return
+	endif
+EndFunction
+
 
 Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pModIDAV, string hint = "", int first_prob=100, int secondary_prob=100 )
 	Trace("SpeakDialogue() Called for [" + aSpeaker + "] (" + TerminalTargetId + ")")

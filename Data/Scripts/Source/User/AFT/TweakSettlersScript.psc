@@ -13,10 +13,15 @@ Keyword	Property WorkshopKeyword Auto Const
 Keyword Property AO_Type_WorkshopResourceObject Auto Const
 
 Location Property SanctuaryHillsLocation Auto Const
+
+Faction	Property FarmerGenericDialogue Auto Const    ;*
+Faction	Property FarmerGenericChild Auto Const       ;*
+Faction Property CurrentCompanionFaction Auto Const
 Faction Property WorkshopNPCFaction Auto Const
 Faction Property WorkshopDialogueFaction Auto Const
-Faction  Property FarmerGenericDialogue Auto Const
-Faction  Property FarmerGenericChild Auto Const
+Faction	Property GenericNPCFaction Auto Const
+Faction	Property REFarmerFaction Auto Const
+Faction	Property TweakSettlerFaction Auto Const
 
 ActorValue Property TweakSettlerMultiResourceId Auto Const
 ActorValue Property TweakSettlerIsWorker    Auto Const
@@ -45,7 +50,7 @@ ObjectReference Property SanctuaryLocationCenterMarker	Auto Const ; 0x0004BE7A
 ObjectReference Property MS10SafetyMarker				Auto Const ; 0x000F15CD
 ObjectReference Property InstSceneAlaneJustin1JustinMarker Auto Const ; 0x000C9D59
 
-Faction 		Property TweakSettlerFaction			Auto Const
+ObjectReference[] InActiveSettlers
 
 int NO_WORKSHOPID       = 9001 const
 int NO_MULTIRESOURCEID  = 9003 const
@@ -59,7 +64,9 @@ bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 EndFunction
 
 Event OnInit()
+	InActiveSettlers = new ObjectReference[0]
 	RegisterForCustomEvent(FollowersScript.GetScript(), "CompanionChange")
+	RegisterForCustomEvent(WorkshopParent, "WorkshopEnterMenu")
 EndEvent
 
 Event OnQuestInit()
@@ -122,6 +129,7 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 			; One Last Sanity Check
 			Trace("Prompt is false and no valid Workshop could be found. Using Sanctuary Hills")
 			workshopRef = LocationToWorkShop(SanctuaryHillsLocation)
+			workshopID  = WorkshopParent.GetWorkshopID(workshopRef)
 		endIf
 		
 		if !workshopRef
@@ -139,7 +147,7 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 		endIf
 
 		if npc.GetActorBase().IsUnique()
-			WorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
+			WorkshopParent.AddPermanentActorToWorkshopPUBLIC(npc, workshopID)
 		else
 			WorkshopParent.AddActorToWorkshopPUBLIC(WNS, workshopRef)
 		endIf
@@ -153,12 +161,14 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 			selection = SanctuaryHillsLocation
 		endif
 		if npc.GetActorBase().IsUnique()
+			Trace("npc is Unique")
 			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
 				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
 			else
 				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akExcludeKeywordList=WorkshopParent.WorkshopSettlementMenuExcludeList)
 			endif
 		else
+			Trace("npc is not Unique")
 			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
 				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
 			else
@@ -167,8 +177,11 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 		endif
 		if selection
 			workshopID = LocationToWorkShopID(selection)
+			Trace("selection[" + selection + "] workshopID [" + workshopID + "]")
 		else
+			Trace("No selection. workshopID [" + workshopID + "]")
 			if (workshopID > -1)
+				Trace("Using original/default location [" + settlement + "] workshopID [" + workshopID + "]")
 				selection = settlement
 			endif
 		endif
@@ -184,7 +197,6 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 			Trace("Worksop assignment is same as current workshop. Bailing")
 			return false
 		endif
-		UnMakeSettler(npc)		
 	endIf
 	
 	WorkshopScript workshopRef = WorkshopParent.GetWorkshop(workshopID)	
@@ -235,10 +247,30 @@ bool Function MakeSettlerHelper(Actor npc, WorkshopScript workshopRef)
 	npc.SetLinkedRef(NONE, TweakSettlerBrahmin)
 	
 	if npc.IsChild()
+		Trace("npc is Child")
 		npc.AddToFaction(FarmerGenericChild)
 	else
+		Trace("npc is not Child")
 		npc.AddToFaction(FarmerGenericDialogue)
 	endif
+	
+	; Handled by Factions Attached to ReferenceAlias
+	
+	; if !npc.IsInFaction(WorkshopNPCFaction)
+	;	npc.AddToFaction(WorkshopNPCFaction)
+	; endIf
+	; if !npc.IsInFaction(WorkshopDialogueFaction)
+	;	npc.AddToFaction(WorkshopDialogueFaction)
+	; endIf
+	; if !npc.IsInFaction(GenericNPCFaction)
+	;	npc.AddToFaction(GenericNPCFaction)
+	; endIf
+	; if !npc.IsInFaction(REFarmerFaction)
+	;	npc.AddToFaction(REFarmerFaction)
+	; endIf
+	if !npc.IsInFaction(TweakSettlerFaction)
+		npc.AddToFaction(TweakSettlerFaction)
+	endIf
 	
 	; if I have a linked work object, set my ownership to it
 	if npc.GetLinkedRef(WorkshopParent.WorkshopLinkWork)
@@ -246,18 +278,40 @@ bool Function MakeSettlerHelper(Actor npc, WorkshopScript workshopRef)
 		TweakAssignActor(workobject, npc)
 	endif
 	
-	; Faction membership enforced by RefCollectionAlias
-	; npc.AddToFaction(WorkshopNPCFaction)
-	; npc.AddToFaction(WorkshopDialogueFaction)		
 	TweakSetCommandable(npc,  true)
 	TweakSetAllowCaravan(npc, true)
 	TweakSetAllowMove(npc,    true)			
 		
 	npc.SetLinkedRef(workshopRef, WorkshopLinkHome)
+	npc.AddToFaction(WorkshopParent.REIgnoreForCleanup)
+	npc.RemoveFromFaction(WorkshopParent.REDialogueRescued)
+	
+	TweakAddActorToWorkshop(npc, workshopRef)
+	
+	; X IDEA 1 : Official Population may be fine, but can't increase because of player charisma limit. 
+	; X IDEA 2 : May need to broadcaste the WorkshopAddActor event... 
+	; X IDEA 3 : Adding WorkshopNPC may fix population
+	; IDEA 4 : Adding npc tp PermantActorAliases may fix population
+	
+	; add to alias collection for existing actors - gives them packages to stay at new "home"
+	; if actorToAssign.IsUnique()
+	; WorkshopParent.PermanentActorAliases.AddRef(actorToAssign)
+	; endif
+	
+	; send custom event for this actor
+	Var[] kargs = new Var[2]
+	kargs[0] = npc
+	kargs[1] = TweakGetWorkshopID(npc)
+	WorkshopParent.SendCustomEvent("WorkshopAddActor", kargs)		
+	
+	if npc.IsInFaction(CurrentCompanionFaction)
+		DisableSettlerAI(npc)
+	endif
 	npc.EvaluatePackage()
 	return true
 	
 EndFunction
+
 
 Function UnMakeSettler(Actor npc, bool removeFromCollection=true)
 
@@ -271,10 +325,14 @@ Function UnMakeSettler(Actor npc, bool removeFromCollection=true)
 	endIf
 	
 	if (pSettlers.Find(npc) < 0)
-		Trace("  npc not found. Aborting")
-		return
+		if (InActiveSettlers.Find(npc) < 0)
+			Trace("  npc not found. Aborting")
+			return
+		endif
 	endif
 	
+	TweakUnassignActor(npc, true)
+
 	TweakSetCommandable(npc,  false)
 	TweakSetAllowCaravan(npc, false)
 	TweakSetAllowMove(npc,    false)
@@ -282,8 +340,7 @@ Function UnMakeSettler(Actor npc, bool removeFromCollection=true)
 	npc.SetValue(WorkshopParent.workshopIDActorValue, NO_WORKSHOPID)
 	npc.SetValue(TweakSettlerMultiResourceId, NO_MULTIRESOURCEID)
 	npc.SetValue(TweakSettlerWork24Hours,0)		
-	TweakUnassignActor(npc, true)
-
+	
 	Actor myBrahmin = NONE
 	ObjectReference oBrahmin = npc.GetLinkedRef(TweakSettlerBrahmin)
 	if oBrahmin
@@ -295,7 +352,22 @@ Function UnMakeSettler(Actor npc, bool removeFromCollection=true)
 		myBrahmin.Delete()				
 	endif
 	npc.SetLinkedRef(NONE, TweakSettlerBrahmin)
-		
+	
+	; Handled By Factions Attached to ReferenceAlias	
+	; if npc.IsInFaction(WorkshopNPCFaction)
+	;	npc.RemoveFromFaction(WorkshopNPCFaction)
+	; endIf
+	; if npc.IsInFaction(WorkshopDialogueFaction)
+	;	npc.RemoveFromFaction(WorkshopDialogueFaction)
+	; endIf
+	; if npc.IsInFaction(GenericNPCFaction)
+	;	npc.RemoveFromFaction(GenericNPCFaction)
+	; endIf
+	; if npc.IsInFaction(REFarmerFaction)
+	;	npc.RemoveFromFaction(REFarmerFaction)
+	; endIf
+	
+	
 	if npc.IsChild()
 		npc.RemoveFromFaction(FarmerGenericChild)
 	else
@@ -304,16 +376,77 @@ Function UnMakeSettler(Actor npc, bool removeFromCollection=true)
 		
 	
 	npc.SetLinkedRef(NONE,WorkshopLinkHome)	
+	
+	if npc.IsInFaction(TweakSettlerFaction)
+		npc.RemoveFromFaction(TweakSettlerFaction)
+	endIf
+	
 	if removeFromCollection
-		pSettlers.RemoveRef(npc)
+		if (pSettlers.Find(npc) > -1)
+			pSettlers.RemoveRef(npc)
+		endIf
+		int index = InActiveSettlers.find(npc)
+		if (index > -1)
+			InActiveSettlers.Remove(index)
+		endif
 		npc.EvaluatePackage()
 	endif
 	
 EndFunction
 
+Function DisableSettlerAI(Actor npc)
+	Trace("DisableSettlerAI [" + npc + "]")
+	if npc.IsInFaction(TweakSettlerFaction)
+		if (InActiveSettlers.Find(npc) < 0)
+			InActiveSettlers.Add(npc)
+		endif
+		pSettlers.RemoveRef(npc)
+		TweakSetCommandable(npc,  false)
+		TweakSetAllowCaravan(npc, false)
+		TweakSetAllowMove(npc,    false)
+		if npc.IsChild()
+			npc.RemoveFromFaction(FarmerGenericChild)
+		else
+			npc.RemoveFromFaction(FarmerGenericDialogue)
+		endif		
+		npc.EvaluatePackage()
+	endif
+	
+EndFunction
+
+Function EnableSettlerAI(Actor npc)
+	Trace("EnableSettlerAI [" + npc + "]")
+	if npc.IsInFaction(TweakSettlerFaction)
+		if (pSettlers.Find(npc) < 0)
+			pSettlers.AddRef(npc)
+		endif
+		int index = InActiveSettlers.Find(npc)
+		if (index > -1)
+			InActiveSettlers.Remove(index)
+		endif
+		TweakSetCommandable(npc,  true)
+		TweakSetAllowCaravan(npc, true)
+		TweakSetAllowMove(npc,    true)
+		if npc.IsChild()
+			npc.AddToFaction(FarmerGenericChild)
+		else
+			npc.AddToFaction(FarmerGenericDialogue)
+		endif				
+		npc.EvaluatePackage()
+	endif
+EndFunction
+
+
 ; Relayed by Quest TweakMonitorPlayer
 Function OnGameLoaded(bool firstTime=false)
 	trace("OnGameLoaded() Called. FirstTime = [" + firstTime + "]")	
+	UnRegisterForCustomEvent(FollowersScript.GetScript(), "CompanionChange")
+	UnRegisterForCustomEvent(WorkshopParent, "WorkshopEnterMenu")
+	
+	
+	RegisterForCustomEvent(FollowersScript.GetScript(), "CompanionChange")
+	RegisterForCustomEvent(WorkshopParent, "WorkshopEnterMenu")
+	
 EndFunction
 
 ; Relayed by Quest TweakMonitorPlayer
@@ -321,8 +454,11 @@ Function AftReset()
 
 	Trace("============= AftReset() ================")
 	int numSettlers = pSettlers.GetCount()
+	int numInActive = InActiveSettlers.Length
 	if (0 == numSettlers)
-		return
+		if (0 == numInActive)		
+			return
+		endif
 	endIf
 	int i = 0
 	while (i < numSettlers)
@@ -333,6 +469,18 @@ Function AftReset()
 		i += 1
 	endWhile
 	pSettlers.RemoveAll()
+	i = 0
+	while (i < numInActive)
+		Actor settler = InActiveSettlers[i] as Actor
+		if settler
+			UnMakeSettler(settler, false)
+		endif
+		i += 1
+	endWhile
+	InActiveSettlers.Clear()
+	
+	UnRegisterForCustomEvent(FollowersScript.GetScript(), "CompanionChange")
+	UnRegisterForCustomEvent(WorkshopParent, "WorkshopEnterMenu")
 	
 EndFunction
 
@@ -343,9 +491,7 @@ Function HandleInstKickOut()
 	ActorBase CompanionX688 = Game.GetForm(0x000BBEE6) as ActorBase
 	Actor X688 = CompanionX688.GetUniqueActor()
 	if !X688.IsDead()
-		int index = pSettlers.find(X688)
-		if index > -1
-
+		if X688.IsInFaction(TweakSettlerFaction)
 			; Prevent X6-88 from turning on Player/Programming
 			Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
 			Faction SynthFaction     = Game.GetForm(0x00083B31) as Faction
@@ -358,6 +504,7 @@ Function HandleInstKickOut()
 		endif
 	endIf
 	
+	; Intentionally omit InActiveSettlers
 	int numSettlers = pSettlers.GetCount()
 	if (0 == numSettlers)
 		return
@@ -388,12 +535,10 @@ Function HandleBoSKickOut()
 	Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
 	
 	ActorValue pAssistance = Game.GetForm(0x000002C1) as ActorValue 
-	
-	
+		
 	if !Danse.IsDead()
 		if BoS302.GetStageDone(20) == 1
-			int index = pSettlers.find(Danse)
-			if index > -1
+			if Danse.IsInFaction(TweakSettlerFaction)
 				; 20 is where you are tasked with executing Danse. Thing is, many users
 				; may decide to betray the BOS at that point. And since Danse has been
 				; marked for execution, it doesn't make sense for him to side with the 
@@ -413,24 +558,20 @@ Function HandleBoSKickOut()
 				endif
 
 				; Haylen would only side with you if Danse is alive...
-				if Haylen && !Haylen.IsDead()
-					index = pSettlers.find(Haylen)
-					if index > -1
-						Haylen.RemoveFromFaction(BrotherhoodofSteelFaction)
-						Haylen.RemoveFromFaction(BoS100FightFaction)				
-						; Need to put her in a faction that will protect the player
-						Haylen.AddToFaction(HasBeenCompanion)
-						Haylen.SetValue(pAssistance, 0)
-						Haylen.SetEssential(False)
-						Haylen.GetActorBase().SetEssential(false)
-						Haylen.SetProtected(True)				
-						Haylen.SetGhost(False)
-					endif
+				if Haylen && !Haylen.IsDead() && Haylen.IsInFaction(TweakSettlerFaction)
+					Haylen.RemoveFromFaction(BrotherhoodofSteelFaction)
+					Haylen.RemoveFromFaction(BoS100FightFaction)				
+					; Need to put her in a faction that will protect the player
+					Haylen.AddToFaction(HasBeenCompanion)
+					Haylen.SetValue(pAssistance, 0)
+					Haylen.SetEssential(False)
+					Haylen.GetActorBase().SetEssential(false)
+					Haylen.SetProtected(True)				
+					Haylen.SetGhost(False)
 				endif
 			endif
 		else
-			int index = pSettlers.find(Danse)
-			if index > -1
+			if Danse.IsInFaction(TweakSettlerFaction)
 				Danse.SetValue(pAssistance, 1)
 				Danse.SetEssential(False)
 				Danse.GetActorBase().SetEssential(false)
@@ -443,31 +584,26 @@ Function HandleBoSKickOut()
 				endif				
 			endif
 			
-			if Haylen && !Haylen.IsDead()
-				index = pSettlers.find(Haylen)
-				if index > -1
-					UnMakeSettler(Haylen)
-					Haylen.SetEssential(false)
-					Haylen.GetActorBase().SetEssential(false)
-					Haylen.SetProtected(false)
-					Haylen.SetGhost(false)
-				endif
-			endif
-			
-		endif		
-	else
-		if Haylen && !Haylen.IsDead()
-			int index = pSettlers.find(Haylen)
-			if index > -1
+			if Haylen && !Haylen.IsDead() && Haylen.IsInFaction(TweakSettlerFaction)
 				UnMakeSettler(Haylen)
 				Haylen.SetEssential(false)
 				Haylen.GetActorBase().SetEssential(false)
 				Haylen.SetProtected(false)
 				Haylen.SetGhost(false)
 			endif
+			
+		endif		
+	else
+		if Haylen && !Haylen.IsDead() && Haylen.IsInFaction(TweakSettlerFaction)
+			UnMakeSettler(Haylen)
+			Haylen.SetEssential(false)
+			Haylen.GetActorBase().SetEssential(false)
+			Haylen.SetProtected(false)
+			Haylen.SetGhost(false)
 		endif
 	endif
 	
+	; Intentionally Omit InActiveSettlers
 	int numSettlers = pSettlers.GetCount()
 	if (0 == numSettlers)
 		return
@@ -491,16 +627,13 @@ Function HandleRRKickOut()
 	ActorBase CompanionDeacon = Game.GetForm(0x00045AC9) as ActorBase
 	Actor Deacon = CompanionDeacon.GetUniqueActor()
 	
-	if !Deacon.IsDead()
-		int index = pSettlers.find(Deacon)
-		if index > -1
-			UnMakeSettler(Deacon)
-			; Unmanage will often restore their original values. So we need to make them mortal
-			Deacon.SetEssential(false)
-			Deacon.GetActorBase().SetEssential(false)
-			Deacon.GetActorBase().SetProtected(false)
-			Deacon.SetGhost(false)
-		endif
+	if !Deacon.IsDead() && Deacon.IsInFaction(TweakSettlerFaction)
+		UnMakeSettler(Deacon)
+		; Unmanage will often restore their original values. So we need to make them mortal
+		Deacon.SetEssential(false)
+		Deacon.GetActorBase().SetEssential(false)
+		Deacon.GetActorBase().SetProtected(false)
+		Deacon.SetGhost(false)
 	endIf
 	
 	; Scan Managed Map and look for RailRoad Faction members.
@@ -509,8 +642,12 @@ Function HandleRRKickOut()
 	; so you can kill them...
 	
 	int numSettlers = pSettlers.GetCount()
+	int numInActive = InActiveSettlers.Length
+	
 	if (0 == numSettlers)
-		return
+		if (0 == numInActive)
+			return
+		endif
 	endIf
 	int i = 0
 	while (i < numSettlers)
@@ -524,7 +661,18 @@ Function HandleRRKickOut()
 		endif
 		i += 1
 	endWhile
-	
+	i = 0
+	while (i < numInActive)
+		Actor settler = InActiveSettlers[i]  as Actor
+		if settler.IsInFaction(RailRoadFaction)
+			UnMakeSettler(settler)
+			settler.SetEssential(false)
+			settler.GetActorBase().SetEssential(false)
+			settler.GetActorBase().SetProtected(false)
+			settler.SetGhost(false)			
+		endif
+		i += 1
+	endWhile	
 endFunction
 
 ; =========================================================================
@@ -812,6 +960,84 @@ Function TweakOnLoad(ObjectReference oNPC)
 	TweakCaravanActorBrahminCheck(npc)
 EndFunction
 
+Event WorkshopParentScript.WorkshopEnterMenu(WorkshopParentScript akSender, Var[] akArgs)
+		WorkshopScript workshopRef = akArgs[1] as WorkshopScript
+		Trace("WorkshopEnterMenu [" + workshopRef + "]")
+		if workshopRef
+			; Recalculate Resources "fixes" the population count (since WorkshopParent.GetWorkshopActors() ignores AFT Settlers). 
+			; So we fix it here when they activate Workshop Mode
+			int extra = TweakGetWorkshopActorCount(workshopRef)
+			if (extra > 0)
+				Trace("Adjusting actual population by [" + extra + "]")
+				WorkshopParent.ModifyResourceData(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingPopulation].resourceValue, workshopRef, extra)
+			endIf
+		endIf			
+EndEvent	
+
+ObjectReference[] Function TweakGetWorkshopActors(WorkshopScript workshopRef, ObjectReference[] startingList = None)
+	if !startingList
+		startingList = new ObjectReference[0]
+	endIf
+	int numSettlers = pSettlers.GetCount()
+	int numInActive = InActiveSettlers.Length
+	if (0 == numSettlers)
+		if (0 == numInActive)
+			return startingList
+		endif
+	endIf
+	
+	int workshopID = workshopRef.GetWorkshopID()
+	int count = 0
+	int i = 0
+	
+	while (i < numSettlers)
+		Actor settler = pSettlers.GetAt(i) as Actor
+		if TweakGetWorkshopID(settler) == workshopID
+			startingList.Add(settler)
+		endif
+		i += 1
+	endWhile
+	i = 0
+	while (i < numInActive)
+		Actor settler = InActiveSettlers[i] as Actor
+		if TweakGetWorkshopID(settler) == workshopID
+			startingList.Add(settler)
+		endif
+		i += 1
+	endWhile	
+	return startingList
+EndFunction
+
+int Function TweakGetWorkshopActorCount(WorkshopScript workshopRef)
+	int numSettlers = pSettlers.GetCount()
+	int numInActive = InActiveSettlers.Length
+	if (0 == numSettlers)
+		if (0 == numInActive)
+			return 0
+		endif
+	endIf
+	
+	int workshopID = workshopRef.GetWorkshopID()
+	int count = 0
+	int i = 0
+	
+	while (i < numSettlers)
+		Actor settler = pSettlers.GetAt(i) as Actor
+		if TweakGetWorkshopID(settler) == workshopID
+			count += 1
+		endif
+		i += 1
+	endWhile
+	i = 0
+	while (i < numInActive)
+		Actor settler = InActiveSettlers[i] as Actor
+		if TweakGetWorkshopID(settler) == workshopID
+			count += 1
+		endif
+		i += 1
+	endWhile	
+	return count
+endFunction
 
 Event FollowersScript.CompanionChange(FollowersScript akSender, Var[] akArgs)
 
@@ -820,12 +1046,16 @@ Event FollowersScript.CompanionChange(FollowersScript akSender, Var[] akArgs)
 
 	Trace("FollowersScript.CompanionChange EventActor [" + EventActor + "] IsNowCompanion [" + IsNowCompanion + "]")
 	
-	if (IsNowCompanion)
-		int index = pSettlers.find(EventActor)
-		if (index > -1)
-			UnMakeSettler(EventActor)
+	if EventActor.IsInFaction(TweakSettlerFaction)
+		Trace("AFT Settler Detected")
+		if (IsNowCompanion)
+			DisableSettlerAI(EventActor)
+		else
+			EnableSettlerAI(EventActor)
 		endIf
-	endIf
+	else
+		Trace("Not AFT Settler. Ignoring")
+	endif
 	
 EndEvent
 
@@ -1017,40 +1247,68 @@ function TweakAddPermanentActorToWorkshopPUBLIC(Actor actorToAssign = NONE, int 
 		actorToAssign = WorkshopParent.WorkshopRecruit.GetActorRef()
 	endif
 
+	WorkshopScript newWorkshop = None
+	
 	if newWorkshopID < 0
-		actorToAssign.OpenWorkshopSettlementMenu(WorkshopParent.WorkshopAssignHomePermanentActor)
-		; NOTE: event from menu is handled by WorkshopNPCScript
-	else
-		bool gotlock = GetSpinLock(pTweakMutexCompanions,30, "TweakAssignCaravanActorPUBLIC") 
-
-		WorkshopScript newWorkshop = WorkshopParent.GetWorkshop(newWorkshopID)
-		actorToAssign.AddToFaction(WorkshopParent.REIgnoreForCleanup)
-		actorToAssign.RemoveFromFaction(WorkshopParent.REDialogueRescued)
-
-		; make Boss loc ref type for this location
-		if actorToAssign.IsCreated()
-			TweakSetAsBoss(actorToAssign, newWorkshop.myLocation)
+		CompanionActorScript CAS = actorToAssign as CompanionActorScript
+		Location selection = SanctuaryHillsLocation
+		if actorToAssign.GetActorBase().IsUnique()
+			Trace("npc is Unique")
+			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
+				selection = actorToAssign.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
+			else
+				selection = actorToAssign.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akExcludeKeywordList=WorkshopParent.WorkshopSettlementMenuExcludeList)
+			endif
+		else
+			Trace("npc is not Unique")
+			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
+				selection = actorToAssign.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
+			else
+				selection = actorToAssign.OpenWorkshopSettlementMenuEx(akActionKW=WorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akExcludeKeywordList=WorkshopParent.WorkshopSettlementMenuExcludeList)
+			endif
 		endif
-		; add to alias collection for existing actors - gives them packages to stay at new "home"
-		WorkshopParent.PermanentActorAliases.AddRef(actorToAssign)
-		; add to the workshop
-		TweakAddActorToWorkshop(actorToAssign, newWorkshop)
-
-		if bAutoAssign
-			; TODO
-			Trace("  SKIPPED : TryToAutoAssignActor")		
-			; 	TryToAutoAssignActor(newWorkshop, actorToAssign)
-		endif
-
-		; send custom event for this actor
-		Var[] kargs = new Var[2]
-		kargs[0] = actorToAssign
-		kargs[1] = newWorkshopID
-		WorkshopParent.SendCustomEvent("WorkshopAddActor", kargs)		
-
-		; unlock editing
-		ReleaseSpinLock(pTweakMutexCompanions, gotlock, "TweakAssignCaravanActorPUBLIC")
+		if selection
+			newWorkshopID = LocationToWorkShopID(selection)
+			Trace("selection[" + selection + "] newWorkshopID [" + newWorkshopID + "]")
+		else
+			Trace("No selection. Using Default")
+			newWorkshopID = LocationToWorkShopID(SanctuaryHillsLocation)
+		endif	
 	endif
+	
+	newWorkshop = WorkshopParent.GetWorkshop(newWorkshopID)
+	bool gotlock = GetSpinLock(pTweakMutexCompanions,30, "TweakAddPermanentActorToWorkshopPUBLIC") 
+
+	actorToAssign.AddToFaction(WorkshopParent.REIgnoreForCleanup)
+	actorToAssign.RemoveFromFaction(WorkshopParent.REDialogueRescued)
+
+	; make Boss loc ref type for this location
+	if actorToAssign.IsCreated()
+		; TweakSetAsBoss(actorToAssign, newWorkshop.myLocation)
+		if newWorkshop
+			actorToAssign.SetPersistLoc(newWorkshop.GetCurrentLocation())
+		endif
+		actorToAssign.ClearFromOldLocations()
+	endif
+	; add to alias collection for existing actors - gives them packages to stay at new "home"
+	WorkshopParent.PermanentActorAliases.AddRef(actorToAssign)
+	; add to the workshop
+	TweakAddActorToWorkshop(actorToAssign, newWorkshop)
+
+	if bAutoAssign
+		; TODO
+		Trace("  SKIPPED : TryToAutoAssignActor")		
+		; 	TryToAutoAssignActor(newWorkshop, actorToAssign)
+	endif
+
+	; send custom event for this actor
+	Var[] kargs = new Var[2]
+	kargs[0] = actorToAssign
+	kargs[1] = newWorkshopID
+	WorkshopParent.SendCustomEvent("WorkshopAddActor", kargs)		
+
+	; unlock editing
+	ReleaseSpinLock(pTweakMutexCompanions, gotlock, "TweakAddPermanentActorToWorkshopPUBLIC")
 
 endFunction
 
@@ -1248,6 +1506,7 @@ function TweakUnassignActor(Actor theActor, bool bRemoveFromWorkshop = false, bo
 	; caravan?
 	foundIndex = WorkshopParent.CaravanActorAliases.Find(theActor)
 	if foundIndex > -1
+		Trace("Member of CaravanActorAliases. Removing")
 		; remove me from the caravan alias collection
 		WorkshopParent.CaravanActorAliases.RemoveRef(theActor)
 		WorkshopParent.CaravanActorRenameAliases.RemoveRef(theActor)
@@ -1260,7 +1519,8 @@ function TweakUnassignActor(Actor theActor, bool bRemoveFromWorkshop = false, bo
 		; set back to Boss
 		if theActor.IsCreated()
 			; Patch 1.4: allow custom loc ref type on workshop NPC
-			TweakSetAsBoss(theActor, startLocation)
+			; TweakSetAsBoss(theActor, startLocation)
+			theActor.ClearFromOldLocations()
 		endif
 
 		; update workshop rating - increment unassigned actors total
@@ -1274,12 +1534,17 @@ function TweakUnassignActor(Actor theActor, bool bRemoveFromWorkshop = false, bo
 		kargs[0] = theActor
 		kargs[1] = workshopRef
 		WorkshopParent.SendCustomEvent("WorkshopActorCaravanUnassign", kargs)
+	else
+		Trace("Not Member of CaravanActorAliases.")		
 	endif
 
 	; work object?
-	if TweakGetWorkshopID(theActor) == workshopRef.GetWorkshopID()
+	int workshopID = TweakGetWorkshopID(theActor)
+	if workshopID == workshopRef.GetWorkshopID()
 		; unassign ownership of all work objects
+		Trace("Searching for OwnedObjects")
 		ObjectReference[] ResourceObjects = workshopRef.GetWorkshopOwnedObjects(theActor)
+		Trace("GetWorkshopOwnedObjects returned [" + ResourceObjects.Length + "] objects")
 		int i = 0
 		while i < ResourceObjects.Length
 			WorkshopObjectScript theObject = ResourceObjects[i] as WorkshopObjectScript
@@ -1300,9 +1565,13 @@ function TweakUnassignActor(Actor theActor, bool bRemoveFromWorkshop = false, bo
 		; clear actor work flags
 		TweakSetMultiResource(theActor, NONE)
 		TweakSetWorker(theActor, false)
+	else
+		Trace("theActor workshopID [" + workshopID + "] != workshopRef.GetWorkshopID() [" + workshopRef.GetWorkshopID() + "]")
 	endif
 
 	if bRemoveFromWorkshop
+		Trace("bRemoveFromWorkshop [True]. Removing")		
+	
 		; clear workshop linked ref
 		theActor.SetLinkedRef(NONE, WorkshopParent.WorkshopItemKeyword)
 
@@ -1403,7 +1672,7 @@ function TweakUnassignActorFromObject(Actor theActor, WorkshopObjectScript theOb
 			WorkshopParent.SendCustomEvent("WorkshopActorUnassigned", kargs)
 		endif
 
-		ObjectReference[] WorkshopActors = WorkshopParent.GetWorkshopActors(workshopRef)
+		ObjectReference[] WorkshopActors = TweakGetWorkshopActors(workshopRef, WorkshopParent.GetWorkshopActors(workshopRef))
 		int foundIndex = WorkshopActors.Find(theActor)
 		if foundIndex > -1
 			ObjectReference[] ResourceObjects = workshopRef.GetWorkshopOwnedObjects(theActor)
@@ -1462,7 +1731,7 @@ function TweakAddActorToWorkshop(Actor assignedActor, WorkshopScript workshopRef
 
 	; if already in the list, do nothing
 	if WorkshopActors == NONE
-		WorkshopActors = WorkshopParent.GetWorkshopActors(workshopRef)
+		WorkshopActors = TweakGetWorkshopActors(workshopRef, WorkshopParent.GetWorkshopActors(workshopRef))
 	endif
 
 	bool bAlreadyAssigned = false
@@ -1483,16 +1752,19 @@ function TweakAddActorToWorkshop(Actor assignedActor, WorkshopScript workshopRef
 		TweakUnassignActor(assignedActor, false)
 	endif
 
-	if bAlreadyAssigned == false
+	int totalPopulation = 0
+	if !bAlreadyAssigned
 		Trace("  Assigning Actor to new workshop");
 		TweakSetWorkshopID(assignedActor, workshopRef.GetWorkshopID())
-		if workshopRef.SettlementOwnershipFaction && workshopRef.UseOwnershipFaction && !assignedActor.IsInFaction(WorkshopParent.Followers.CurrentCompanionFaction)
+		if workshopRef.SettlementOwnershipFaction && workshopRef.UseOwnershipFaction ;  && !assignedActor.IsInFaction(WorkshopParent.Followers.CurrentCompanionFaction)
 			assignedActor.SetCrimeFaction(workshopRef.SettlementOwnershipFaction)
 		endif
-		
+
+		; add linked ref so workshop knows about me
 		assignedActor.SetLinkedRef(workshopRef, WorkshopParent.WorkshopItemKeyword)
 
 		WorkshopParent.AssignHomeMarkerToActor(assignedActor, workshopRef)
+				
 		ObjectReference linkHome = assignedActor.GetLinkedRef(WorkshopLinkHome)
 		if linkHome
 			Trace("  WorkshopLinkHome [" + linkHome + "]")
@@ -1504,10 +1776,12 @@ function TweakAddActorToWorkshop(Actor assignedActor, WorkshopScript workshopRef
 			assignedActor.SetLinkedRef(CodsworthKitchenMarker,WorkshopLinkHome)
 		endif
 
-		; WorkshopParent.ApplyWorkshopAliasData(assignedActor)
+		; "stamp" alias data so they keep it even after being in alias - allows them to initialize to correct package even if Reset hasn't finished running
+		WorkshopParent.ApplyWorkshopAliasData(assignedActor)
 
 		TweakUpdatePlayerOwnership(assignedActor, workshopRef)
 		
+		; 98730: Recalc workshop ratings on old workshop (if there is one) now that actor is linked to new workshop
 		if oldWorkshopID > -1 && oldWorkshopID != workshopRef.GetWorkshopID()
 			WorkshopScript oldWorkshopRef = WorkshopParent.GetWorkshop(oldWorkshopID)		
 			if oldWorkshopRef
@@ -1515,15 +1789,18 @@ function TweakAddActorToWorkshop(Actor assignedActor, WorkshopScript workshopRef
 			endif 
 		endif
 
-		int totalPopulation = workshopRef.GetBaseValue(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingPopulation].resourceValue) as int
+		totalPopulation = workshopRef.GetBaseValue(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingPopulation].resourceValue) as int
 		float currentHappiness = workshopRef.GetValue(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingHappiness].resourceValue)
-		if totalPopulation == 0
+		Trace("Target Workshop currentHappiness [" + currentHappiness + "]")
+		if 0 == totalPopulation
 			WorkshopParent.SetResourceData(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingHappinessModifier].resourceValue, workshopRef, 0)
 			if bResetMode
+				Trace("ResetMode is True. Setting Happiness to 50")
 				WorkshopParent.SetResourceData(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingHappiness].resourceValue, workshopRef, 50.0)
 				WorkshopParent.SetResourceData(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingHappinessTarget].resourceValue, workshopRef, 50.0)
 			else
 				bResetHappiness = true
+				Trace("ResetMode is False. Setting Happiness to 50")
 			endif
 			
 			; Dont start attacks because of AFT Settlers. If they never put up a beacon, there
@@ -1532,22 +1809,27 @@ function TweakAddActorToWorkshop(Actor assignedActor, WorkshopScript workshopRef
 			; WorkshopParent.SetResourceData(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingLastAttackDaysSince].resourceValue, workshopRef, 99)
 			
 		endif
+		
+		; Mark the Actor as Unassigned to anything....
 		assignedActor.SetValue(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingPopulationUnassigned].resourceValue, 1)
 
 		WorkshopParent.UpdateVendorFlagsAll(workshopRef)
 
 		if assignedActor.IsCreated()
+			; TweakSetAsBoss(assignedActor, workshopRef.myLocation)
 			assignedActor.SetPersistLoc(workshopRef.myLocation)
-			TweakSetAsBoss(assignedActor, workshopRef.myLocation)
+			assignedActor.ClearFromOldLocations()
 		endif
 
+		Trace("Target Workshop Population [" + totalPopulation + "]")
 	endif
 
+	
 	if bResetMode
 		assignedActor.SetValue(TweakSettlerMultiResourceProduction, 0.0)
 	endif
 
-	if workshopRef.PlayerHasVisited && bAlreadyAssigned == false
+	if workshopRef.PlayerHasVisited && !bAlreadyAssigned
 		TweakSetWorker(assignedActor, false)
 	endif
 
@@ -1555,16 +1837,38 @@ function TweakAddActorToWorkshop(Actor assignedActor, WorkshopScript workshopRef
 		TweakTryToAssignBedToActor(workshopRef, assignedActor)
 	endif
 
-	assignedActor.EvaluatePackage()
-	Trace("  Package [" + assignedActor.GetCurrentPackage() + "]")
-
+	; While we can temporarily increase the population of the workshop
+	; by manually increasing WorkshopRatingPopulation, the issue is when the player
+	; activates WorkShop Mode, it recalculates the population. AFT Settlers lack the
+	; boolean flag bCountsForPopulation, which the built in workshop system seems
+	; to confirm/check for. So we can assign NPCs to settlements, but they will never 
+	; count towards the settlements population. 
+	
+	; workshopRef.RecalculateWorkshopResources()
+	
 	if !workshopRef.RecalculateWorkshopResources()
-		WorkshopParent.ModifyResourceData(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingPopulation].resourceValue, workshopRef, 1)
+		Trace("RecalculateWorkshopResources Failed. Attempting Manual Update...")
+		if !bAlreadyAssigned
+			WorkshopParent.ModifyResourceData(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingPopulation].resourceValue, workshopRef, 1)
+		endif
+	 else
+		Trace("RecalculateWorkshopResources Called")
+		if !bAlreadyAssigned
+			int newPopulation = workshopRef.GetBaseValue(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingPopulation].resourceValue) as int
+			if (totalPopulation == newPopulation)
+				Trace("RecalculateWorkshopResources Did not increase population. Attempting to increase Manually")
+				WorkshopParent.ModifyResourceData(WorkshopParent.WorkshopRatings[WorkshopParent.WorkshopRatingPopulation].resourceValue, workshopRef, 1)
+			endif
+		endif
 	endif
 
 	if !bResetMode && bResetHappiness
 		WorkshopParent.ResetHappiness(workshopRef)
 	endif
+	
+	assignedActor.EvaluatePackage()
+	Trace("  Package [" + assignedActor.GetCurrentPackage() + "]")
+	
 endFunction
 
 function TweakTryToAssignBedToActor(WorkshopScript workshopRef, Actor theActor)

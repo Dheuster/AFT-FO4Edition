@@ -4,6 +4,8 @@ Faction Property  pTweakNamesFaction Auto Const
 ; FormList Property pTweakCustomNames Auto Const
 String[] Property IndexToString Auto
 
+ActorValue Property CraftingAbilityMedicine	Auto Const
+
 Group Standard_Companions
 	ActorBase Property CompanionCait			Auto Const ; Cell : CombatZone01 Ref : CaitRef
 	ActorBase Property Codsworth				Auto Const ; Cell : SanctuaryExt02(-20,22) Ref : Codsworth1Ref
@@ -184,7 +186,7 @@ int Function GetNameIndex(Actor npc, Bool assign = false)
 		Trace("NPC already has assigned name")	
 		return currentid
 	endif
-
+		
 	int targetid = 0
 	int ActorBaseID = base.GetFormID()
 	
@@ -249,38 +251,26 @@ int Function GetNameIndex(Actor npc, Bool assign = false)
 		return targetid
 	endif
 		
+	float reInstallValue = npc.GetValue(CraftingAbilityMedicine)
+	
+	if reInstallValue > 18.0 && reInstallValue < 111.0
+		npc.SetValue(CraftingAbilityMedicine, 0.0)
+		if (reInstallValue > 50.0)
+			AssignName(npc, reInstallValue as int)
+			return reInstallValue as int
+		else
+			npc.SetFactionRank(pTweakNamesFaction, reInstallValue as int)
+			return reInstallValue as int			
+		endif
+	endif
+	
 	Trace("Unrecognized NPC")
 	
 	if (assign)
 		Trace("Assign is True")
 		TweakFollowerScript pTweakFollowerScript = (pTweakFollower as TweakFollowerScript)
 		if pTweakFollowerScript	
-		
-			; Look for the first 0 bit
-			; int bit    = 0
-			; int offset = 0
-			; int mask = pTweakFollowerScript.GetUsedGenericNameSlots()
-			
-			; Trace("GetUsedGenericNameSlots returned [" + mask +"]")
-			
-			; if (0 == mask)
-				; Special Case : all slots are available:
-				; targetid = 19
-				; Trace("Found 0 bit at offset [0] ID will be [" + targetid + "]")
-			; else
-				; while (mask > 0 && offset < 32)
-					; bit  = mask % 2                ; isolate least significant bit
-					; if (bit == 0)                  ; We are done...
-						; targetid = offset + 19
-						; mask = 0
-						; Trace("Found 0 bit at offset [" + offset +"] ID will be [" + targetid + "]")
-					; else
-						; mask = ((mask / 2) as Int) ; shift right 1
-						; offset += 1
-					; endif
-				; endWhile
-			; endif
-			
+					
 			bool[] mask = pTweakFollowerScript.GetUsedGenericNameSlots()
 			int masklen = mask.Length
 			Trace("GetUsedGenericNameSlots returned [" + masklen +"] booleans")			

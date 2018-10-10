@@ -14,46 +14,38 @@ ReferenceAlias  Property pDogmeatCompanion	Auto Const
 EndGroup
 
 Group GlobalVariables
-GlobalVariable Property pTweakMutexCompanions	Auto Const
-GlobalVariable Property pTweakFollowerLimit		Auto Const
-GlobalVariable Property pTweakFollowerCount Auto Const
-GlobalVariable Property pTimeScale          Auto Const
-GlobalVariable Property pTweakFollowerCatchup Auto Const
+GlobalVariable Property pTweakMutexCompanions			Auto Const
+GlobalVariable Property pTweakFollowerLimit				Auto Const
+GlobalVariable Property pTimeScale						Auto Const
+GlobalVariable Property pTweakFollowerCatchup			Auto Const
+GlobalVariable Property pTweakFollowerCount				Auto Const
 ; GlobalVariable Property pGameDaysPassed     Auto
-GlobalVariable Property iFollower_Com_Wait  Auto Const
-GlobalVariable Property iFollower_Stance_Aggressive Auto Const
-GlobalVariable Property iFollower_Stance_Defensive  Auto Const
-GlobalVariable Property pTweakIgnoreAffinity		Auto Const
-GlobalVariable Property pTweakMaxManaged		Auto Const
-GlobalVariable Property pTweakManageBoostOffset	Auto Const
+GlobalVariable Property iFollower_Com_Wait				Auto Const
+GlobalVariable Property iFollower_Stance_Aggressive		Auto Const
+GlobalVariable Property iFollower_Stance_Defensive		Auto Const
+GlobalVariable Property pTweakIgnoreAffinity			Auto Const
+GlobalVariable Property pTweakMaxManaged				Auto Const
+GlobalVariable Property pTweakManageBoostOffset			Auto Const
+GlobalVariable Property pTweakAllowAutonomousPickup		Auto Const
+GlobalVariable Property MQWonInst						Auto Const
+GlobalVariable Property pTweakIdleCooldownActiveMin		Auto Const
+GlobalVariable Property pTweakIdleCooldownActiveMax		Auto Const
+GlobalVariable Property pTweakIdleCooldownDismissedMin	Auto Const
+GlobalVariable Property pTweakIdleCooldownDismissedMax	Auto Const
+GlobalVariable Property pTweakSynergyChrBoost			Auto Const
+GlobalVariable Property pTweakSynergyLckBoost			Auto Const
+GlobalVariable Property pTweakRetreat					Auto Const
+GlobalVariable Property TweakSummonAllRemaining			Auto Const ; 3
 
 EndGroup
-
-FormList Property pTweakHelloTopicCait       Auto Const
-FormList Property pTweakHelloTopicCodsworth  Auto Const
-FormList Property pTweakHelloTopicCurie      Auto Const
-FormList Property pTweakHelloTopicDanse      Auto Const
-FormList Property pTweakHelloTopicDeacon     Auto Const
-FormList Property pTweakHelloTopicDogmeat    Auto Const
-FormList Property pTweakHelloTopicHancock    Auto Const
-FormList Property pTweakHelloTopicMacCready  Auto Const
-FormList Property pTweakHelloTopicNick       Auto Const
-FormList Property pTweakHelloTopicPiper      Auto Const
-FormList Property pTweakHelloTopicPreston    Auto Const
-FormList Property pTweakHelloTopicStrong     Auto Const
-FormList Property pTweakHelloTopicX688       Auto Const
-FormList Property pTweakHelloTopicAda        Auto Const
-FormList Property pTweakHelloTopicLongfellow Auto Const
-FormList Property pTweakHelloTopicPorterGage Auto Const
-FormList Property pTweakHelloTopicSpouse	 Auto Const
 
 Group Messages
 Message Property pTweakTimescale			Auto Const
 Message Property pTweakMaxReached			Auto Const
 Message Property pTweakUpdateMsg			Auto Const
 Message Property pTweakUpdateDoneMsg		Auto Const
-Message Property pTweakInfoInspecting 		Auto Const
-Message Property pTweakNoWorkshopParentMsg  Auto Const
+Message Property pTweakInfoInspecting		Auto Const
+Message Property pTweakNoWorkshopParentMsg	Auto Const
 Message Property pWorkshopUnownedMessage	Auto Const
 Message Property pTweakInstituteSummon		Auto Const
 Message Property pTweakProgress				Auto Const
@@ -62,13 +54,13 @@ Message Property pTweakShowResourceID		Auto Const
 EndGroup
 
 Group Conditionals_for_external_terminals
-Bool Property pFollowerNoMorals        auto conditional
-Bool Property pFollowerCatchup         auto conditional
-Bool Property pFollowerPackMule        auto conditional
-Bool Property pFollowerSynergy         auto conditional 
+Bool Property pFollowerNoMorals	Auto conditional
+Bool Property pFollowerCatchup	Auto conditional
+Bool Property pFollowerPackMule	Auto conditional
+Bool Property pFollowerSynergy	Auto conditional
+Location Property PlayerHome	Auto Conditional
 EndGroup
 
-Bool Property pInstalled auto
 
 Group AFT_Activator_Talk_Support
 ActorValue Property pTweakTopicHello			Auto Const ; pTweakHelloTopicList
@@ -91,87 +83,100 @@ ActorValue Property pTweakTopicStyleAgg			Auto Const ; pTweakStyleAggTopicList
 ActorValue Property pTweakTopicStyleAggModID	Auto Const ; pTweakStyleAggTopicList
 ActorValue Property pTweakTopicStyleDef			Auto Const ; pTweakStyleDefTopicList
 ActorValue Property pTweakTopicStyleDefModID	Auto Const ; pTweakStyleDefTopicList
+ActorBase Property CompanionCait			Auto Const
+ActorBase Property Codsworth				Auto Const
+ActorBase Property CompanionCurie			Auto Const
+ActorBase Property BoSPaladinDanse			Auto Const
+ActorBase Property CompanionDeacon			Auto Const
+ActorBase Property Dogmeat					Auto Const
+ActorBase Property Hancock					Auto Const
+ActorBase Property CompanionMacCready		Auto Const
+ActorBase Property CompanionNickValentine	Auto Const
+ActorBase Property CompanionPiper			Auto Const
+ActorBase Property PrestonGarvey			Auto Const
+ActorBase Property CompanionStrong			Auto Const
+ActorBase Property CompanionX688			Auto Const
+ActorBase Property TweakCompanionNate		Auto Const
+ActorBase Property TweakCompanionNora		Auto Const
+FormList Property pTweakHelloTopicCait       Auto Const
+FormList Property pTweakHelloTopicCodsworth  Auto Const
+FormList Property pTweakHelloTopicCurie      Auto Const
+FormList Property pTweakHelloTopicDanse      Auto Const
+FormList Property pTweakHelloTopicDeacon     Auto Const
+FormList Property pTweakHelloTopicDogmeat    Auto Const
+FormList Property pTweakHelloTopicHancock    Auto Const
+FormList Property pTweakHelloTopicMacCready  Auto Const
+FormList Property pTweakHelloTopicNick       Auto Const
+FormList Property pTweakHelloTopicPiper      Auto Const
+FormList Property pTweakHelloTopicPreston    Auto Const
+FormList Property pTweakHelloTopicStrong     Auto Const
+FormList Property pTweakHelloTopicX688       Auto Const
+FormList Property pTweakHelloTopicAda        Auto Const
+FormList Property pTweakHelloTopicLongfellow Auto Const
+FormList Property pTweakHelloTopicPorterGage Auto Const
+FormList Property pTweakHelloTopicSpouse	 Auto Const
+
 EndGroup
-
-; Used to detect Wait State...
-ActorValue     Property pFollowerState      Auto Const
-Package        Property pCommandMode_Travel Auto Const
-; GlobalVariable Property iFollower_Com_Wait  Auto Const ; Above in Globals
-
-; Scale (For AftReset/Unmanage)
-ActorValue Property pTweakScale					Auto Const
-
-ActorValue Property pTweakSkipDistance			Auto Const
 
 
 ; Other Quest Scripts : Note Script types are not recognized until they 
 ;                       have successfully compiled...
 ; AFT:TweakMonitorPlayerScript Property pTweakMonitorPlayerScript Auto
 ; Quest                    Property pTweakMonitorPlayer Auto
-Quest      Property pFollowers            Auto Const
-Quest      Property pTweakPipBoy          Auto Const
-Quest      Property pTweakNames           Auto Const
-Quest      Property pTweakScrapScanMaster Auto Const
-Quest	   Property pTweakCOMSpouse		  Auto Const ;ResetAffinityScene
-Quest	   Property pTweakSettlers		  Auto Const
-Quest	   Property BoS302				  Auto Const
+Group Injected_Quests
 
+; Never inject Scripts.... Creates dependency on the entirebackwards
+; interface as well as the compiler used to compile the script. So
+; you will have backwards compatibility issues when FO4 releases 
+; patches.
+Quest	Property pFollowers				Auto Const
+Quest	Property pTweakPipBoy			Auto Const
+Quest	Property pTweakNames			Auto Const
+Quest	Property pTweakScrapScanMaster	Auto Const
+Quest	Property pTweakCOMSpouse		Auto Const ;ResetAffinityScene
+Quest	Property pTweakSettlers			Auto Const
+Quest	Property BoS302					Auto Const
+Quest	Property pTweakLocator			Auto Const
+Quest	Property pTweakInfo				Auto Const
+Quest	Property pTweakDedupeMaster		Auto Const
+Quest	Property pDN136_Attack			Auto Const
+Quest	Property pTweakScanNonConstructed_BtoC	Auto Const
+Quest	Property BoSKickOut				Auto Const
+Quest	Property BoSKickOutSoft			Auto Const
+Quest	Property InstKickOut			Auto Const
+Quest	Property RRKickOut				Auto Const
+Quest	Property pTweakDLC01			Auto Const
+Quest	Property pTweakDLC03			Auto Const
+Quest	Property pTweakDLC04			Auto Const
 
+endGroup
+
+Group Injected_Keywords
 Keyword    Property pTeammateReadyWeapon_DO Auto Const
 Keyword    Property p_AttachPassenger       Auto Const
 Keyword    Property p_AttachSlot2           Auto Const
 Keyword    Property pPlayerCanStimpak       Auto Const
-FormList   Property pTweakHumanoidKeywords  Auto Const
 Keyword	   Property pAnimFlavorSmoking		Auto Const
+endGroup
 
-ReferenceAlias	Property pLostNPC			Auto Const
-Quest			Property pTweakLocator		Auto Const
-ReferenceAlias	Property pInfoNPC			Auto Const
-Quest			Property pTweakInfo			Auto Const
-Quest 			Property pTweakDedupeMaster Auto Const
-Quest			Property pDN136_Attack		Auto Const
-Quest 			Property pTweakScanNonConstructed_BtoC	Auto Const
-
-Quest			Property BoSKickOut			Auto Const
-Quest			Property BoSKickOutSoft 	Auto Const
-Quest			Property InstKickOut		Auto Const
-Quest			Property RRKickOut 			Auto Const
-
-ReferenceAlias[] Property pFollowerMap Auto
-ReferenceAlias[] Property pManagedMap  Auto
-
+Group Injected_Factions
 Faction property pTweakFollowerFaction       Auto Const
 Faction property pTweakNamesFaction          Auto Const
 Faction property pDisallowedCompanionFaction Auto Const
 Faction property pDanversFaction             Auto Const
 Faction property pTweakRangedFaction		 Auto Const
 Faction property pPlayerFaction 			 Auto Const
-
-; Items to Add to Inventory (Dont due it to fast or it breaks New Game...)
-Potion   Property pTweakActivateAFT        Auto Const
-Holotape Property pTweakHoloTape           Auto Const
-
-
-Float Property version Auto
-Int   Property pfCount Auto
-Bool  Property pCharGenCacheEnabled Auto hidden
-Bool  Property combatRunningFlag Auto hidden
-Bool  Property instituteSummonMsgOnce Auto hidden
-
-
-int CONFIRM_VERSION        = 3 const
-int UPDATE_VERSION         = 4 const
-int COMBAT_MONITOR         = 5 const
-int RETREAT_END            = 6 const
-
-int EXIT_PA_BASE           = 30 const
-int EXIT_PA_COMPANION1	   = 30 const
-int EXIT_PA_COMPANION2	   = 31 const
-int EXIT_PA_COMPANION3	   = 32 const
-int EXIT_PA_COMPANION4	   = 33 const
-int EXIT_PA_COMPANION5	   = 34 const
+Faction	Property pTweakCampHomeFaction		Auto Const
+Faction	Property pTweakPosedFaction			Auto Const
+Faction	Property pCurrentCompanionFaction	Auto Const
+Faction	Property pREIgnoreForCleanup		Auto Const
+Faction	Property pREDialogueRescued			Auto Const
+Faction Property pTweakSyncPAFaction		Auto Const
+endGroup
 
 ; INFO:
+
+Group Info_Support
 ActorValue Property pStrength				Auto	Const
 ActorValue Property pPerception				Auto	Const
 ActorValue Property pEndurance				Auto	Const
@@ -220,73 +225,14 @@ GlobalVariable Property pTweakInfoVar21  Auto Const
 GlobalVariable Property pTweakInfoVar22  Auto Const
 GlobalVariable Property pTweakInfoVar23  Auto Const
 GlobalVariable Property pTweakInfoVar24  Auto Const
-GlobalVariable Property MQWonInst		 Auto Const
-
-GlobalVariable Property pTweakIdleCooldownActiveMin		Auto Const
-GlobalVariable Property pTweakIdleCooldownActiveMax		Auto Const
-GlobalVariable Property pTweakIdleCooldownDismissedMin	Auto Const
-GlobalVariable Property pTweakIdleCooldownDismissedMax	Auto Const
-
-GlobalVariable Property pTweakSynergyChrBoost	Auto Const
-GlobalVariable Property pTweakSynergyLckBoost	Auto Const
-
-GlobalVariable Property pTweakRetreat			Auto Const
+endGroup
 
 
-; Use by TweakMakeFollowerSpell to identify name of NPC.
-Location Property PlayerHome Auto Conditional
+Group Select_Follower_Support
+GlobalVariable[] Property pToggles Auto Const
+EndGroup
 
-Spell	Property pTweakFollowerStealth Auto Const
-Spell	Property TeleportInSpell	   Auto Const
-
-ReferenceAlias  Property pShelterMapMarker     Auto Const
-Faction			Property pTweakCampHomeFaction	Auto Const
-Faction			Property pTweakPosedFaction	Auto Const
-Faction			Property pCurrentCompanionFaction Auto Const
-Faction			Property pREIgnoreForCleanup Auto Const
-Faction			Property pREDialogueRescued Auto Const
-
-
-; Used to confirm compatibility with some functions
-Race	Property pHumanRace							Auto Const
-Race	Property pGhoulRace							Auto Const
-Race	Property pPowerArmorRace					Auto Const
-Race	Property pSynthGen2RaceValentine			Auto Const
-Race	Property pSynthGen2Race                     Auto Const
-Faction Property pTweakSyncPAFaction				Auto Const
-
-Location Property InstituteLocation					Auto Const
-
-; Never inject Scripts.... Creates dependency on the entirebackwards
-; interface as well as the compiler used to compile the script. So
-; you will have backwards compatibility issues when FO4 releases 
-; patches.
-
-Quest Property pTweakDLC01			Auto Const
-Quest Property pTweakDLC03			Auto Const
-Quest Property pTweakDLC04			Auto Const
-
-;TweakDLC01Script Property pTweakDLC01Script			Auto Const
-;TweakDLC03Script Property pTweakDLC03Script			Auto Const
-;TweakDLC04Script Property pTweakDLC04Script			Auto Const
-
-; Vanilla Companions
-ActorBase Property CompanionCait			Auto Const
-ActorBase Property Codsworth				Auto Const
-ActorBase Property CompanionCurie			Auto Const
-ActorBase Property BoSPaladinDanse			Auto Const
-ActorBase Property CompanionDeacon			Auto Const
-ActorBase Property Dogmeat					Auto Const
-ActorBase Property Hancock					Auto Const
-ActorBase Property CompanionMacCready		Auto Const
-ActorBase Property CompanionNickValentine	Auto Const
-ActorBase Property CompanionPiper			Auto Const
-ActorBase Property PrestonGarvey			Auto Const
-ActorBase Property CompanionStrong			Auto Const
-ActorBase Property CompanionX688			Auto Const
-ActorBase Property TweakCompanionNate		Auto Const
-ActorBase Property TweakCompanionNora		Auto Const
-
+Group Injected_Perks
 Perk	  Property pTweakCarryBoost				Auto Const ; Perk increases carryweight with strength
 Perk	  Property pTweakHealthBoost			Auto Const ; Perk increases health with endurance
 Perk	  Property pTweakDmgResistBoost			Auto Const ; Perk increases Damage Resistance with agility
@@ -295,19 +241,80 @@ Perk	  Property pTweakPlayerSynergyChrPerk	Auto Const ; Perk increases Ranged Da
 Perk	  Property pTweakPlayerSynergyLckPerk	Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakZeroCarryInCombat		Auto Const ; Perk prevent weapon pickup during combat
 Perk	  Property pTweakPlayerSwimMonitorPerk	Auto Const ; Sends OnEnterWater/OnExitWater to TweakMonitorPlayer
+Perk	  Property Sneak01						Auto Const
+Perk	  Property Sneak02						Auto Const
+Perk	  Property Sneak03						Auto Const
+Perk	  Property Sneak04						Auto Const
+Perk	  Property CompanionInspirational		Auto Const
+Perk	  Property ImmuneToRadiation			Auto Const
+EndGroup
 
-;Perk	Property pCompanionInspirational		Auto Const
-;Spell	Property pAbMagLiveLoveCompanionPerks	Auto Const
+Group Injected_Races
+; Used to confirm compatibility with some functions
+Race	Property pHumanRace					Auto Const
+Race	Property pGhoulRace					Auto Const
+Race	Property pPowerArmorRace			Auto Const
+Race	Property pSynthGen2RaceValentine	Auto Const
+Race	Property pSynthGen2Race				Auto Const
+EndGroup
 
-; 194 ....
-GlobalVariable[] Property pToggles Auto Const
+Group Injected_Misc
 
-Location Property pListeningPostBravoLocation Auto Const
-ObjectReference Property BoS302DanseMarker		Auto Const
+; Used to detect Wait State...
+ActorValue	Property pFollowerState      Auto Const
+Package		Property pCommandMode_Travel Auto Const
+; GlobalVariable Property iFollower_Com_Wait  Auto Const ; Above in Globals
 
-Message Property TweakSummonAllWarning Auto Const ; You may only use this command [3] more time(s). Continue? 0=No 1=yes
-Message Property TweakSummonAllLocked Auto Const  ; Locked. Will unlock in %f.0 days
-GlobalVariable Property TweakSummonAllRemaining Auto Const ; 3
+; Scale (For AftReset/Unmanage)
+ActorValue	Property pTweakScale					Auto Const
+ActorValue	Property pTweakSkipDistance				Auto Const
+; Items to Add to Inventory (Dont due it to fast or it breaks New Game...)
+Potion		Property pTweakActivateAFT				Auto Const
+Holotape	Property pTweakHoloTape					Auto Const
+
+Spell		Property pTweakFollowerStealth			Auto Const
+Spell		Property TeleportInSpell				Auto Const
+
+FormList	Property pTweakHumanoidKeywords			Auto Const
+Location	Property InstituteLocation				Auto Const
+Location	Property pListeningPostBravoLocation	Auto Const
+
+; You may only use this command [3] more time(s). Continue? 0=No 1=yes
+Message		Property TweakSummonAllWarning			Auto Const 
+; Locked. Will unlock in %f.0 days
+Message		Property TweakSummonAllLocked			Auto Const  
+
+ReferenceAlias	Property pLostNPC			Auto Const
+ReferenceAlias	Property pInfoNPC			Auto Const
+ReferenceAlias	Property pShelterMapMarker	Auto Const
+ObjectReference	Property BoS302DanseMarker	Auto Const
+
+EndGroup
+
+Group Local_Persisted
+Bool Property pInstalled auto
+ReferenceAlias[] Property pFollowerMap Auto
+ReferenceAlias[] Property pManagedMap  Auto
+Float Property version Auto
+Int   Property pfCount Auto
+Bool  Property pCharGenCacheEnabled Auto hidden
+Bool  Property combatRunningFlag Auto hidden
+Bool  Property instituteSummonMsgOnce Auto hidden
+EndGroup
+
+; Local Constants
+int CONFIRM_VERSION        = 3 const
+int UPDATE_VERSION         = 4 const
+int COMBAT_MONITOR         = 5 const
+int RETREAT_END            = 6 const
+int EXIT_PA_BASE           = 30 const
+int EXIT_PA_COMPANION1	   = 30 const
+int EXIT_PA_COMPANION2	   = 31 const
+int EXIT_PA_COMPANION3	   = 32 const
+int EXIT_PA_COMPANION4	   = 33 const
+int EXIT_PA_COMPANION5	   = 34 const
+
+; Local Only
 float fSummonAllUnlock = 0.0
 
 
@@ -316,33 +323,6 @@ bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 	debug.OpenUserLog(logName)
 	RETURN debug.TraceUser(logName, asTextToPrint, aiSeverity)
 EndFunction
-
-; See AFT:TweakDFScript for docs...
-;bool Function GetSpinLock(GlobalVariable mutex, int attempts = 0, string sourcehint = "")
-;	if (1.0 == mutex.mod(1))
-;		trace("Giving SpinLock to [" + sourcehint + "]")
-;		return true
-;	endif
-;	while (attempts != 0)
-;		Utility.wait(0.1)
-;		if (0.0 == mutex.GetValue() && 1.0 == mutex.mod(1))
-;			trace("Giving SpinLock to [" + sourcehint + "] (" + attempts + " attempts left)")
-;			return true
-;		endif
-;		attempts -= 1
-;	endwhile
-;	trace("[" + sourcehint + "] Failed to get SpinLock")
-;	return false
-;endFunction
-
-;Function ReleaseSpinLock(GlobalVariable mutex, bool gotLock = true, string sourcehint = "")
-;	if gotLock
-;		trace("[" + sourcehint + "] Releasing SpinLock")
-;		mutex.SetValue(0.0)
-;	else
-;		trace("Ignoring Spinlock Release Request from [" + sourcehint + "]")		
-;	endif
-;endFunction
 
 Event OnInit()
 	Trace("OnInit()")
@@ -386,25 +366,75 @@ Function OnGameLoaded(bool firstTime=false)
 	
 	RegisterForKickOut()
 	
-	if (1.19 != version)
+	if (1.20 != version)
 		; In case this is new game, wait for pInstalled to be true....
 		StartTimer(0, CONFIRM_VERSION)
 	else
 		Trace("No Update Required")
 		CheckForErrors()  ; Because... you know... Fallout 4
 		GiveAFTToPlayer() ; Just in case....
-		UnregisterForMenuOpenCloseEvent("ContainerMenu")
-		RegisterForMenuOpenCloseEvent("ContainerMenu")		
 		SendOnGameLoadToAliasScripts()
 	endif	
 	
 	Trace("OnGameLoaded() Finished")
 EndFunction
 
+bool Function GetCompanionsInCombat()
+	int tally = 0
+	if pCompanion1 && pCompanion1.GetReference()
+		tally += 1
+		if pCompanion1.GetActorRef().IsInCombat()
+			return true
+		endif
+	endif
+	if  pCompanion2 && pCompanion2.GetReference()
+		tally += 1
+		if pCompanion2.GetActorRef().IsInCombat()
+			return true
+		endif
+	endif
+	if  pCompanion3 && pCompanion3.GetReference()
+		tally += 1
+		if pCompanion3.GetActorRef().IsInCombat()
+			return true
+		endif
+	endif	
+	if pCompanion4 && pCompanion4.GetReference()
+		tally += 1
+		if pCompanion4.GetActorRef().IsInCombat()
+			return true
+		endif
+	endif
+	if  pCompanion5 && pCompanion5.GetReference()
+		tally += 1
+		if pCompanion5.GetActorRef().IsInCombat()
+			return true
+		endif
+	endif
+	if  pDogmeatCompanion && pDogmeatCompanion.GetReference()
+		tally += 1
+		if pDogmeatCompanion.GetActorRef().IsInCombat()
+			return true
+		endif
+	endif
+	if (0 == tally)
+		; Only consider player if he is by himself...
+		return Game.GetPlayer().IsInCombat()
+	endif
+	return false
+EndFunction
+
 Event OnTimer(int aiTimerID)
 
 	if (COMBAT_MONITOR == aiTimerID)
-		if Game.GetPlayer().IsInCombat()
+
+		; 1.20 : Can't trust Player.IsInCombat. If user has God Mode enabled, 
+		;        it wont return a reliable value. 
+		
+		; if Game.GetPlayer().IsInCombat()
+		;	StartTimer(16,COMBAT_MONITOR)
+	
+		if GetCompanionsInCombat()
 			StartTimer(16,COMBAT_MONITOR)
 		else
 			RelayCombatEndEvent()
@@ -423,7 +453,7 @@ Event OnTimer(int aiTimerID)
 		; if it appears we beat the script initializer...
 
 		if (pInstalled)
-			if (version  < 1.19)
+			if (version  < 1.20)
 				StartTimer(0,UPDATE_VERSION)
 			else
 				CheckForErrors()
@@ -457,7 +487,7 @@ Event OnTimer(int aiTimerID)
 		Actor player	= Game.GetPlayer()
 		float ov        = version
 		float ov_102fix = version
-		version  = 1.19
+		version  = 1.20
 		
 		if ov < 1.20
 			if ov < 1.19 ; Fixed F4SE Compatibility (Removed use of GetName as a script function)
@@ -499,7 +529,9 @@ Event OnTimer(int aiTimerID)
 														initializeFollowerMap()
 													endif
 												
+													Trace("---=== Before v10Update ===---")
 													int import_count = pDFScript.v10Update()
+													Trace("---=== After v10Update ===---")
 
 													; bool gotlock = GetSpinLock(pTweakMutexCompanions,1, "OnTimer (UpdateVersion)") ; low priority since it is read-only	
 													int numFollowers = GetAllTweakFollowers().length
@@ -641,9 +673,9 @@ Event OnTimer(int aiTimerID)
 							
 						endif
 						
-						; 1.17
-						UnregisterForMenuOpenCloseEvent("ContainerMenu")
-						RegisterForMenuOpenCloseEvent("ContainerMenu")		
+						; 1.17 ; 1.20 : Moved to TweakSettingsScript
+						; UnregisterForMenuOpenCloseEvent("ContainerMenu")
+						; RegisterForMenuOpenCloseEvent("ContainerMenu")		
 						
 						if (ov != 0.0)
 							; Updated the pref/scrap scanner with camp items
@@ -687,7 +719,17 @@ Event OnTimer(int aiTimerID)
 				endif ; verion < 1.18
 			endif ; version < 1.19
 			
-			; 1.13						
+			; 1.20
+			UnregisterForMenuOpenCloseEvent("ContainerMenu")
+			
+			float recoverSpouse = player.GetValue(Game.GetForm(0x002486EC) as ActorValue)	
+			if (recoverSpouse == 1.23 || recoverSpouse == 2.34 || recoverSpouse == 3.45 || recoverSpouse == 4.56)
+				AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
+				if TweakCOMSpouseScript
+					TweakCOMSpouseScript.GotReInstalled()
+				endif
+			endif
+			
 			if (ov != 0.0)
 				int pmlength = pManagedMap.Length
 				int pm = 1
@@ -738,6 +780,25 @@ Event OnTimer(int aiTimerID)
 						; 1.15
 						if !afix.HasPerk(pTweakZeroCarryInCombat)
 							afix.AddPerk(pTweakZeroCarryInCombat)
+						endif
+						; 1.20
+						if !afix.HasPerk(Sneak01)
+							afix.AddPerk(Sneak01)
+						endif
+						if !afix.HasPerk(Sneak02)
+							afix.AddPerk(Sneak02)
+						endif
+						if !afix.HasPerk(Sneak03)
+							afix.AddPerk(Sneak03)
+						endif
+						if !afix.HasPerk(Sneak04)
+							afix.AddPerk(Sneak04)
+						endif
+						if !afix.HasPerk(CompanionInspirational)
+							afix.AddPerk(CompanionInspirational)
+						endif
+						if !afix.HasPerk(ImmuneToRadiation)
+							afix.AddPerk(ImmuneToRadiation)
 						endif
 					endif
 				endif
@@ -811,101 +872,7 @@ Function AftReset()
 	if pTweakScrapScanMaster.IsRunning()
 		pTweakScrapScanMaster.Stop()
 	endif
-
-	; 1.20 : Save off SPOUSE stats:
-	ActorValue CISROMANTIC = Game.GetForm(0x002486EC) as ActorValue ; CCE_TestCompanionChatEvent (SkillMagAV08)
-	ActorValue CAFFINITY   = Game.GetForm(0x000ADC8C) as ActorValue ; MS16FahrenheitShieldDamage
-	ActorValue CSELFISH    = Game.GetForm(0x000C9B0E) as ActorValue ; Dogmeat_clickedPreMolerat
-	ActorValue CMEAN       = Game.GetForm(0x00066514) as ActorValue ; EMSystemSleeping
-	ActorValue CVIOLENT    = Game.GetForm(0x00084287) as ActorValue ; CompStrongBerserkAV
-	ActorValue CNICE       = Game.GetForm(0x00248491) as ActorValue ; PA_Unarmed_AV
-	ActorValue CGENEROUS   = Game.GetForm(0x000B9635) as ActorValue ; FWIsAttacker
-	ActorValue CPEACEFUL   = Game.GetForm(0x000DCE0F) as ActorValue ; TerminalVariable01
-	
-	ActorValue CA_Affinity       = Game.GetForm(0x000A1B80) as ActorValue		
-	ActorValue CA_Trait_Selfish  = Game.GetForm(0x000A1B1D) as ActorValue
-	ActorValue CA_Trait_Mean     = Game.GetForm(0x000A1B1F) as ActorValue
-	ActorValue CA_Trait_Violent  = Game.GetForm(0x000A1B21) as ActorValue
-	ActorValue CA_Trait_Peaceful = Game.GetForm(0x000A1B20) as ActorValue
-	ActorValue CA_Trait_Nice     = Game.GetForm(0x000A1B1E) as ActorValue
-	ActorValue CA_Trait_Generous = Game.GetForm(0x000A1B1C) as ActorValue
-
-	Actor Nate = TweakCompanionNate.GetUniqueActor()
-	if Nate && Nate.IsEnabled()
-		Trace("Saving Spouse Info incase of re-install")		
-		
-		CompanionActorScript cas = Nate as CompanionActorScript
-		if cas.IsRomantic()
-			if Nate.IsInFaction(pCurrentCompanionFaction)
-				player.SetValue(CISROMANTIC,1.23)
-			else
-				player.SetValue(CISROMANTIC,2.34)
-			endif
-		else
-			if Nate.IsInFaction(pCurrentCompanionFaction)
-				player.SetValue(CISROMANTIC,3.45)
-			else
-				player.SetValue(CISROMANTIC,4.56)
-			endif		
-		endif
 				
-		player.SetValue(CAFFINITY,    Nate.GetValue(CA_Affinity))
-		player.SetValue(CSELFISH,     Nate.GetValue(CA_Trait_Selfish))
-		player.SetValue(CMEAN,        Nate.GetValue(CA_Trait_Mean))
-		player.SetValue(CVIOLENT,     Nate.GetValue(CA_Trait_Violent))
-		player.SetValue(CPEACEFUL,    Nate.GetValue(CA_Trait_Peaceful))
-		player.SetValue(CNICE,        Nate.GetValue(CA_Trait_Nice))
-		player.SetValue(CGENEROUS,    Nate.GetValue(CA_Trait_Generous))
-		
-		Nate.RemoveAllItems(player,true)
-		Nate.Disable()
-		; Long shot, but give it a try....
-		AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
-		if TweakCOMSpouseScript
-			TweakCOMSpouseScript.MQ102SpouseCorpseMaleREF.Enable()
-		endif
-	endif
-	
-	Actor Nora = TweakCompanionNora.GetUniqueActor()
-	if Nora && Nora.IsEnabled()
-		Trace("Saving Spouse Info incase of re-install")		
-			
-		CompanionActorScript cas = Nora as CompanionActorScript
-		if cas.IsRomantic()
-			if Nora.IsInFaction(pCurrentCompanionFaction)
-				player.SetValue(CISROMANTIC,1.23)
-			else
-				player.SetValue(CISROMANTIC,2.34)
-			endif
-		else
-			if Nora.IsInFaction(pCurrentCompanionFaction)
-				player.SetValue(CISROMANTIC,3.45)
-			else
-				player.SetValue(CISROMANTIC,4.56)
-			endif		
-		endif		
-						
-		player.SetValue(CAFFINITY,    Nora.GetValue(CA_Affinity))
-		player.SetValue(CSELFISH,     Nora.GetValue(CA_Trait_Selfish))
-		player.SetValue(CMEAN,        Nora.GetValue(CA_Trait_Mean))
-		player.SetValue(CVIOLENT,     Nora.GetValue(CA_Trait_Violent))
-		player.SetValue(CPEACEFUL,    Nora.GetValue(CA_Trait_Peaceful))
-		player.SetValue(CNICE,        Nora.GetValue(CA_Trait_Nice))
-		player.SetValue(CGENEROUS,    Nora.GetValue(CA_Trait_Generous))
-		
-		Nora.RemoveAllItems(player,true)
-		Nora.Disable()
-		; Long shot, but give it a try....
-		AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
-		if TweakCOMSpouseScript
-			TweakCOMSpouseScript.MQ102SpouseCorpseFemaleREF.Enable()
-		endif
-	endif
-	
-	if pTweakCOMSpouse && pTweakCOMSpouse.IsRunning()
-		pTweakCOMSpouse.Stop()
-	endif
-			
 	Actor npc = None
 	int i = 1
 	int nextstatus = 1
@@ -913,21 +880,44 @@ Function AftReset()
 		
 	AFT:TweakDFScript pDFScript = (pFollowers as AFT:TweakDFScript)
 	if pDFScript
-		Trace("AftReset : Clearing Core Companions from ActiveCompanions RefCollectionAlias")
+		Trace("AftReset : Clearing Non-Core Companions from ActiveCompanions RefCollectionAlias")
 		pDFScript.ClearNonCoreFromActive()
 	endif	
 	
+	bool spouseWasCompanion = false
+	ActorBase base = None
+	ActorValue CraftingAbilityMedicine = Game.GetForm(0x00000364) as ActorValue
+
 	while (i < pMapLength)
 		npc = pManagedMap[i].GetActorRef()
 		if (npc)
+		
+			base = npc.GetActorBase()
+			if (base == TweakCompanionNate || base == TweakCompanionNora)
+				if npc.IsInFaction(pCurrentCompanionFaction)
+					spouseWasCompanion = true
+				endIf
+			endIf
+			
+			
 			nextstatus -= 1
 			if 0 == nextstatus
 				nextstatus = 3
 				pTweakProgress.Show(i, pMapLength)
 			endif
-			if pDFScript && !IsCoreCompanion(npc)
-				Trace("AftReset : Restoring managed npc [" + npc + "] to ActiveCompanions RefCollectionAlias")
-				pDFScript.AddtoActiveCollection(npc)
+			
+			if !IsCoreCompanion(npc)
+				if pDFScript
+					Trace("AftReset : Restoring managed npc [" + npc + "] to ActiveCompanions RefCollectionAlias")
+					pDFScript.AddtoActiveCollection(npc)
+				endif
+				float id = npc.GetFactionRank(pTweakNamesFaction)
+				if id > 50.0
+					; Hide the old name as an ActorValue on the NPC. This gets picked up
+					; by the GetNameIndex function of TweakNamesScript if they re-install
+					; AFT. I'm only interested in NPCs the user took the time to name.					
+					npc.SetValue(CraftingAbilityMedicine, id)
+				endif
 			endif
 			UnManageFollower(npc)			
 		endif
@@ -996,6 +986,11 @@ Function AftReset()
 	endif
 	if player.HasPerk(pTweakPlayerSwimMonitorPerk)
 		player.RemovePerk(pTweakPlayerSwimMonitorPerk)
+	endif
+	
+	AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
+	if TweakCOMSpouseScript
+		TweakCOMSpouseScript.AFTReset(spouseWasCompanion)
 	endif
 
 EndFunction
@@ -1206,9 +1201,7 @@ Function SendOnGameLoadToAliasScripts()
 			(npcref As TweakSettings).CallFunctionNoWait("EventOnGameLoad", params)
 			(npcref As TweakAppearance).CallFunctionNoWait("EventOnGameLoad", params)
 			(npcref As TweakInventoryControl).CallFunctionNoWait("EventOnGameLoad", params)
-			; (npcref As TweakSettings).EventOnGameLoad()
-			; (npcref As TweakAppearance).EventOnGameLoad()
-			; (npcref As TweakInventoryControl).EventOnGameLoad()
+			(npcref As TweakMedical).CallFunctionNoWait("EventOnGameLoad", params)
 		endif
 		i += 1
 	endWhile	
@@ -1577,7 +1570,7 @@ Function UnManageFollower(Actor npc)
 	if npc.HasPerk(pTweakZeroCarryInCombat)
 		npc.RemovePerk(pTweakZeroCarryInCombat)
 	endif	
-	
+		
 	FollowersScript pFollowersScript = (pFollowers As FollowersScript)
 	if pFollowersScript
 		Trace("UnManageFollower : Dismissing Follower")
@@ -1601,6 +1594,25 @@ Function UnManageFollower(Actor npc)
 		ActorBase base = npc.GetActorBase()
 		If (base == Game.GetForm(0x00002F24) as ActorBase) ; ---=== Nick Valentine ===---
 			RemoveNickItems()
+		endif
+	else
+		if npc.HasPerk(Sneak01)
+			npc.RemovePerk(Sneak01)
+		endif
+		if npc.HasPerk(Sneak02)
+			npc.RemovePerk(Sneak02)
+		endif
+		if npc.HasPerk(Sneak03)
+			npc.RemovePerk(Sneak03)
+		endif
+		if npc.HasPerk(Sneak04)
+			npc.RemovePerk(Sneak04)
+		endif
+		if npc.HasPerk(CompanionInspirational)
+			npc.RemovePerk(CompanionInspirational)
+		endif
+		if npc.HasPerk(ImmuneToRadiation)
+			npc.RemovePerk(ImmuneToRadiation)
 		endif
 	endif
 	
@@ -2086,6 +2098,25 @@ bool Function ImportFollower(Actor npc, bool silent = false)
 	npc.AddPerk(pTweakRangedDmgBoost)
 	npc.AddPerk(pTweakZeroCarryInCombat)
 	
+	if !npc.HasPerk(Sneak01)
+		npc.AddPerk(Sneak01)
+	endif
+	if !npc.HasPerk(Sneak02)
+		npc.AddPerk(Sneak02)
+	endif
+	if !npc.HasPerk(Sneak03)
+		npc.AddPerk(Sneak03)
+	endif
+	if !npc.HasPerk(Sneak04)
+		npc.AddPerk(Sneak04)
+	endif
+	if !npc.HasPerk(CompanionInspirational)
+		npc.AddPerk(CompanionInspirational)
+	endif
+	if !npc.HasPerk(ImmuneToRadiation)
+		npc.AddPerk(ImmuneToRadiation)
+	endif
+		
 	if npc.HasKeyword(pAnimFlavorSmoking)
 		Trace("AnimFlavorSmoking detected. Removing")
 		npc.ChangeAnimFlavor() ; Reset
@@ -2796,7 +2827,19 @@ Function FollowerInfo(Actor npc, int type = 0)
 		pTweakInfoVar7.SetValue(npc.GetValue(pAgility))
 		pTweakInfoVar8.SetValue(npc.GetValue(pLuck))
 		pTweakInfoVar9.SetValue(npc.GetValue(pHealth))
-		pTweakInfoVar10.SetValue(npc.GetValue(pCarryWeight))
+		
+		if (1.0 == pTweakAllowAutonomousPickup.GetValue())
+			pTweakInfoVar10.SetValue(npc.GetValue(pCarryWeight))
+		else
+			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+			if (followerId > 0)
+				ReferenceAlias a = pManagedMap[followerId]
+				; We can add more as needed
+				pTweakInfoVar10.SetValue((a As TweakSettings).GetCarryWeightInfo())
+			else
+				pTweakInfoVar10.SetValue(npc.GetValue(pCarryWeight))
+			endif			
+		endif
 	
 		pTweakInfoVar11.SetValue(npc.GetValue(pEnergyResist))
 		pTweakInfoVar12.SetValue(npc.GetValue(pFireResist))
@@ -3287,57 +3330,6 @@ Function SculptByNameId(int id = 0, int uiMenu = 1)
 
 	pTweakAppearance.Sculpt(uiMenu)
 	
-EndFunction
-
-; BUGFIX: When player changes Followers equipment, the perks are lost. 
-; This can cause a sudden drop in health and kill the NPC. So we make
-; all companions invulnerable (SetGhost) when trade menu opens. When 
-; the menu closes, we reset AFT's perks before removing the invulnerability. 
-; (And heal the player if they are 0 or less HP).
-
-Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
-	if (asMenuName == "ContainerMenu")
-		if abOpening == true
-			int i = 0
-			int pFollowerMapLength = pFollowerMap.length	
-			Actor npc
-			while (i < pFollowerMapLength)
-				npc = pFollowerMap[i].GetActorRef()
-				if (npc)
-					int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
-					if (followerId > 0)
-						(pManagedMap[followerId] as TweakSettings).CallFunctionNoWait("EventTradeBegin", new Var[0])
-					endIf
-				endif
-				i += 1
-			endWhile
-		else
-			HandleCloseTradeMenu()
-		endif
-	endif
-EndEvent
-
-Function HandleCloseTradeMenu()
-	if (Utility.IsInMenuMode())
-		Trace("In Menu Mode, Waiting")
-		Utility.waitmenumode(0.03)
-		self.CallFunctionNoWait("HandleCloseTradeMenu", new Var[0])
-		return
-	endIf	
-	
-	int i = 0
-	int pFollowerMapLength = pFollowerMap.length	
-	Actor npc
-	while (i < pFollowerMapLength)
-		npc = pFollowerMap[i].GetActorRef()
-		if (npc)
-			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
-			if (followerId > 0)
-				(pManagedMap[followerId] as TweakSettings).CallFunctionNoWait("EventTradeEnd", new Var[0])
-			endIf
-		endif
-		i += 1
-	endWhile	
 EndFunction
 
 Function SculptLeveledByNameId(int id = 0, int uiMenu = 1)
@@ -4438,13 +4430,38 @@ Function MoveToPlayerByNameId(int id, bool excludeWaiting=false, float startingO
 	else
 		MoveToPlayer(None, excludeWaiting, startingOffset, excludeInCombat, outsideradius, cylinder_height)
 		if combatRunningFlag
-			if !Game.GetPlayer().IsInCombat()
+			if !GetCompanionsInCombat()		
 				combatRunningFlag = false
 				RelayCombatEndEvent()
 			endif
 		endif		
 	endIf
 	
+EndFunction
+
+Function ToggleAllowAutonomousRelay()
+
+	if (0.0 == pTweakAllowAutonomousPickup.GetValue())
+		pTweakAllowAutonomousPickup.SetValue(1.0)
+	else
+		pTweakAllowAutonomousPickup.SetValue(0.0)
+	endif
+	
+	int i = 0
+	int pManagedMapLength = pManagedMap.length	
+	Actor npc
+	ReferenceAlias r
+	Var[] params = new Var[0]
+	while (i < pManagedMapLength)
+		r =  pManagedMap[i]
+		if r
+			npc = r.GetActorReference()
+			if (npc)
+				(r as TweakSettings).CallFunctionNoWait("ToggleAllowAutonomousPickup", params)
+			endIf
+		endif
+		i += 1
+	endWhile
 EndFunction
 
 Function AttackVisible()
@@ -6064,31 +6081,50 @@ String Function GetResourceID()
 	pTweakShowResourceID.Show(((formid - lastsix)/0x01000000) as Int)
 EndFunction 
 
-; int Function GetUsedGenericNameSlots()
-	; Trace("GetUsedGenericNameSlots() Called")
+; See AFT:TweakDFScript for docs...
+bool Function GetSpinLock(GlobalVariable mutex, int attempts = 0, string sourcehint = "")
 
-	; Actor npc             = None
-	; int pManagedMapLength = pManagedMap.Length
-	; int i                 = 1	
-	
-	; int id
-	; int bitmask = 0
-	
-	; Trace("Building Bitmask from [" + pManagedMapLength + "] aliases")
-	; while (i < pManagedMapLength)
-		; npc = pManagedMap[i].GetActorRef()
-		; if (npc)
-			; id = npc.GetFactionRank(pTweakNamesFaction)
-			; if (id > 18 && id < 51)
-				; bitmask += (Math.Pow(2,(id - 19)) as Int)
-			; endif
-		; endif
-		; i += 1
-	; EndWhile
-	; return bitmask
+; Deprecated : Note : Anytime you remove a function from a script, it causes that script
+; to become non-backwards compatible with the next release of your mod. So you always 
+; leave the function definitions in place once released. But you can remove the code code that 
+; calls it/uses it and also gut the function so that it does nothing. 
+	return false
+endFunction
 
-; EndFunction
+Function FixCarryWeightForTradeStart(Actor npc)
+	if 0.0 == pTweakAllowAutonomousPickup.getValue()
+		if (npc)
+			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+			if (followerId > 0)
+				ReferenceAlias a = pManagedMap[followerId]
+				(a as TweakSettings).FixCarryWeightForTradeStart()
+			endif
+		endif
+	endif
+EndFunction
 
+Function FixCarryWeightForTradeEnd(Actor npc)
+	if 0.0 == pTweakAllowAutonomousPickup.getValue()
+		if (npc)
+			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+			if (followerId > 0)
+				ReferenceAlias a = pManagedMap[followerId]
+				(a as TweakSettings).FixCarryWeightForTradeEnd()
+			endif
+		endif
+	endif
+EndFunction
+
+Function ReleaseSpinLock(GlobalVariable mutex, bool gotLock = true, string sourcehint = "")
+	; deprecated
+endFunction
+
+Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
+	; deprecated/moved to TweakSettingsScript
+EndEvent
+
+Function HandleCloseTradeMenu()
+	; deprecated/moved to TweakSettingsScript	
+EndFunction
 
 int MAX_MANAGED	   = 32 const ; deprecated
-

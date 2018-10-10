@@ -5,6 +5,7 @@ Bool Property HasOriginalHome Auto Conditional
 
 ReferenceAlias	Property dismissedNPC		Auto Const
 LocationAlias	Property originalHome		Auto Const
+LocationAlias	Property assignedHome		Auto Const
 Message 		Property TweakDismissMenu	Auto Const
 Message			Property TweakDismissMessage Auto Const
 Event OnQuestInit()
@@ -25,14 +26,20 @@ Function ShowDismiss(Actor npc, Location home)
 	originalHome.Clear()	
 EndFunction
 
-int Function ShowMenu(Actor npc, Location home)
+int Function ShowMenu(Actor npc, Location home, Location assigned=None)
 	dismissedNPC.ForceRefTo(npc)
 	if (home)
 		HasOriginalHome = true
 		originalHome.ForceLocationTo(home)
 	else
 		HasOriginalHome = false
-	endif	
+	endif
+	if (assigned)
+		assignedHome.ForceLocationTo(assigned)
+	elseif (HasOriginalHome)
+		assignedHome.ForceLocationTo(home)
+	endif
+	
 	if (npc as CompanionActorScript)
 		IsCasCompanion = True
 	elseif (npc as DogmeatActorScript)
@@ -43,5 +50,6 @@ int Function ShowMenu(Actor npc, Location home)
 	int choice = TweakDismissMenu.Show()
 	dismissedNPC.Clear()
 	originalHome.Clear()
+	assignedHome.Clear()	
 	return choice
 EndFunction
