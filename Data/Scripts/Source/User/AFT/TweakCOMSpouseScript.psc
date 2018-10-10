@@ -54,6 +54,7 @@ GlobalVariable  Property TweakSpouseGreetAllowed				Auto Const
 ObjectReference Property QuickstartRespecTrigger				Auto Const
 ObjectReference Property TestRespecMarker						Auto Const
 Message			Property TweakCurieHandoff						Auto Const
+Message			Property TweakPromptSpouseProgress				Auto Const
 
 ; Subtitle Override
 ReferenceAlias	Property pSubtitleOverride						Auto Const
@@ -83,26 +84,74 @@ InputEnableLayer ILayer
 
 Event OnQuestInit()
 
-	Trace("TweakCOMSpouse Initialized!")
+	Trace("TweakCOMSpouse Initialized!")			
+	SanctuaryCommentMade = false
+	HouseCommentMade     = false
 	Actor player = Game.getPlayer()
 	
 	; 1.20 : Recover Spouse on re-install
 	ActorValue CISROMANTIC = Game.GetForm(0x002486EC) as ActorValue ; CCE_TestCompanionChatEvent (SkillMagAV08)
+	float recover = player.GetValue(CISROMANTIC)
+	if (recover == 1.23 || recover == 2.34 || recover == 3.45 || recover == 4.56)
+		; GotReInstalled will be called from TweakFollowerScript once AFT has initialized....
+		return
+	endIf
+	
+	; Add area trigger around corpse. 
+	; 
+	; If early in the game, set flag to wait and speak line after player takes
+	; ring. Otherwise, speak it when they get close the spouse corpse...
+	
+	if (MQ102.GetCurrentStageID() < 10) && 0 == player.GetItemCount(pArmor_SpouseWeddingRing)
+		Trace("Registering for OnItemAdded Scene")
+		AddInventoryEventFilter(pArmor_SpouseWeddingRing)
+		RegisterForRemoteEvent(player, "OnItemAdded")
+		SpeakLineNearPod = false
+	else
+		Trace("Spouse already activated or player has already left vault (blocks spouse activation). Skipping Activation Event")
+	endif
+
+	Trace("Registering for Location Change Notification")
+	RegisterForRemoteEvent(player,"OnLocationChange")
+	
+	if player.GetCurrentLocation() == Vault111Cryo
+		UpdateOccupants()
+		Trace("Player is already in Vault 111")
+		UnRegisterForDistanceEvents(player, MQPlayerSpousePodREF)	
+		RegisterForDistanceLessThanEvent(player, MQPlayerSpousePodREF, 350)
+	endif
+	
+EndEvent
+
+; Each Time a Save Game is Loaded 
+Function OnGameLoaded(bool firstTime=false)
+	if (pSpouse.GetActorReference())
+		TweakCSRescue.Remove()
+	endif
+EndFunction	
+
+; Called From TweakFollowerScript
+Function GotReInstalled()
+
+	; 1.20 : Recover Spouse on re-install
+	Actor player = Game.getPlayer()	
+	
+	ActorValue CISROMANTIC = Game.GetForm(0x002486EC) as ActorValue ; CCE_TestCompanionChatEvent (SkillMagAV08)
+	ActorValue CAFFINITY   = Game.GetForm(0x000ADC8C) as ActorValue ; MS16FahrenheitShieldDamage
+	ActorValue CSELFISH    = Game.GetForm(0x000C9B0E) as ActorValue ; Dogmeat_clickedPreMolerat
+	ActorValue CMEAN       = Game.GetForm(0x00066514) as ActorValue ; EMSystemSleeping
+	ActorValue CVIOLENT    = Game.GetForm(0x00084287) as ActorValue ; CompStrongBerserkAV
+	ActorValue CNICE       = Game.GetForm(0x00248491) as ActorValue ; PA_Unarmed_AV
+	ActorValue CGENEROUS   = Game.GetForm(0x000B9635) as ActorValue ; FWIsAttacker
+	ActorValue CPEACEFUL   = Game.GetForm(0x000DCE0F) as ActorValue ; TerminalVariable01
 	
 	float recover = player.GetValue(CISROMANTIC)
+	
 	if (recover == 1.23 || recover == 2.34 || recover == 3.45 || recover == 4.56)
 	
 		SanctuaryCommentMade = true
 		HouseCommentMade     = true
 		SpeakLineNearPod     = false
-
-		ActorValue CAFFINITY   = Game.GetForm(0x000ADC8C) as ActorValue ; MS16FahrenheitShieldDamage
-		ActorValue CSELFISH    = Game.GetForm(0x000C9B0E) as ActorValue ; Dogmeat_clickedPreMolerat
-		ActorValue CMEAN       = Game.GetForm(0x00066514) as ActorValue ; EMSystemSleeping
-		ActorValue CVIOLENT    = Game.GetForm(0x00084287) as ActorValue ; CompStrongBerserkAV
-		ActorValue CNICE       = Game.GetForm(0x00248491) as ActorValue ; PA_Unarmed_AV
-		ActorValue CGENEROUS   = Game.GetForm(0x000B9635) as ActorValue ; FWIsAttacker
-		ActorValue CPEACEFUL   = Game.GetForm(0x000DCE0F) as ActorValue ; TerminalVariable01
 		
 		ActorValue CA_Trait_Selfish  = Game.GetForm(0x000A1B1D) as ActorValue
 		ActorValue CA_Trait_Mean     = Game.GetForm(0x000A1B1F) as ActorValue
@@ -112,7 +161,7 @@ Event OnQuestInit()
 		ActorValue CA_Trait_Generous = Game.GetForm(0x000A1B1C) as ActorValue
 		
 		if (recover == 1.23 || recover == 3.45)
-			SpawnSpouse(true)
+			SpawnSpouse()
 			; previously current follower
 		else
 			SpawnSpouse(false)
@@ -150,51 +199,23 @@ Event OnQuestInit()
 					cas.RomanceDeclined(true)
 				endif
 			endIf			
-		endif
-		
-		; ['I feel like I missed something.','COMCait','000EE445'] (975941)
-		Topic MissedSomething     = Game.GetForm(0x000EE445) as Topic
-		Spouse.Say(MissedSomething,Spouse,false,Game.GetPlayer())
-		
-		return
-	endif
 			
-	SanctuaryCommentMade = false
-	HouseCommentMade     = false
-	
-	; Add area trigger around corpse. 
-	; 
-	; If early in the game, set flag to wait and speak line after player takes
-	; ring. Otherwise, speak it when they get close the spouse corpse...
-	
-	if (MQ102.GetCurrentStageID() < 10) && 0 == player.GetItemCount(pArmor_SpouseWeddingRing)
-		Trace("Registering for OnItemAdded Scene")
-		AddInventoryEventFilter(pArmor_SpouseWeddingRing)
-		RegisterForRemoteEvent(player, "OnItemAdded")
-		SpeakLineNearPod = false
-	else
-		Trace("Spouse already activated or player has already left vault (blocks spouse activation). Skipping Activation Event")
+			; ['I feel like I missed something.','COMCait','000EE445'] (975941)
+			Topic MissedSomething     = Game.GetForm(0x000EE445) as Topic
+			Spouse.Say(MissedSomething,Spouse,false,Game.GetPlayer())			
+		endif		
 	endif
 
-	Trace("Registering for Location Change Notification")
-	RegisterForRemoteEvent(player,"OnLocationChange")
+	player.SetValue(CISROMANTIC, 0.0)
+	player.SetValue(CAFFINITY,   0.0)
+	player.SetValue(CSELFISH,    0.0)
+	player.SetValue(CMEAN,       0.0)
+	player.SetValue(CNICE,       0.0)
+	player.SetValue(CGENEROUS,   0.0)
+	player.SetValue(CPEACEFUL,   0.0)
 	
-	if player.GetCurrentLocation() == Vault111Cryo
-		UpdateOccupants()
-		Trace("Player is already in Vault 111")
-		UnRegisterForDistanceEvents(player, MQPlayerSpousePodREF)	
-		RegisterForDistanceLessThanEvent(player, MQPlayerSpousePodREF, 350)
-	endif
-	
-EndEvent
+EndFunction
 
-; Each Time a Save Game is Loaded 
-Function OnGameLoaded(bool firstTime=false)
-	if (pSpouse.GetActorReference())
-		TweakCSRescue.Remove()
-	endif
-EndFunction	
-	
 Event Actor.OnLocationChange(Actor akPlayer, Location oldLocation, Location newLocation)
 
 	if (pSpouse.GetActorReference() == akPlayer)
@@ -1769,6 +1790,91 @@ Function EnableMS19()
 	
 EndFunction
 
+Function AFTReset(bool wasCompanion = false)
+
+	ActorValue CISROMANTIC = Game.GetForm(0x002486EC) as ActorValue ; CCE_TestCompanionChatEvent (SkillMagAV08)
+	ActorValue CAFFINITY   = Game.GetForm(0x000ADC8C) as ActorValue ; MS16FahrenheitShieldDamage
+	ActorValue CSELFISH    = Game.GetForm(0x000C9B0E) as ActorValue ; Dogmeat_clickedPreMolerat
+	ActorValue CMEAN       = Game.GetForm(0x00066514) as ActorValue ; EMSystemSleeping
+	ActorValue CVIOLENT    = Game.GetForm(0x00084287) as ActorValue ; CompStrongBerserkAV
+	ActorValue CNICE       = Game.GetForm(0x00248491) as ActorValue ; PA_Unarmed_AV
+	ActorValue CGENEROUS   = Game.GetForm(0x000B9635) as ActorValue ; FWIsAttacker
+	ActorValue CPEACEFUL   = Game.GetForm(0x000DCE0F) as ActorValue ; TerminalVariable01
+	
+	Actor player = Game.GetPlayer()
+	
+	player.SetValue(CISROMANTIC, 0.0)
+	player.SetValue(CAFFINITY,   0.0)
+	player.SetValue(CSELFISH,    0.0)
+	player.SetValue(CMEAN,       0.0)
+	player.SetValue(CVIOLENT,    0.0)
+	player.SetValue(CPEACEFUL,   0.0)
+	player.SetValue(CNICE,       0.0)
+	player.SetValue(CGENEROUS,   0.0)
+	
+
+	Actor theSpouse = pSpouse.GetActorReference()
+	if theSpouse
+		Trace("Spouse Alias filled.")
+		
+		bool spouseWasMale = false
+		if theSpouse.GetActorBase() == pTweakCompanionNate
+			spouseWasMale = true
+		endIf
+		
+		; 1.20 : Save off SPOUSE stats:
+		int saveProgress = TweakPromptSpouseProgress.Show()
+		if 0 == saveProgress
+			
+			ActorValue CA_Affinity       = Game.GetForm(0x000A1B80) as ActorValue		
+			ActorValue CA_Trait_Selfish  = Game.GetForm(0x000A1B1D) as ActorValue
+			ActorValue CA_Trait_Mean     = Game.GetForm(0x000A1B1F) as ActorValue
+			ActorValue CA_Trait_Violent  = Game.GetForm(0x000A1B21) as ActorValue
+			ActorValue CA_Trait_Peaceful = Game.GetForm(0x000A1B20) as ActorValue
+			ActorValue CA_Trait_Nice     = Game.GetForm(0x000A1B1E) as ActorValue
+			ActorValue CA_Trait_Generous = Game.GetForm(0x000A1B1C) as ActorValue
+		
+			Trace("Saving Spouse Info incase of re-install")		
+			CompanionActorScript cas = theSpouse as CompanionActorScript
+			if cas.IsRomantic()
+				if wasCompanion || theSpouse.IsInFaction(pCurrentCompanionFaction)
+					player.SetValue(CISROMANTIC,1.23)
+				else
+					player.SetValue(CISROMANTIC,2.34)
+				endif
+			else
+				if wasCompanion || theSpouse.IsInFaction(pCurrentCompanionFaction)
+					player.SetValue(CISROMANTIC,3.45)
+				else
+					player.SetValue(CISROMANTIC,4.56)
+				endif		
+			endif		
+							
+			player.SetValue(CAFFINITY,    theSpouse.GetValue(CA_Affinity))
+			player.SetValue(CSELFISH,     theSpouse.GetValue(CA_Trait_Selfish))
+			player.SetValue(CMEAN,        theSpouse.GetValue(CA_Trait_Mean))
+			player.SetValue(CVIOLENT,     theSpouse.GetValue(CA_Trait_Violent))
+			player.SetValue(CPEACEFUL,    theSpouse.GetValue(CA_Trait_Peaceful))
+			player.SetValue(CNICE,        theSpouse.GetValue(CA_Trait_Nice))
+			player.SetValue(CGENEROUS,    theSpouse.GetValue(CA_Trait_Generous))
+		endIf
+		
+		theSpouse.RemoveAllItems(player,true)
+		theSpouse.Disable()
+		
+		if spouseWasMale
+			MQ102SpouseCorpseMaleREF.Enable()
+		else
+			MQ102SpouseCorpseFemaleREF.Enable()
+		endif
+		
+		if IsRunning()
+			Stop()
+		endif
+	endif
+	
+EndFunction
+
 Function ResetAffinityScene()
 	Trace("ResetAffinityScene")
 	Actor Spouse = pSpouse.GetActorReference()
@@ -1785,7 +1891,7 @@ Function ResetAffinityScene()
 EndFunction
 
 Function SpawnSpouse(bool currentCompanion=true)
-
+	Trace("SpawnSpouse [" + currentCompanion + "]")
 	Actor pc = Game.GetPlayer()
 	
 	int spouseGender = 1
@@ -1820,6 +1926,7 @@ Function SpawnSpouse(bool currentCompanion=true)
 	Form InvisibleGeneric01 = Game.GetForm(0x00024571)
 	ObjectReference spawnMarker = pc.PlaceAtMe(InvisibleGeneric01)
 	spawnMarker.SetPosition(posdata[0],posdata[1],posdata[2])
+	spawnMarker.SetAngle(0.0,0.0, spawnMarker.GetAngleZ() + spawnMarker.GetHeadingAngle(pc))
 	spawnMarker.MoveToNearestNavmeshLocation()
 	Utility.wait(0.1)
 	
@@ -1871,13 +1978,16 @@ Function SpawnSpouse(bool currentCompanion=true)
 		
 		theSpouse.SetValue(pCA_Affinity, 5.0)
 		
+		AddInventoryEventFilter(pArmor_SpouseWeddingRing)
+		RegisterForRemoteEvent(pc, "OnItemAdded")
+		theSpouse.SetAvailableToBeCompanion()
+		theSpouse.AddToFaction(pHasBeenCompanionFaction)
+		
 		if (currentCompanion)
 			SetCurrentStageID(39)
-			theSpouse.SetCompanion()	
+			theSpouse.SetCompanion()
 		else
 			SetCurrentStageID(38)
-			theSpouse.SetAvailableToBeCompanion()
-			theSpouse.AddToFaction(pHasBeenCompanionFaction)	
 		endIf
 	
 		if !Min02.IsStageDone(100)

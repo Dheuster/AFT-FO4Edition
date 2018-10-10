@@ -5,6 +5,7 @@ Group Injected
 	Faction  Property pTweakNamesFaction				Auto Const
 	Faction  Property pTweakEnterPAFaction				Auto Const
 	Faction  Property pCurrentCompanionFaction			Auto Const
+	Faction	 Property pTweakEnhancedFaction				Auto Const
 
 	Faction	 Property pTweakManagedOutfit				Auto Const
 	Faction  Property pTweakCombatOutFitFaction			Auto Const
@@ -468,9 +469,12 @@ EndFunction
 
 Function UnManageOutfits()
 
+	Trace("UnManageOutfits")
 	if !managed
+		Trace("Returning. NPC does not appear to have outfit management enabled")
 		return
 	endif
+	
 
 	Actor npc = self.GetActorRef()
 	ActorBase base = npc.GetActorBase()
@@ -611,99 +615,149 @@ EndFunction
 ;
 ; EnterAssignedPA assumes you have gained legitimate access to the PA at some
 ; point. 
+;
+; NOTES:
+;
+;   You can use COMMANDMODE to tell a follower to get into a PA, but not exit
+;   the powerarmor. 
+;
+;   OnSit recieves a reference to a furniture object that only briefly remains
+;   valid. Shortly after, the NPC sort of changes race and the Object 
+;   passed into the OnSit becomes is teleported away. (Still valid but 
+;   not actually being used). When the NPC exits the PA, that referemce will 
+;   get teleported back. 
+;
+;   Both OnSit and GetUp get called whether the NPC is getting into or exiting
+;   powerarmor. In the case of OnGetUp, the akFurniture will never appear 
+;   to be in use. But within the OnSit handler, you can detect if they are
+;   getting in or out by examining the IsFurnitureInUse flag. 
+;
+;   I believe this bug is specific to ReferenceAlias events. I have seen mods
+;   that use these handlers on Spell/Perk effects and they seem to work correctly
+;   there. 
+
 
 Event OnSit(ObjectReference akFurniture)
 	Trace("OnSit [" + akFurniture + "]")
+	
 	if akFurniture.HasKeyword(FurnitureTypePowerArmor)
-
-		; Wait for the exiting animation to finish...
-		int maxwait = 6
-		while (!akFurniture.IsFurnitureInUse() && maxwait > 0)
-			Trace("Waiting for NPC to enter PA()")
-			Utility.wait(1.0)
-			maxwait -= 1
-		endwhile
-		
-		Trace("PA Detected [" + akFurniture + "]")
-		Actor npc = self.GetActorReference()
-		
-		if akFurniture.IsFurnitureInUse()
-			Trace("Expected : Furniture in use")		
-			npc.SetValue(pTweakInPowerArmor, 1.0)
-		else
-			; In older versions of Falluot 4, the Getup event didn'take
-			; fire. OnSit would fire instead, which is why we allow this
-			; to detect that possibility.
-			Trace("Unexpected : Furniture not in use after 6 seconds")		
-			npc.SetValue(pTweakInPowerArmor, 0.0)
-		endif
-		
-		Trace("PA Detected [" + akFurniture + "]")
-
+		Trace("OnSit - FurnitureTypePowerArmor Detected")
+		Actor npc = self.GetActorReference()		
 		if (akFurniture.IsFurnitureInUse())
-			Trace("PA Is in Use (We are exiting)")
-			npc.SetValue(pTweakInPowerArmor, 0.0)
+			OnExitPowerArmor(akFurniture)
 		else
-			Trace("PA Is in NOT in use (We are entering)")
-			npc.SetValue(pTweakInPowerArmor, 1.0)
+			OnEnterPowerArmor(akFurniture)
 		endif
-					
-		ObjectReference onpc       = self.GetReference()
-		ObjectReference oldPA      = onpc.GetLinkedRef(pLinkPowerArmor)
-		ObjectReference PAPrevUser = akFurniture.GetLinkedRef(pLinkPowerArmor)
-		
-		; Cleanup links if there is a change in assignment...
-		if (oldPA && oldPA != akFurniture && onpc == oldPA.GetLinkedRef(pLinkPowerArmor))
-			; Unassign link to Self on Previous PA (since we are no longer the user)
-			oldPA.SetLinkedRef(None, pLinkPowerArmor)
-		endif
-		if (PAPrevUser && PAPrevUser != onpc && akFurniture == PAPrevUser.GetLinkedRef(pLinkPowerArmor))
-			; Unassign link to PA on previous PA's user since we are now using it...
-			PAPrevUser.SetLinkedRef(None, pLinkPowerArmor)
-		endif
-		
-		; Enforce assignment to current NPC
-		onpc.SetLinkedRef(akFurniture,pLinkPowerArmor)
-		akFurniture.SetLinkedRef(onpc,pLinkPowerArmor)
+	endIf
+EndEvent
 
-		if npc.IsInFaction(pTweakEnterPAFaction)
-			npc.RemoveFromFaction(pTweakEnterPAFaction)
-			npc.EvaluatePackage()
-		endif
-		
-		if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))		
-			TryToUnEquipPAHelmet()
-		endif		
-		
+Function OnEnterPowerArmor(ObjectReference akFurniture)
+	Trace("OnEnterPowerArmor [" + akFurniture + "]")
+	Actor npc = self.GetActorReference()
+			
+	; Wait for the NPC to get into the powerarmor:		
+	Trace("OnEnter - Waiting for NPC to enter PowerArmor")
+	int maxwait = 10
+	; Note : npc.WornHasKeyword(pArmorTypePower) will be false but will change to true. 	
+	while (!npc.WornHasKeyword(pArmorTypePower) && maxwait > 0)
+		Trace("OnEnter - Waiting [" + (10 - maxwait) + "]")
+		Utility.wait(1.0)
+		maxwait -= 1
+	endwhile
+	Trace("OnEnter - Done Waiting")
+			
+	if npc.WornHasKeyword(pArmorTypePower)
+		Trace("OnEnter - Expected : NPC is in PowerArmor")		
+	else
+		Trace("OnEnter - Unexpected : NPC not in PowerArmor after [" + 10 + "] seconds")		
 	endif
-EndEvent
+	npc.SetValue(pTweakInPowerArmor, 1.0)
+						
+	ObjectReference onpc       = self.GetReference()
+	ObjectReference oldPA      = onpc.GetLinkedRef(pLinkPowerArmor)
+	ObjectReference PAPrevUser = akFurniture.GetLinkedRef(pLinkPowerArmor)
+	
+	; Cleanup links if there is a change in assignment...
+	if (oldPA && oldPA != akFurniture && onpc == oldPA.GetLinkedRef(pLinkPowerArmor))
+		; Unassign link to Self on Previous PA (since we are no longer the user)
+		Trace("OnEnter - Unassigning Link from Old PA to PrevUser")
+		oldPA.SetLinkedRef(None, pLinkPowerArmor)
+	endif
+	if (PAPrevUser && PAPrevUser != onpc && akFurniture == PAPrevUser.GetLinkedRef(pLinkPowerArmor))
+		; Unassign link to PA on previous PA's user since we are now using it...
+		Trace("OnEnter - Unassigning Link from PrevUser to Old PA")
+		PAPrevUser.SetLinkedRef(None, pLinkPowerArmor)
+	endif
+	
+	; Enforce assignment to current NPC
+	Trace("OnEnter - Assigning Link from Self to New PA")
+	onpc.SetLinkedRef(akFurniture,pLinkPowerArmor)
+	Trace("OnEnter - Assigning Link from New PA to Self")
+	akFurniture.SetLinkedRef(onpc,pLinkPowerArmor)
 
-Event OnGetUp(ObjectReference akFurniture)
-	Trace("OnGetUp()")
-	If (akFurniture.HasKeyword(FurnitureTypePowerArmor))
+	if npc.IsInFaction(pTweakEnterPAFaction)
+		npc.RemoveFromFaction(pTweakEnterPAFaction)
+	endif
+	
+	if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))		
+		TryToUnEquipPAHelmet()
+	endif
+	
+	npc.EvaluatePackage()
 		
-		; Wait for the exiting animation to finish...
-		int maxwait = 6
-		while (akFurniture.IsFurnitureInUse() && maxwait > 0)
-			Trace("Waiting for NPC to exit PA()")
-			Utility.wait(1.0)
-			maxwait -= 1
-		endwhile
-		
-		Actor npc = self.GetActorReference()
-		
-		if !akFurniture.IsFurnitureInUse()
-			Trace("Expected : Furniture not in use")		
-			npc.SetValue(pTweakInPowerArmor, 0.0)
-		else
-			Trace("Unexpected : Furniture still in use after 6 seconds")					
-		endif
+EndFunction
 
-		if npc.IsInFaction(pTweakEnterPAFaction)
-			npc.RemoveFromFaction(pTweakEnterPAFaction)
-		endif
-	EndIf
-EndEvent
+Function OnExitPowerArmor(ObjectReference akFurniture)
+	Trace("OnExitPowerArmor [" + akFurniture + "]")
+	Actor npc = self.GetActorReference()
+		
+	; Wait for the NPC to get into the powerarmor:		
+	Trace("OnExit - Waiting for NPC to exit PowerArmor")
+	int maxwait = 10
+	; Note : npc.WornHasKeyword(pArmorTypePower) will be true but will change to false. 	
+	while (akFurniture.IsFurnitureInUse() && maxwait > 0)
+		Trace("OnExit - Waiting [" + (10 - maxwait) + "]")
+		Utility.wait(1.0)
+		maxwait -= 1
+	endwhile
+	Trace("OnExit - Done")
+			
+	if !akFurniture.IsFurnitureInUse()
+		Trace("OnExit - Expected : Furniture not in use")		
+	else
+		Trace("OnExit - Unexpected : Furniture still in use after [" + 10 + "] seconds")					
+	endif
+	npc.SetValue(pTweakInPowerArmor, 0.0)
+
+	ObjectReference onpc       = self.GetReference()
+	ObjectReference oldPA      = onpc.GetLinkedRef(pLinkPowerArmor)
+	ObjectReference PAPrevUser = akFurniture.GetLinkedRef(pLinkPowerArmor)
+	
+	if (oldPA && oldPA != akFurniture && onpc == oldPA.GetLinkedRef(pLinkPowerArmor))
+		Trace("OnExit - Unassigning Link from Old PA to PrevUser")
+		oldPA.SetLinkedRef(None, pLinkPowerArmor)
+	endif
+	if (PAPrevUser && PAPrevUser != onpc && akFurniture == PAPrevUser.GetLinkedRef(pLinkPowerArmor))
+		Trace("OnExit - Unassigning Link from PrevUser to Old PA")
+		PAPrevUser.SetLinkedRef(None, pLinkPowerArmor)
+	endif
+	
+	Trace("OnExit - Assigning Link from Self to New PA")
+	onpc.SetLinkedRef(akFurniture,pLinkPowerArmor)
+	Trace("OnExit - Assigning Link from New PA to Self")
+	akFurniture.SetLinkedRef(onpc,pLinkPowerArmor)
+
+	if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))		
+		Trace("OnExit - IsInFaction TweakPAHelmetCombatToggleFaction")
+		; If unequipped before this (ExitPA Command), this command will do nothing. 
+		TryToStorePAHelmet()
+	else
+		Trace("OnExit - Not In Faction TweakPAHelmetCombatToggleFaction")		
+	endif
+	
+	npc.EvaluatePackage()
+	
+EndFunction
 
 Event OnCommandModeGiveCommand(int aeCommandType, ObjectReference akTarget)
 
@@ -723,15 +777,6 @@ Event OnCommandModeGiveCommand(int aeCommandType, ObjectReference akTarget)
 	; 10 - Workshop Assign
 	; 11 - Ride Vertibird
 	; 12 - Enter Power Armor
-	
-	Trace("OnCommandModeGiveCommand : [" + aeCommandType + "]")
-	if (12 == aeCommandType)
-		; It is unclear if an ONSIT event will happen soon, but it is probably coming
-	endif
-
-	; 1.20 : Bug when followers told to exit PA via dialogue instead of AFT Activator. 
-	;        They don't remove the PA helmet before they get out. Not sure if we can 
-	;        intercept the event. 
 	
 EndEvent
 
@@ -896,9 +941,79 @@ ObjectReference Function GetAssignedPA()
 	return None	
 EndFunction
 
-Function TryToUnEquipPAHelmet()
-	Trace("TryToEquipPAHelmet")
+; This should only be called when you know the user is 
+; not in their PA. 
+Function TryToStorePAHelmet()
+
+	Trace("TryToStorePAHelmet()")
+	ObjectReference akFurniture = self.GetReference().GetLinkedRef(pLinkPowerArmor)
+	
+	if !akFurniture
+		Trace("akFurniture is None. Bailing")
+		return
+	endif
+	if akFurniture.IsFurnitureInUse()
+		Trace("PA is in Use. Bailing")
+		return
+	endif
+	
 	Actor npc = self.GetActorRef()
+	if !pTrackedPAHelmet
+	
+		Armor Armor_Power_Raider_Helm	= Game.GetForm(0x00140C54) as Armor
+		Armor Armor_Power_T45_Helm		= Game.GetForm(0x00154ABF) as Armor
+		Armor Armor_Power_T51_Helm		= Game.GetForm(0x00140C4E) as Armor
+		Armor Armor_Power_T60_Helm		= Game.GetForm(0x00140C4A) as Armor
+		Armor Armor_Power_X01_Helm		= Game.GetForm(0x00154AC5) as Armor
+		
+		if npc.GetItemCount(Armor_Power_Raider_Helm) > 0
+			Trace("pTrackedPAHelmet ~= Armor_Power_Raider_Helm")
+			pTrackedPAHelmet = Armor_Power_Raider_Helm
+		elseif npc.GetItemCount(Armor_Power_T45_Helm) > 0
+			Trace("pTrackedPAHelmet ~= Armor_Power_T45_Helm")
+			pTrackedPAHelmet = Armor_Power_T45_Helm
+		elseif npc.GetItemCount(Armor_Power_T51_Helm) > 0
+			Trace("pTrackedPAHelmet ~= Armor_Power_T51_Helm")
+			pTrackedPAHelmet = Armor_Power_T51_Helm
+		elseif npc.GetItemCount(Armor_Power_T60_Helm) > 0
+			Trace("pTrackedPAHelmet ~= Armor_Power_T60_Helm")
+			pTrackedPAHelmet = Armor_Power_T60_Helm
+		elseif npc.GetItemCount(Armor_Power_X01_Helm) > 0
+			Trace("pTrackedPAHelmet ~= Armor_Power_X01_Helm")
+			pTrackedPAHelmet = Armor_Power_X01_Helm
+		endif
+	endif
+	if (!pTrackedPAHelmet)
+		Trace("Ignored : No pTrackedPAHelmet")		
+		return
+	endif
+	
+	if 0 == akFurniture.GetItemCount(pTrackedPAHelmet)
+		Trace("PA does not have helmet.")
+		if npc.GetItemCount(pTrackedPAHelmet) > 0
+			Trace("Transfering Helmet from NPC to PA")
+			npc.RemoveItem(pTrackedPAHelmet,1,true, akFurniture)
+		else
+			Trace("NPC does not have helmet. Bailing")
+		endif
+	else
+		Trace("PA already has helmet")
+	endif
+	
+endFunction
+
+; This should only ever be called when the NPC is in the PowerArmor. 
+; Therefore it is OKAY to re-eval the helmet if the current value
+; doesn't match anything in the followers inventory. 
+Function TryToUnEquipPAHelmet(bool checkcombat=true)
+	Trace("TryToUnEquipPAHelmet")
+	Actor npc = self.GetActorRef()
+	if pTrackedPAHelmet
+		if 0 == npc.GetItemCount(pTrackedPAHelmet)
+			Trace("Rejecting Previous Helmet. Must be in new Armor")
+			pTrackedPAHelmet = None
+		endif
+	endif
 	if !pTrackedPAHelmet
 		Trace("No pTrackedPAHelmet. Searching")
 		Armor Armor_Power_Raider_Helm	= Game.GetForm(0x00140C54) as Armor
@@ -925,93 +1040,76 @@ Function TryToUnEquipPAHelmet()
 	else
 		Trace("pTrackedPAHelmet found")
 	endIf
-	if (pTrackedPAHelmet)
-
-		ObjectReference onpc       = self.GetReference()
-		ObjectReference myPA       = onpc.GetLinkedRef(pLinkPowerArmor)
-		if myPA
-			Trace("PA Found")
-			if myPA.IsFurnitureInUse()
-				Trace("PA is in Use")
-				if npc.IsEquipped(pTrackedPAHelmet)
-					Trace("Unequipping Helmet")				
-					ignorePAEvents = true
-					npc.UnEquipItem(pTrackedPAHelmet)
-					ignorePAEvents = false
-				else
-					Trace("Ignored : Helmet not currently equipped")				
-				endif
-			else
-				Trace("PA not in Use")
-				if 0 == myPA .GetItemCount(pTrackedPAHelmet)
-					Trace("PA does not have helmet.")
-					if npc.GetItemCount(pTrackedPAHelmet) > 0
-						Trace("Transfering Helmet from NPC to PA")
-						npc.RemoveItem(pTrackedPAHelmet,1,myPA)
-					else
-						Trace("NPC does not have helmet. Bailing")
-					endif
-				else
-					Trace("PA already has helmet")
-				endif
-			endif
-		else
-			Trace("PA No detected. Bailing")
-		endif	
-	else
+	if (!pTrackedPAHelmet)
 		Trace("Ignored : No pTrackedPAHelmet or combatInProgress")		
+		return
 	endif
+	if checkcombat && combatInProgress
+		Trace("Ignored : In Combat")
+		return
+	endif	
+	if npc.IsEquipped(pTrackedPAHelmet)
+		ignorePAEvents = true
+		Trace("Unequipping Helmet")				
+		npc.UnEquipItem(pTrackedPAHelmet)
+		ignorePAEvents = false
+	else
+		Trace("Ignored : Helmet not currently equipped")				
+	endif
+
 EndFunction
 
 Function TryToEquipPAHelmet()
 	Trace("TryToEquipPAHelmet")
 	Actor npc = self.GetActorRef()
-	if (pTrackedPAHelmet)
-		if !npc.IsEquipped(pTrackedPAHelmet)
-			if 0 != npc.GetItemCount(pTrackedPAHelmet)
-				ignorePAEvents = true
-				npc.EquipItem(pTrackedPAHelmet)
-				ignorePAEvents = false
-				Utility.wait(0.5)
-				if (!npc.IsEquipped(pTrackedPAHelmet))
-					Trace("EQUIP FAILURE ** But at least it was detected")
-					
-					; Retry the more expensive way....
-					Trace("PAOutfit.length = [" + PAOutfit.length + "]")
-					int i = 0
-					int pa_numparts = PAOutfit.length
-					ignorePAEvents = true
-					while (i < pa_numparts)
-						Armor pa_part = PAOutfit[i] as Armor
-						if pa_part
-							Trace("Unequipping Part [" + pa_part + "]")
-							npc.UnequipItem(pa_part)
-						endif
-						i += 1
-					endwhile
-					Trace("Bumping AI")
-					BumpArmorAI()
-					pa_numparts = PAOutfit.length
-					while (i < pa_numparts)
-						Armor pa_part = PAOutfit[i] as Armor
-						if pa_part
-							Trace("Equipping Part [" + pa_part + "]")
-							npc.EquipItem(pa_part)
-						endif
-						i += 1
-					endwhile
-					ignorePAEvents = false
-				else
-					Trace("pTrackedPAHelmet Successfully Equipped")			
-				endif
-			else
-				Trace("Ignored : Follower does not have the helmet")			
-			endif
-		else
-			Trace("Ignored : pTrackedPAHelmet already Equipped")
-		endif
-	else
+	if (!pTrackedPAHelmet)
 		Trace("Ignored : No pTrackedPAHelmet")
+		return
+	endif
+	if npc.IsEquipped(pTrackedPAHelmet)
+		Trace("Ignored : pTrackedPAHelmet already Equipped")
+		return
+	endif
+	if 0 == npc.GetItemCount(pTrackedPAHelmet)
+		Trace("Ignored : Follower does not have the helmet")			
+		return	
+	endif
+	
+	ignorePAEvents = true
+	npc.EquipItem(pTrackedPAHelmet)
+	ignorePAEvents = false
+	Utility.wait(0.5)
+	
+	if (!npc.IsEquipped(pTrackedPAHelmet))
+		Trace("EQUIP FAILURE ** But at least it was detected")
+		
+		; Retry the more expensive way....
+		Trace("PAOutfit.length = [" + PAOutfit.length + "]")
+		int i = 0
+		int pa_numparts = PAOutfit.length
+		ignorePAEvents = true
+		while (i < pa_numparts)
+			Armor pa_part = PAOutfit[i] as Armor
+			if pa_part
+				Trace("Unequipping Part [" + pa_part + "]")
+				npc.UnequipItem(pa_part)
+			endif
+			i += 1
+		endwhile
+		Trace("Bumping AI")
+		BumpArmorAI()
+		pa_numparts = PAOutfit.length
+		while (i < pa_numparts)
+			Armor pa_part = PAOutfit[i] as Armor
+			if pa_part
+				Trace("Equipping Part [" + pa_part + "]")
+				npc.EquipItem(pa_part)
+			endif
+			i += 1
+		endwhile
+		ignorePAEvents = false
+	else
+		Trace("pTrackedPAHelmet Successfully Equipped")			
 	endif
 EndFunction
 
@@ -1390,14 +1488,16 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 		Trace("Invalid TargetOutfit")
 		return
 	endif
+	
+	bool weapdrawcomboveride = (weaponDrawn && (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue()))
 
 	Actor npc = self.GetActorReference()
 	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
 		Trace("Ignoring RestoreTweakOutfit. NPC is wearing PowerArmor")
 		
 		; NEW 1.14 : Equip Combat Outfit weapon when combat starts. Even in PA:
-		if (CombatOutfitEnabled && npc.IsInFaction(pTweakUseCombatWeaponFaction))
-			if OUTFIT_COMBAT == targetOutfit || (combatInProgress)
+		if (CombatOutfitEnabled && npc.IsInFaction(pTweakUseCombatWeaponFaction) && npc.IsPlayerTeammate())
+			if OUTFIT_COMBAT == targetOutfit || (combatInProgress) || weapdrawcomboveride
 				pTrackedWeapon = None
 				Int n_items = CombatOutfit.length
 				if (n_items > 0)
@@ -1408,7 +1508,25 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 						if (c_item && c_item as Weapon && 0 != npc.GetItemCount(c_item))
 							Trace("EquipItem [" + c_item + "]")
 							pTrackedWeapon = (c_item as Weapon)
-							npc.EquipItem(c_item, true, true)
+							if pTrackedWeapon
+								if combatInProgress || weapdrawcomboveride
+									; npc.EquipItem(pTweakWeap)
+									; Utility.wait(0.32) ; at least 0.25 
+									; npc.UnequipItem(pTweakWeap)
+									; Utility.wait(0.32) ; at least 0.25
+									; npc.RemoveItem(pTweakWeap)
+									; Utility.wait(0.32) ; at least 0.25
+									npc.EquipItem(pTrackedWeapon, true, true)								
+								elseif !npc.IsEquipped(pTrackedWeapon)
+									; npc.EquipItem(pTweakWeap)
+									; Utility.wait(0.32) ; at least 0.25 
+									; npc.UnequipItem(pTweakWeap)
+									; Utility.wait(0.32) ; at least 0.25
+									; npc.RemoveItem(pTweakWeap)
+									; Utility.wait(0.32) ; at least 0.25
+									npc.EquipItem(pTrackedWeapon, false, true)
+								endif								
+							endif							
 							c = n_items
 						endif
 						c += 1
@@ -1424,9 +1542,7 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 	
 	; Criteria May not be met (IE: Restore combat outside combat because
 	; it is being disabled)
-	
-	bool weapdrawcomboveride = (weaponDrawn && (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue()))
-	
+		
 	if 0 == targetOutfit
 		if (CombatOutfitEnabled && (combatInProgress || weapdrawcomboveride))
 			Trace("targetOutfit = OUTFIT_COMBAT")
@@ -1487,41 +1603,7 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 	; So, you need to track it independently. 
 		
 	if(!AvoidUnequipAll)
-		UnequipAllGear()
-		Int numitems = gear.length
-		Int i = 0
-		Form item
-		if (gear == CombatOutfit)
-			pTrackedWeapon = None
-			while (i < numitems)
-				item = gear[i]
-				if (0 != npc.GetItemCount(item))
-					Trace("EquipItem [" + item + "]")
-					if item as Weapon
-						; Remember so Standard Outfit/Set Outfit can marks
-						; as removable.
-						pTrackedWeapon = (item as Weapon)
-						npc.EquipItem(item, true, true)
-					else
-						npc.EquipItem(item, false, true)
-					endIf
-				else
-					Trace("NPC no longer has item [" + item + "]")
-				endif				
-				i += 1
-			endWhile			
-		else
-			while (i < numitems)
-				item = gear[i]
-				if (0 != npc.GetItemCount(item))
-					Trace("EquipItem [" + item + "]")
-					npc.EquipItem(item, false, true)
-				else
-					Trace("NPC no longer has item [" + item + "]")
-				endif				
-				i += 1
-			endWhile
-		endif
+		FullOutfitEquip(gear, weapdrawcomboveride)
 		return
 	endif
 
@@ -1535,16 +1617,20 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 		Form item
 		Int i = 0
 		if (gear == CombatOutfit)
-		
+			Trace("Processing Combat Outfit")
+			pTrackedWeapon = None
 			while (i < numitems)
 				item = gear[i]
 				if (item)
 					if (0 != npc.GetItemCount(item))
-						Trace("EquipItem [" + item + "]")
-						if item as Weapon
+						if item as Weapon && npc.IsInFaction(pTweakUseCombatWeaponFaction)
+							Trace("Item [" + item + "] <- marked as weapon")
 							pTrackedWeapon = (item as Weapon)
-						else
+						elseif !(item as Ammo)
+							Trace("EquipItem [" + item + "]")
 							npc.EquipItem(item, false, true)
+						else
+							Trace("Skipping Ammo [" + item + "]")
 						endIf
 					else
 						Trace("NPC not longer has item [" + item + "]")
@@ -1554,27 +1640,33 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 			endWhile
 			
 			if pTrackedWeapon && npc.IsPlayerTeammate()
-				npc.EquipItem(pTweakWeap)
-				Utility.wait(0.32) ; at least 0.25 
-				npc.UnequipItem(pTweakWeap)
-				Utility.wait(0.32) ; at least 0.25
-				npc.RemoveItem(pTweakWeap)
-				Utility.wait(0.32) ; at least 0.25
-				npc.EquipItem(pTrackedWeapon, true, true)
-				; TODO : Telease Tracked Weapon after 10 seconds?
-			endif
-			
+				if combatInProgress || weapdrawcomboveride
+					Trace("Equipping Item [" + pTrackedWeapon + "] with no-remove flags")
+					npc.EquipItem(pTrackedWeapon, true, true)								
+				elseif !npc.IsEquipped(pTrackedWeapon)
+					npc.EquipItem(pTweakWeap)
+					Utility.wait(0.32) ; at least 0.25 
+					npc.UnequipItem(pTweakWeap)
+					Utility.wait(0.32) ; at least 0.25
+					npc.RemoveItem(pTweakWeap)
+					Utility.wait(0.32) ; at least 0.25
+					Trace("Equipping Item [" + pTrackedWeapon + "] with remove-allowed flags")
+					npc.EquipItem(pTrackedWeapon, false, true)
+				endif								
+			endif					
+						
 		else
-			; if pTrackedWeapon && npc.IsEquipped(pTrackedWeapon)
-				; npc.UnequipItem(pTrackedWeapon)
-				; pTrackedWeapon = None
-			; endif
+			Trace("Processing Non-Combat Outfit")
 			while (i < numitems)
 				item = gear[i]
 				if (item)
 					if (0 != npc.GetItemCount(item))
-						Trace("EquipItem [" + item + "]")
-						npc.EquipItem(item, false, true)
+						if  !(item as Ammo)
+							Trace("EquipItem [" + item + "]")
+							npc.EquipItem(item, false, true)
+						else
+							Trace("Skipping Ammo [" + item + "]")
+						endif
 					else
 						Trace("NPC not longer has item [" + item + "]")
 					endif				
@@ -1584,24 +1676,32 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 		endif
 	endif
 
+	; Hopefully all slots were cleared. But sometimes (one-piece) outfits will
+	; not clear. The only recoarse is to start over, with an UnEquipAll command.
 	
+	bool needsSecond = false
 	int i = 0
 	int curr_len = CurrentOutfit.length
 	while (i < curr_len)
 		Form item = CurrentOutfit[i]
-		if !(item as Weapon)
-			if (npc.IsEquipped(item) && (gear.Find(item) < 0))
-				Trace("UnEquipItem [" + item + "]")
-				npc.UnEquipItem(item,false,true)
+		if !(item as Weapon) && !(item as Ammo)
+			if (npc.IsEquipped(item) && (gear.Find(item) < 0) )
+				Trace("Item [" + item + "] is still equipped. Unequipping.")
+				; npc.UnEquipItem(item,false,true)
+				needsSecond = true
 				int pos = myHead.Find(item)
 				if (pos > -1)
-					Trace("Removing from myHead")
+					Trace("Item [" + item + "] found on Head. Removing from myHead collection.")
 					myHead.Remove(pos)
 				endif
 			endif
 		endif
 		i += 1
 	endWhile
+	
+	if needsSecond
+		FullOutfitEquip(gear, weapdrawcomboveride)
+	endif
 	
 	Trace("Syncing CurrentOutfit with Chosen outfit")
 	CurrentOutfit.Clear()
@@ -1624,12 +1724,72 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 	
 endFunction
 
+Function FullOutfitEquip(Form[] gear, bool weapdrawcomboveride)
+	Trace("FullOutfitEquip")
+	Actor npc = self.GetActorRef()
+	
+	UnequipAllGear()
+	Int numitems = gear.length
+	Int i = 0
+	Form item
+	if (gear == CombatOutfit)
+		Trace("Processing Combat Outfit")
+		pTrackedWeapon = None
+		while (i < numitems)
+			item = gear[i]
+			if (0 != npc.GetItemCount(item))
+				Trace("EquipItem [" + item + "]")
+				if item as Weapon && npc.IsInFaction(pTweakUseCombatWeaponFaction)
+					Trace("Item [" + item + "] <- marked as weapon")
+					pTrackedWeapon = (item as Weapon)
+					npc.EquipItem(item, true, true)
+				elseif !(item as ammo)
+					Trace("EquipItem [" + item + "]")
+					npc.EquipItem(item, false, true)
+				else
+					Trace("Skipping Ammo [" + item + "]")
+				endIf
+			else
+				Trace("NPC no longer has item [" + item + "]")
+			endif				
+			i += 1
+		endWhile			
+	else
+		while (i < numitems)
+			item = gear[i]
+			if (0 != npc.GetItemCount(item))
+				if !(item as ammo)
+					Trace("EquipItem [" + item + "]")
+					npc.EquipItem(item, false, true)
+				else
+					Trace("Skipping Ammo [" + item + "]")
+				endif
+			else
+				Trace("NPC no longer has item [" + item + "]")
+			endif				
+			i += 1
+		endWhile
+	endif
+	
+	if pTrackedWeapon && npc.IsPlayerTeammate()
+		if combatInProgress || weapdrawcomboveride
+			Trace("Equipping Item [" + pTrackedWeapon + "] with no-remove flags")
+			npc.EquipItem(pTrackedWeapon, true, true)								
+		elseif !npc.IsEquipped(pTrackedWeapon)
+			npc.EquipItem(pTweakWeap)
+			Utility.wait(0.32) ; at least 0.25 
+			npc.UnequipItem(pTweakWeap)
+			Utility.wait(0.32) ; at least 0.25
+			npc.RemoveItem(pTweakWeap)
+			Utility.wait(0.32) ; at least 0.25
+			Trace("Equipping Item [" + pTrackedWeapon + "] with remove-allowed flags")
+			npc.EquipItem(pTrackedWeapon, false, true)
+		endif								
+	endif		
+EndFunction
+
 Function HandleCombatEnd()
 
-	if (!combatInProgress)
-		return
-	endif
-	combatInProgress = False
 	CancelTimer(COMBATEND_DELAYED)
 	
 	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
@@ -1642,6 +1802,28 @@ Function HandleCombatEnd()
 		return
 	endif
 	
+	if (CombatOutfitEnabled && npc.IsInFaction(pTweakUseCombatWeaponFaction) && npc.IsPlayerTeammate())
+		if !pTrackedWeapon
+			Int n_items = CombatOutfit.length
+			if (n_items > 0)
+				Form c_item
+				Int c = 0
+				while (c < n_items)
+					c_item = CombatOutfit[c]
+					if (c_item && c_item as Weapon && 0 != npc.GetItemCount(c_item))
+						pTrackedWeapon = c_item as Weapon
+						c = n_items
+					endif
+					c += 1
+				endWhile
+			endif
+		endif
+		if pTrackedWeapon
+			Trace("EquipItem [" + pTrackedWeapon + "]")
+			npc.EquipItem(pTrackedWeapon, false, true)
+		endif
+	endif
+				
 	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
 		Trace("PowerArmor Detected")
 		if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))
@@ -2233,8 +2415,64 @@ Event OnTimer(int akTimerId)
 		return
 	endif
 	if (akTimerID == COMBATEND_DELAYED)
-		if Game.GetPlayer().IsInCombat() || self.GetActorRef().IsInCombat()
-			StartTimer(20,COMBATEND_DELAYED)
+		Actor npc = self.GetActorRef()
+		if combatInProgress
+			Trace("Renewing Combat Timer")
+			StartTimer((20 + Utility.RandomInt(-5,5)),COMBATEND_DELAYED)
+			
+			; 1.20 : Weapon Use Enhancements for EnhancedAI (Dynamic Combat Style)
+			if !npc.IsInFaction(pTweakEnhancedFaction)
+				Trace("NPC is not assigned to Dynamic Combat Style")
+				return
+			endif
+			if !npc.IsInFaction(pCurrentCompanionFaction)
+				Trace("NPC is not CurrentCompanion")
+				return
+			endif
+			if npc.IsBleedingOut()
+				Trace("NPC is bleeding out")
+				return
+			endif
+			if npc.IsDead()
+				Trace("NPC is dead")
+				return
+			endif
+			
+			if npc.IsInFaction(pTweakUseCombatWeaponFaction) && CombatOutfitEnabled && pTrackedWeapon
+				Trace("Bailing. User has specified to use COMBAT OUTFIT weapon")
+				; Users does not want AI switching weapons.
+				return
+			endIf
+			
+			if pTrackedWeapon && npc.IsEquipped(pTrackedWeapon)
+				Trace("UnEquipping Combat Weapon as it is likely force/locked")
+				npc.UnEquipItem(pTrackedWeapon)
+			endIf
+			
+			Trace("ReEvaluating Dynamic AI (assess Melee, Spread or ranged)")
+			npc.EvaluatePackage()
+
+			; If Far from target:			
+			; Scan inventory for:
+			;   WeaponTypeSniper
+			;   WeaponTypeGaussRifle	
+
+			; If Medium from target:
+			; Scan inventory for (anything but):
+			;   WeaponTypeJunkJet
+			;   WeaponTypeMissileLauncher
+			;   WeaponTypeFatman
+			;   WeaponTypeBroadsider
+			;   WeaponTypeCryolater
+			
+			; If Near target:
+			; Scan inventory for:
+			;   WeaponTypeMelee1H
+			;   WeaponTypeMelee2H
+			
+			Trace("ReEvaluating Weapon based on new AI")
+			BumpWeaponAI()
+			
 		else
 			HandleCombatEnd()
 		endif
@@ -2694,7 +2932,7 @@ endFunction
 
 Function OnCombatBegin()
 	combatInProgress=true
-	StartTimer(20,COMBATEND_DELAYED)
+	StartTimer((20 + Utility.RandomInt(-5,5)),COMBATEND_DELAYED)
 	Trace("OnCombatBegin()")
 	
 	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
@@ -2708,7 +2946,8 @@ Function OnCombatBegin()
 		if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))		
 			TryToEquipPAHelmet()
 		endif
-		return
+		; 1.20 Bug Fix : The return here was avoiding the combat weapon...
+		; return
 	endif
 
 	if (CombatOutfitEnabled)
@@ -2722,9 +2961,12 @@ endFunction
 ; Called by TweakFollowerScript: RelayCombatEnd
 Function OnCombatEnd()
 	Trace("OnCombatEnd()")
-
+	combatInProgress = false
+	
 	; ignored:
-	; handleCombatEnd()
+	; 
+	;  See Timer COMBATEND_DELAYED which calls handleCombatEnd()
+	;  with 20 seconds of the end of combat. 
 	;
 	; NOTES: This gets called quicker and more often than we want, 
 	;        especially if the player stays out of the fight and
@@ -3106,7 +3348,6 @@ Function RestoreDefaultWeapon()
 		endif								
 	endif
 EndFunction
-
 
 ; SQUARE ROOT is expensive. Most people dont actually want to KNOW the distance. They
 ; simply want equality or range checks, which you can do without the square root. No

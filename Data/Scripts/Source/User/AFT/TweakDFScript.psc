@@ -2858,9 +2858,15 @@ Function TryRotateCompanion()
 		trace("Skipping Rotate : Menu is Open or Rotation is not allowed")
 	else
 		Actor PlayerRef = Game.GetPlayer()
-		if (PlayerRef.IsInCombat())
-			trace("Skipping Rotate : Player in Combat")
-		else
+
+		; 1.20 : God mode will cause this to always fail or succeed. Many users
+		;        use God mode, so I have decided to remove it. There is already
+		;        a Companion God Mode Check Below....
+		
+		; if (PlayerRef.IsInCombat())
+		;	trace("Skipping Rotate : Player in Combat")
+		; else
+		
 			Actor oCompanion = pCompanion.GetActorReference()
 			if (None == oCompanion)
 				trace("No Assigned pCompanion. Calling RotateCOmpanion")												
@@ -2883,7 +2889,8 @@ Function TryRotateCompanion()
 			else ; if GetSpinLock(pTweakMutexCompanions, 0, "OnTimer (Rotate Companion)")
 				RotateCompanion()
 			endIf
-		endIf
+			
+		; endIf
 	endIf
 	
 EndFunction	

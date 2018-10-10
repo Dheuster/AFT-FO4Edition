@@ -1,58 +1,10 @@
 ;BEGIN FRAGMENT CODE - Do not edit anything between this and the end comment
 Scriptname AFT:Fragments:Terminals:TERM_TweakAFTSettingsMisc_0106B7E8 Extends Terminal Hidden Const
 
-;BEGIN FRAGMENT Fragment_Terminal_01
-Function Fragment_Terminal_01(ObjectReference akTerminalRef)
-;BEGIN CODE
-pTweakAllowStealth.SetValue(0)
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_Terminal_02
-Function Fragment_Terminal_02(ObjectReference akTerminalRef)
-;BEGIN CODE
-pTweakAllowStealth.SetValue(1)
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_Terminal_03
-Function Fragment_Terminal_03(ObjectReference akTerminalRef)
-;BEGIN CODE
-pTweakIgnoreMurder.SetValue(0)
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_Terminal_04
-Function Fragment_Terminal_04(ObjectReference akTerminalRef)
-;BEGIN CODE
-pTweakIgnoreMurder.SetValue(1)
-;END CODE
-EndFunction
-;END FRAGMENT
-
 ;BEGIN FRAGMENT Fragment_Terminal_05
 Function Fragment_Terminal_05(ObjectReference akTerminalRef)
 ;BEGIN CODE
 pTweakAllowLoiter.SetValue(1.0)
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_Terminal_06
-Function Fragment_Terminal_06(ObjectReference akTerminalRef)
-;BEGIN CODE
-pTweakFollowerCatchup.SetValue(0)
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_Terminal_07
-Function Fragment_Terminal_07(ObjectReference akTerminalRef)
-;BEGIN CODE
-pTweakFollowerCatchup.SetValue(1)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -169,22 +121,6 @@ pTweakSettlementAsCity.SetValue(0)
 EndFunction
 ;END FRAGMENT
 
-;BEGIN FRAGMENT Fragment_Terminal_22
-Function Fragment_Terminal_22(ObjectReference akTerminalRef)
-;BEGIN CODE
-pTweakCombatOutfitOnWeapDraw.SetValue(1.0)
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_Terminal_23
-Function Fragment_Terminal_23(ObjectReference akTerminalRef)
-;BEGIN CODE
-pTweakCombatOutfitOnWeapDraw.SetValue(0.0)
-;END CODE
-EndFunction
-;END FRAGMENT
-
 ;BEGIN FRAGMENT Fragment_Terminal_24
 Function Fragment_Terminal_24(ObjectReference akTerminalRef)
 ;BEGIN CODE
@@ -226,3 +162,7 @@ GlobalVariable Property pTweakSettlementAsCity Auto Const
 GlobalVariable Property pTweakCombatOutfitOnWeapDraw Auto Const
 
 GlobalVariable Property pTweakShowAffinityProgress Auto Const
+
+GlobalVariable Property pTweakAllowHealSelf Auto Const
+
+GlobalVariable Property pTweakAllowHealOther Auto Const

@@ -68,6 +68,8 @@ ActorValue Property RightMobilityCondition auto const
 ActorValue Property EnduranceCondition Auto const
 ActorValue Property Rads Auto const
 ActorValue Property Health Auto const
+ActorValue Property HC_IsCompanionInNeedOfHealing Auto Const
+
 SPELL Property CureAddictions Auto Const
 Hardcore:HC_ManagerScript Property HC_Manager const auto
 Quest 	  Property TweakMemoryLounger Auto Const
@@ -492,8 +494,15 @@ Function MakeCamp(bool refresh = false, bool beamup = false)
 	bool hasFoundation = ((1.0 == pTweakCampFoundationEnabled.GetValue()) && (pTweakExpandCamp.GetStage() > 20))
  
 	if (!refresh)
- 
-		if player.IsInCombat()
+		bool testCombat = false
+		AFT:TweakFollowerScript pTweakFollowerScript = (self as Quest) as AFT:TweakFollowerScript
+		if (pTweakFollowerScript)
+			testCombat = pTweakFollowerScript.GetCompanionsInCombat()
+		else
+			testCombat = player.IsInCombat()
+		endif
+	
+		if testCombat
 			pTweakVisualFailCombat.ShowOnPipBoy()
 			pccopy.delete()
 			spawnMarker.delete()
@@ -4061,10 +4070,10 @@ Function HealAll(Actor myPatient)
 	;for new survival - curing diseases
 	if myPatient == Game.GetPlayer()
 		HC_Manager.ClearDisease()
+	else
+		myPatient.SetValue(HC_IsCompanionInNeedOfHealing, 0)
 	endif
-	
 	CureAddictions.Cast(myPatient, myPatient)
-	
 EndFunction
 
 ; SQUARE ROOT is expensive. Most people dont actually want to KNOW the distance. They

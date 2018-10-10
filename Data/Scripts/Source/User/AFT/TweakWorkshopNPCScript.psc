@@ -9,6 +9,8 @@ ActorValue Property EnduranceCondition Auto const
 ActorValue Property Rads Auto const
 ActorValue Property Health Auto const
 SPELL Property CureAddictions Auto Const
+Hardcore:HC_ManagerScript Property HC_Manager const auto
+ActorValue Property HC_IsCompanionInNeedOfHealing Auto Const
 
 
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
@@ -74,5 +76,12 @@ Function HealAll(Actor myPatient)
 	myPatient.RestoreValue(RightAttackCondition, 9999)
 	myPatient.RestoreValue(RightMobilityCondition, 99999)
 	myPatient.RestoreValue(EnduranceCondition, 9999)
-	CureAddictions.Cast(myPatient, myPatient)	
+
+	;for new survival - curing diseases
+	if myPatient == Game.GetPlayer()
+		HC_Manager.ClearDisease()
+	else
+		myPatient.SetValue(HC_IsCompanionInNeedOfHealing, 0)
+	endif
+	CureAddictions.Cast(myPatient, myPatient)
 EndFunction

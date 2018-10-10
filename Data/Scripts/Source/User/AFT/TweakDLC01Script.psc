@@ -12,6 +12,13 @@ Bool			Property	Installed		Auto Conditional
 float			Property	version			Auto
 Int				Property	resourceID		Auto
 
+; --=== Items ===--
+Potion			Property	DLC01RepairKit	Auto
+Sound			Property    DLC01NPCHumanRobotRepairKitB Auto
+
+; --=== Keywords ===--
+Keyword			Property	DLC01PlayerCanRepairKit Auto
+
 ; --=== Actors ===--
 Actor			Property	Ada				Auto
 Actor			Property	Mechanist		Auto
@@ -152,6 +159,9 @@ Function AllToNone()
 	DLC01LairLocation.Clear()
 	DLC01LairRoboStoreLocation.Clear()
 	
+	DLC01RepairKit = None
+	DLC01PlayerCanRepairKit = None
+	
 endFunction
 
 Function OnGameLoaded(bool firstcall)
@@ -163,6 +173,27 @@ Function OnGameLoaded(bool firstcall)
 
 		bool 	issue = false
 
+		DLC01RepairKit 			     = Game.GetFormFromFile(0x01004F12,PluginName) As Potion
+		DLC01PlayerCanRepairKit      = Game.GetFormFromFile(0x01004F13,PluginName) As Keyword
+		DLC01NPCHumanRobotRepairKitB = Game.GetFormFromFile(0x0100EB72,PluginName) As Sound
+		
+		if (!DLC01RepairKit)
+			trace("DLC01RepairKit did not load.")
+		else
+			trace("Loaded DLC01RepairKit Potion")
+		endif
+		if (!DLC01PlayerCanRepairKit)
+			trace("DLC01PlayerCanRepairKit did not load.")
+		else
+			trace("Loaded DLC01PlayerCanRepairKit Keyword")
+		endif
+		if (!DLC01NPCHumanRobotRepairKitB)
+			trace("DLC01NPCHumanRobotRepairKitB did not load.")
+		else
+			trace("Loaded DLC01NPCHumanRobotRepairKitB Keyword")
+		endif
+		
+		
 		; Load Resources
 		DLC01MQ00 = Game.GetFormFromFile(0x01000805,PluginName) As Quest
 		DLC01MQ01 = Game.GetFormFromFile(0x01000806,PluginName) As Quest

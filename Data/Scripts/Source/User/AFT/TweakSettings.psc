@@ -22,6 +22,7 @@ Group Injected
 	Faction			Property pTweakNoHomeFaction			Auto Const
 	Faction			Property pTweakAutoStanceFaction		Auto Const
 	Faction			Property pTweakSettlerFaction			Auto Const
+	Faction			Property pTweakPackMuleFaction			Auto Const
 
 	
 	Faction			Property pPlayerFaction					Auto Const ; 0001C21C 
@@ -37,6 +38,7 @@ Group Injected
 	; LinkedRef for TweakGoHome package....
 	Keyword         Property pTweakLocHome					Auto Const 
 	Keyword         Property pTeammateReadyWeapon_DO		Auto Const
+	Keyword			Property pFurnitureTypePowerArmor		Auto Const
 	
 	ObjectReference Property CaitPostCombatMarker01			Auto Const ; 0x000C73E9
 	ObjectReference Property CodsworthKitchenMarker			Auto Const ; 0x00023CBC
@@ -131,11 +133,18 @@ Group Injected
 	ActorBase      Property pTweakCompanionNora				Auto Const
 	ActorBase      Property pTweakCompanionNate				Auto Const
 	
+	Perk  Property pTweakCarryBoost				Auto Const
+	Perk  Property pTweakZeroCarryInCombat		Auto COnst
 	Perk  Property pTweakHealthBoost			Auto Const 
 	Perk  Property pTweakDmgResistBoost			Auto Const 
 	Perk  Property pTweakRangedDmgBoost			Auto Const 
 	Perk  Property pCompanionInspirational		Auto Const
 	Spell Property pAbMagLiveLoveCompanionPerks	Auto Const
+	Perk  Property Sneak01						Auto Const
+	Perk  Property Sneak02						Auto Const
+	Perk  Property Sneak03						Auto Const
+	Perk  Property Sneak04						Auto Const
+	Perk  Property ImmuneToRadiation			Auto Const
 	
 	Spell Property TeleportOutSpell Auto Const
 	Spell Property TeleportInSpell  Auto Const
@@ -143,6 +152,9 @@ Group Injected
 	Quest Property TweakDLC01 Auto Const
 	Quest Property TweakDLC03 Auto Const
 	Quest Property TweakDLC04 Auto Const
+	
+	GlobalVariable Property TweakAllowAutonomousPickup	Auto Const 	; "[ ] Allow autonomous weapon pickup"
+	GlobalVariable Property HC_Rule_DamageWhenEncumbered Auto Const
 	
 EndGroup
 
@@ -161,6 +173,8 @@ Group LocalPersistance
 	Int       Property originalConfidence		Auto
 	Int       Property originalAssistance		Auto
 	Int       Property lastCommandReceived		Auto
+	
+	float     Property originalBaseCarryWeight	Auto
 	
 	float	  Property originalStrength			= 0.0 Auto  
 	float	  Property originalPerception		= 0.0 Auto
@@ -205,6 +219,9 @@ int		Property numKilled			Auto Hidden
 int ONLOAD_FLOOD_PROTECT      = 998 const
 ; int ONHIT_FLOOD_PROTECT       = 997 const
 
+float TradeHealth
+bool TradeMenuOpen = false
+
 bool Function Trace(string asTextToPrint, int aiSeverity = 0) debugOnly
 	string logName = "TweakSettings" + self.GetActorRef().GetFactionRank(pTweakNamesFaction)
 	; string logName = "TweakSettings"
@@ -236,6 +253,173 @@ Event OnInit()
 EndEvent
 
 Function v20upGrade()
+	Trace("v20upGrade()")
+	Actor npc = self.GetActorRef()
+	originalBaseCarryWeight = -1.0
+	
+	ActorBase base  = npc.GetActorBase()
+	int ActorBaseID = base.GetFormID()
+
+	if (base == Game.GetForm(0x00079249) as ActorBase)     ; 1 ---=== Cait ===---
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
+	elseif (base == Game.GetForm(0x000179FF) as ActorBase) ; 2 ---=== Codsworth ===---
+		originalBaseCarryWeight = 110.0
+		originalStrength        = 9.0
+		originalEndurance       = 7.0
+	elseif (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 4.0
+	elseif (base == Game.GetForm(0x00027683) as ActorBase) ; 4 ---=== Danse ===---
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 8.0
+	elseif (base == Game.GetForm(0x00045AC9) as ActorBase) ; 5 ---=== Deacon ===---
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
+	elseif (base == Game.GetForm(0x0001D15C) as ActorBase) ; 6 ---=== Dogmeat ===---
+		originalBaseCarryWeight = 160.0
+		originalStrength        = 4.0
+		originalEndurance       = 4.0
+	elseif (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 8.0
+	elseif (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 4.0
+	elseif (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 8.0
+	elseif (base == Game.GetForm(0x00002F1E) as ActorBase) ; 10 ---=== Piper ===---	
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
+	elseif (base == Game.GetForm(0x00019FD9) as ActorBase) ; 11 ---=== Preston ===---
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
+	elseif (base == Game.GetForm(0x00027682) as ActorBase) ; 12 ---=== Strong ===---
+		originalBaseCarryWeight = 390.0
+		originalStrength        = 24.0
+		originalEndurance       = 8.0
+	elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
+		originalBaseCarryWeight = 310.0
+		originalStrength        = 16.0
+		originalEndurance       = 17.0
+	elseif (base == pTweakCompanionNate) ; ---=== Nate ===---	
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
+	elseif (base == pTweakCompanionNora) ; ---=== Nora ===---	
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 5.0
+	elseif (ActorBaseID > 0x00ffffff)
+		
+		int ActorBaseMask
+			
+		if ActorBaseID > 0x80000000			
+			ActorBaseMask = (ActorBaseID - 0x80000000) % (0x01000000)
+		else
+			ActorBaseMask = ActorBaseID % (0x01000000)
+		endif
+			
+		if 0x0000FD5A == ActorBaseMask ; Ada
+			originalBaseCarryWeight = 110.0
+			originalStrength        = 9.0
+			originalEndurance       = 7.0
+		elseif 0x00006E5B == ActorBaseMask ; Longfellow
+			originalBaseCarryWeight = 150.0
+			originalStrength        = 5.0
+			originalEndurance       = 7.0
+		elseif 0x0000881D == ActorBaseMask ; Porter Gage
+			originalBaseCarryWeight = 150.0
+			originalStrength        = 7.0
+			originalEndurance       = 7.0
+		endif		
+	endif
+	
+	if -1 == originalBaseCarryWeight
+		originalBaseCarryWeight = npc.GetBaseValue(pCarryWeight)
+	endif
+		
+	if 1.0 == TweakAllowAutonomousPickup.GetValue()
+		if !npc.HasPerk(pTweakCarryBoost)
+			npc.AddPerk(pTweakCarryBoost)
+		endIf
+		if !npc.HasPerk(pTweakZeroCarryInCombat)
+			npc.AddPerk(pTweakZeroCarryInCombat)
+		endIf
+	endif
+	
+	; As much as I want to do this, it could also cause population to spike and food to no longer
+	; be adequate at a number of settlements. I could see this upsetting users. So for now, we will
+	; not auto-import Managed NPCs to Settlers during an upgrade...
+	
+	; Keyword	WorkshopKeyword	=	Game.GetForm(0x00054BA7) as Keyword
+	;
+	; if assignedHome && assignedHome.HasKeyword(WorkshopKeyword) && !npc.IsInFaction(pCurrentCompanionFaction)
+	;	WorkshopNPCScript wns = (npc as WorkshopNPCScript)
+	;	if !wns
+	;		AFT:TweakSettlersScript	AFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)	
+	;		if AFTSettlers
+	;			Trace("Upgrading Non-Active Managed NPC to AFTSettler as they are assigned to a Settlement.")
+	;			if AFTSettlers.MakeSettler(npc, assignedHome, false)
+	;				npc.AddToFaction(pTweakSkipGoHomeFaction)
+	;			endIf
+	;		endIf
+	;	endIf
+	; endIf
+	
+EndFunction
+
+Function ToggleAllowAutonomousPickup()
+	Actor npc = self.GetActorRef()
+	if (0.0 == TweakAllowAutonomousPickup.getValue())
+		if npc.HasPerk(pTweakCarryBoost)
+			npc.RemovePerk(pTweakCarryBoost)
+		endIf
+		npc.ModValue(pCarryWeight, 0)			
+		enforceCarryWeight = 0
+		enforceSettings()
+	else
+		npc.ModValue(pCarryWeight, 0)			
+		ResetCarryWeight()
+	endIf
+	UnregisterForMenuOpenCloseEvent("ContainerMenu")
+	RegisterForMenuOpenCloseEvent("ContainerMenu")
+EndFunction
+
+Function ResetCarryWeight()
+	Actor npc = self.GetActorRef()
+	enforceCarryWeight = -1
+	if npc.IsInFaction(pTweakPackMuleFaction)
+		enforceCarryWeight = 2000
+	else
+		enforceCarryWeight = (originalBaseCarryWeight + (npc.GetValue(pStrength) * 10.0)) as int
+		if 1.0 == HC_Rule_DamageWhenEncumbered.GetValue()
+			enforceCarryWeight -= 50
+		endif
+	endif
+EndFunction
+
+float Function GetCarryWeightInfo()
+	Actor npc = self.GetActorRef()
+	if npc.IsInFaction(pTweakPackMuleFaction)
+		return 2000.0
+	else
+		float cinfo = (originalBaseCarryWeight + (npc.GetValue(pStrength) * 10.0))
+		if 1.0 == HC_Rule_DamageWhenEncumbered.GetValue()
+			cinfo -= 50.0
+		endif
+		return cinfo
+	endif
 EndFunction
 
 Function EventPlayerSneakStart()
@@ -275,48 +459,120 @@ Function EventPlayerSneakExit()
 	endIf	
 EndFunction
 
-float TradeHealth
-Function EventTradeBegin()
-	Actor npc = self.GetActorRef()
-	npc.StartDeferredKill()
-	TradeHealth = npc.GetValue(pHealth)
-EndFunction
+; BUGFIX: When player changes Followers equipment, the perks are lost. 
+; This can cause a sudden drop in health and kill the NPC. So we make
+; all companions invulnerable when trade menu opens. When the menu closes, 
+; we reset AFT's perks before removing the invulnerability. (And heal the 
+; npc if they are 0 or less HP).
 
-Function EventTradeEnd()
+Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
+	if (asMenuName == "ContainerMenu")	
+		Actor npc = self.GetActorRef()
+		bool allowCarryPerk = (1.0 == TweakAllowAutonomousPickup.getValue())
+		
+		if abOpening == true
+			Trace("EventTradeBegin()")
+			TradeMenuOpen = true	
+			npc.StartDeferredKill()
+			TradeHealth = npc.GetValue(pHealth)
+			if !allowCarryPerk
+				FixCarryWeightForTradeStart()
+			endif
+		else
+			Trace("EventTradeEnd()")
+			TradeMenuOpen = false
+			float currentHealth = npc.GetValue(pHealth)
+			bool endDeferred = true
+
+			if (TradeHealth != currentHealth)
+				if (currentHealth < 0.0)
+					npc.RestoreValue(pHealth, 9999)
+					Utility.wait(0.1)
+					bool wasEssential = npc.IsEssential()
+					npc.SetEssential(true)
+					npc.EndDeferredKill()
+					endDeferred = false
+					Utility.wait(0.1)
+					if !wasEssential
+						npc.SetEssential(false)
+					endif
+				endif
+				npc.RemovePerk(pTweakDmgResistBoost)
+				if allowCarryPerk
+					npc.RemovePerk(pTweakCarryBoost)
+				endif
+				npc.RemovePerk(pTweakZeroCarryInCombat)
+				npc.RemovePerk(pTweakHealthBoost)
+				npc.RemovePerk(pTweakRangedDmgBoost)
+				npc.RemovePerk(pCompanionInspirational)
+				npc.RemoveSpell(pAbMagLiveLoveCompanionPerks)
+				npc.RemovePerk(Sneak01)
+				npc.RemovePerk(Sneak02)
+				npc.RemovePerk(Sneak03)
+				npc.RemovePerk(Sneak04)
+				npc.RemovePerk(ImmuneToRadiation)
+				
+				Utility.wait(1.0)
+				Trace("Adding Perks Back")
+				npc.AddPerk(pTweakDmgResistBoost)
+				if allowCarryPerk
+					npc.AddPerk(pTweakCarryBoost)
+				endif
+				npc.AddPerk(pTweakZeroCarryInCombat)
+				npc.AddPerk(pTweakHealthBoost)
+				npc.AddPerk(pTweakRangedDmgBoost)
+				npc.AddPerk(pCompanionInspirational)
+				npc.AddSpell(pAbMagLiveLoveCompanionPerks)	
+				npc.AddPerk(Sneak01)
+				npc.AddPerk(Sneak02)
+				npc.AddPerk(Sneak03)
+				npc.AddPerk(Sneak04)
+				npc.AddPerk(ImmuneToRadiation)
+				Trace("Perks restored")
+			endif
+			if !allowCarryPerk
+				FixCarryWeightForTradeEnd()		
+			endif	
+			if endDeferred
+				npc.EndDeferredKill()
+			endif				
+		
+		endif
+	endif
+EndEvent
+
+Function FixCarryWeightForTradeStart()
+	Trace("TmpEnableCarryWeight()")
+	ResetCarryWeight()
 	Actor npc = self.GetActorRef()
-	float currentHealth = npc.GetValue(pHealth)
-	bool endDeferred = true
-	if (TradeHealth != currentHealth)
-		if (currentHealth < 0.0)
-			npc.RestoreValue(pHealth, 9999)
-			Utility.wait(0.1)
-			bool wasEssential = npc.IsEssential()
-			npc.SetEssential(true)
-			npc.EndDeferredKill()
-			endDeferred = false
-			Utility.wait(0.1)
-			if !wasEssential
-				npc.SetEssential(false)
+	if enforceCarryWeight > -1 && (enforceCarryWeight != npc.GetValue(pCarryWeight))
+		Trace("Attempt 1")
+		npc.SetValue(pCarryWeight, enforceCarryWeight)
+		Utility.WaitMenuMode(0.1)
+		float currentCarryWeight = npc.GetValue(pCarryWeight)
+		if (currentCarryWeight == enforceCarryWeight)
+			Trace("Attempt 1 : Success!")
+		else
+			Trace("Attempt 1 : Failure. Current CarryWeight [" + currentCarryWeight + "]. Retrying")
+			float diff = (enforceCarryWeight - currentCarryWeight)
+			npc.ModValue(pCarryWeight, diff)
+			Utility.WaitMenuMode(0.1)
+			currentCarryWeight = npc.GetValue(pCarryWeight)
+			if (currentCarryWeight == enforceCarryWeight)
+				Trace("Attempt 2 : Success!")
+			else
+				Trace("Attempt 2 : Failure. Current CarryWeight [" + currentCarryWeight + "]. Bailing")
 			endif
 		endif
-		npc.RemovePerk(pTweakDmgResistBoost)
-		npc.RemovePerk(pTweakHealthBoost)
-		npc.RemovePerk(pTweakRangedDmgBoost)
-		npc.RemovePerk(pCompanionInspirational)
-		npc.RemoveSpell(pAbMagLiveLoveCompanionPerks)		
-		Utility.wait(1.0)
-		Trace("Adding Perks Back")
-		npc.AddPerk(pTweakDmgResistBoost)
-		npc.AddPerk(pTweakHealthBoost)
-		npc.AddPerk(pTweakRangedDmgBoost)
-		npc.AddPerk(pCompanionInspirational)
-		npc.AddSpell(pAbMagLiveLoveCompanionPerks)	
-		Trace("Perks restored")
 	endif
-	if endDeferred
-		npc.EndDeferredKill()
-	endif		
 EndFunction
+
+Function FixCarryWeightForTradeEnd()
+	enforceCarryWeight = 0
+	if (enforceCarryWeight != self.GetActorRef().GetValue(pCarryWeight))
+		enforceSettings()
+	endif
+endFunction
 
 ; ObjectReference Cache:
 ;
@@ -365,13 +621,27 @@ Function initialize()
 	; the actor record slaps on a -100 modifier. If we get base, 
 	; we ignore the modifier can get inflated values. 
 	
-	originalCarryWeight  = npc.GetValue(pCarryWeight) As Int
 	
-	Trace("Original CarryWeight [" + originalCarryWeight + "]")
+	; 1.20 : In order to prevent NPCs from picking up items
+	; they shouldn't, AFT now tightly manages carryweight.
+	;
+	; By that, I mean carryweight is enforced to be 0 at all times. 
+	; The only time it changes is when the trade menu opens/closes. 
+	;
+	; At that moment, we set the carryweight to what it SHOULD be. 
+	; That is: BASE  + 10 per strength or simply 2000 if packmule is enabled.
+	; The one gotcha is that Strength can change as a result of an 
+	; OnItemEquipped or OnItemUnEquipped event. So we must catch these
+	; and update accordingly. 
+		
 	
-	originalStrength     = npc.GetBaseValue(pStrength)
+	originalCarryWeight     = npc.GetValue(pCarryWeight) As Int
+	originalBaseCarryWeight = -1.0
+	originalStrength        = -1.0
+	originalEndurance       = -1.0
+	
+	
 	originalPerception   = npc.GetBaseValue(pPerception)
-	originalEndurance    = npc.GetBaseValue(pEndurance)
 	originalCharisma     = npc.GetBaseValue(pCharisma)
 	originalIntelligence = npc.GetBaseValue(pIntelligence)
 	originalAgility      = npc.GetBaseValue(pAgility)
@@ -380,12 +650,7 @@ Function initialize()
 	originalRace         = npc.GetRace()
 	originalEssential    = npc.IsEssential()
 	originalProtected    = npc.GetActorBase().IsProtected()
-	
-	if originalCarryWeight < 150
-		Trace("Adjusting Original Carry Weight to 150")
-		originalCarryWeight = 150
-	endif
-	
+		
 	Trace("originalEssential [" + originalEssential + "] (current instance)")
 	Trace("originalProtected [" + originalProtected + "] (ActorBase)")
 	
@@ -507,6 +772,9 @@ Function initialize()
 		corecompanion = true
 		originalHome    = Game.GetForm(0x0001905B) as Location ; CombatZoneLocation
 		originalHomeRef = CaitPostCombatMarker01
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
 		
 	elseif (base == Game.GetForm(0x000179FF) as ActorBase) ; 2 ---=== Codsworth ===---
 	
@@ -514,6 +782,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x0001F229) as Location ; SanctuaryHillsPlayerHouseLocation
         originalHomeRef = CodsworthKitchenMarker
+		originalBaseCarryWeight = 110.0
+		originalStrength        = 9.0
+		originalEndurance       = 7.0
 		
 		f = Game.GetForm(0x0001D566) as Faction ; CrimeConcordArea
 		if (f)
@@ -548,6 +819,9 @@ Function initialize()
 		originalHome    = Game.GetForm(0x0002BE8D) as Location ; Vault81Location
 		originalHomeRef = COMCurieIntroMarker		
 		originalRace = Game.GetForm(0x000359F4) as Race		; HandyRace
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 4.0
 
 		; This actorvalue controls appearance restrictions. We set to human 
 		; So that you can pose Curie once she changes to human. 
@@ -557,6 +831,9 @@ Function initialize()
 	
 		Trace("Danse Detected.")
 		corecompanion = true
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 8.0
 
 		
 		Quest BoS201 = Game.GetForm(0x0002BF21) as Quest
@@ -596,6 +873,9 @@ Function initialize()
 		corecompanion = true
 		originalHome    = Game.GetForm(0x000482C2) as Location ; RailroadHQLocation
 		originalHomeRef = DeaconHomeMarker
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
 
 		f = Game.GetForm(0x000BDAAA) as Faction ; CrimeRailroadHQ
 		if (f)
@@ -616,6 +896,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x00024FAB) as Location ; RedRocketTruckStopLocation
 		originalHomeRef = RedRocketCenterMarker
+		originalBaseCarryWeight = 160.0
+		originalStrength        = 4.0
+		originalEndurance       = 4.0
 		
 		f = Game.GetForm(0x0006E269) as Faction ; DogmeatFaction
 		if (f)
@@ -638,6 +921,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x0002260F) as Location ; GoodneighborOldStateHouseLocation	
 		originalHomeRef = MS04HancockEndMarker
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 8.0
 
 		f = Game.GetForm(0x000228A8) as Faction ; CrimeGoodneighbor
 		if (f)
@@ -664,6 +950,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x0002267F) as Location ; GoodneighborTheThirdRailLocation
 		originalHomeRef = COMMacCreadyStartMarker
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 4.0
 
 		f = Game.GetForm(0x000228A8) as Faction ; CrimeGoodneighbor
 		if (f)
@@ -690,6 +979,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x00003979) as Location ; DiamondCityValentinesLocation
 		originalHomeRef = MS07NickOfficeMarker		
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 8.0
 
 		f = Game.GetForm(0x0003E0C8) as Faction ; CaptiveFaction
 		if (f)
@@ -730,6 +1022,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x00003962) as Location ; DiamondCityPublickOccurrencesLocation
 		originalHomeRef = MQ201BPiperTravelMarker02
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
 
 		f = Game.GetForm(0x00002CB4) as Faction ; CrimeDiamondCity
 		if (f)
@@ -756,6 +1051,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x0001F228) as Location ; SanctuaryHillsLocation
 		originalHomeRef = SanctuaryLocationCenterMarker
+		originalBaseCarryWeight = 150
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
 
 		f = Game.GetForm(0x00068043) as Faction ; MinutemenFaction
 		if (f)
@@ -788,6 +1086,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x0001DAF7) as Location ; TrinityTowerLocation
 		originalHomeRef = MS10SafetyMarker
+		originalBaseCarryWeight = 390.0
+		originalStrength        = 24.0
+		originalEndurance       = 8.0
 
 		if originalCarryWeight < 200
 			originalCarryWeight = 200
@@ -799,6 +1100,9 @@ Function initialize()
 		corecompanion = true
 		originalHome = Game.GetForm(0x001BBC22) as Location ; InstituteSRBLocation	
 		originalHomeRef = InstSceneAlaneJustin1JustinMarker
+		originalBaseCarryWeight = 310.0
+		originalStrength        = 16.0
+		originalEndurance       = 17.0
 		
 		f = Game.GetForm(0x000A95E6) as Faction ; CrimeInstitute
 		if (f)
@@ -820,7 +1124,10 @@ Function initialize()
 		endIf
 		
 	elseif (base == pTweakCompanionNate) ; ---=== Nate ===---	
-	
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 7.0
+
 		Trace("Nate Detected")
 		
 		corecompanion = true
@@ -849,6 +1156,10 @@ Function initialize()
 	
 		Trace("Nora Detected")
 		
+		originalBaseCarryWeight = 150.0
+		originalStrength        = 5.0
+		originalEndurance       = 5.0
+	
 		corecompanion = true
 		originalHome = Game.GetForm(0x0001F229) as Location ; SanctuaryHillsPlayerHouseLocation
 		originalHomeRef = CodsworthKitchenMarker
@@ -893,14 +1204,23 @@ Function initialize()
 					originalHomeRef = RedRocketCenterMarker
 					assignedHome    = originalHome
 					assignedHomeRef = originalHomeRef					
-				endIf				
+				endIf
+				
+				originalBaseCarryWeight = 110.0
+				originalStrength        = 9.0
+				originalEndurance       = 7.0
+				
 			elseif 0x00006E5B == ActorBaseMask ; Longfellow
 				corecompanion = true
+				originalBaseCarryWeight = 150.0
+				originalStrength        = 5.0
+				originalEndurance       = 7.0
+				
 				if pTweakDLC03 && pTweakDLC03.Installed				
 					originalHome    = pTweakDLC03.LongfellowCabinLocation
 					originalHomeRef = pTweakDLC03.DLC03LongfellowCabinRef
 					assignedHome    = originalHome
-					assignedHomeRef = originalHomeRef					
+					assignedHomeRef = originalHomeRef						
 				else
 					; Set to None so that he picks up dynamic assignment... (Drops an XMarker)
 					originalHome    = None
@@ -908,6 +1228,9 @@ Function initialize()
 				endIf
 			elseif 0x0000881D == ActorBaseMask ; Porter Gage
 				corecompanion = true
+				originalBaseCarryWeight = 150.0
+				originalStrength        = 7.0
+				originalEndurance       = 7.0
 				if pTweakDLC04 && pTweakDLC04.Installed				
 					originalHome    = pTweakDLC04.NukaTownUSALocation
 					originalHomeRef = pTweakDLC04.DLC04MQ02OverlookGageMarker
@@ -922,10 +1245,17 @@ Function initialize()
 		endif
 		
 		if !corecompanion
+		
+			originalBaseCarryWeight = npc.GetBaseValue(pCarryWeight)
+			originalStrength        = npc.GetBaseValue(pStrength)
+			originalEndurance       = npc.GetBaseValue(pEndurance)
+		
 			if (CAS)
+				Trace("CAS Detected. Using CAS.HomeLocation")
 				originalHome    = CAS.HomeLocation
 				originalHomeRef = AFTSettlers.LocationToMarker(originalHome)
 			elseif (DAS)
+				Trace("DAS Detected. Using DAS.HomeLocation")
 				originalHome    = DAS.HomeLocation
 				originalHomeRef = AFTSettlers.LocationToMarker(originalHome)
 			endIf
@@ -935,6 +1265,7 @@ Function initialize()
 			WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 			int workshopID = npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
 			if (workshopID > -1)
+				Trace("WNS Detected. Using WNS.WorkshopIDActorValue")
 				originalHome    = AFTSettlers.WorkShopIDToLocation(workshopID)
 				originalHomeRef = AFTSettlers.LocationToWorkShopMarker(originalHome)
 			endif
@@ -945,7 +1276,7 @@ Function initialize()
 			if (workshopID > -1)
 				originalHome    = AFTSettlers.WorkShopIDToLocation(workshopID)
 				originalHomeRef = AFTSettlers.LocationToWorkShopMarker(originalHome)
-			endif		
+			endif
 		endif
 		
 		if (!originalHome)
@@ -974,7 +1305,21 @@ Function initialize()
 		Trace("Faction Scan Complete")
 								
 	endif
+	
+	if originalCarryWeight < 150
+		Trace("Adjusting Original Carry Weight to 150")
+		originalCarryWeight = 150
+	endif
+	if originalBaseCarryWeight < 150.0
+		Trace("Adjusting Original BASE Carry Weight to 150")
+		originalBaseCarryWeight = 150.0
+	endif
+		
 
+	Trace("Original Strength        [" + originalStrength + "]")
+	Trace("Original Endurance       [" + originalEndurance + "]")
+	Trace("Original BaseCarryWeight [" + originalBaseCarryWeight + "]")
+	
 	; Factions can make NPCs start fighting each other. IE: Pickup a synth and a BOS
 	; NPC and they will just start going at it all the time. Strip them of their 
 	; factions and they play nice. 
@@ -1090,10 +1435,16 @@ Function initialize()
 	
 	combatInProgress = false
 	
+	UnregisterForMenuOpenCloseEvent("ContainerMenu")
+	RegisterForMenuOpenCloseEvent("ContainerMenu")
+	
 endFunction
 
 Function EventOnGameLoad()
+	UnregisterForMenuOpenCloseEvent("ContainerMenu")
+	RegisterForMenuOpenCloseEvent("ContainerMenu")
 EndFunction
+
 
 ; Every time they join the PC.
 Function EventFollowingPlayer(bool firstTime=false)
@@ -1166,6 +1517,7 @@ Function UnManage()
 		if assignedHomeRef
 			Keyword	WorkshopKeyword	=	Game.GetForm(0x00054BA7) as Keyword
 			if !assignedHomeRef.HasKeyword(WorkshopKeyword)
+				assignedHomeRef.SetPersistLoc(None)
 				assignedHomeRef.Disable()
 				assignedHomeRef.Delete()
 			endif
@@ -1202,223 +1554,267 @@ Function UnManage()
 	npc.SetValue(pConfidence,  originalConfidence)
 	npc.SetValue(pAssistance,  originalAssistance)
 	
-	if !IsCoreCompanion(npc)	
-		bool clearfactions = true
+	npc.RemovePerk(pTweakDmgResistBoost)
+	npc.RemovePerk(pTweakCarryBoost)
+	npc.RemovePerk(pTweakHealthBoost)
+	npc.RemovePerk(pTweakRangedDmgBoost)
+	
+	; 1.20 : Because of the various import options, it is near impossible 
+	; here to know if it is safe to remove everything. So we are much more
+	; fine grained in our cleanup now:
+	
+	; Remove all the TweakFactions....
+	Trace("Removing From All Tweak Factions")
+	Faction TweakBoomstickFaction     = Game.GetFormFromFile(0x01010E6D,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakBruiserFaction       = Game.GetFormFromFile(0x01010E6E,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakCampOutFitFaction    = Game.GetFormFromFile(0x01035657,"AmazingFollowerTweaks.esp") as Faction			
+	Faction TweakCityOutFitFaction    = Game.GetFormFromFile(0x01035658,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakCombatOutFitFaction  = Game.GetFormFromFile(0x01035656,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakCommandoFaction      = Game.GetFormFromFile(0x01010E6F,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakConvNegToPos         = Game.GetFormFromFile(0x01041598,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakConvPosToNeg         = Game.GetFormFromFile(0x01041599,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakCrimeFaction_Ignored = Game.GetFormFromFile(0x0101BB22,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakEnhancedFaction      = Game.GetFormFromFile(0x01010E83,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakEnterPAFaction       = Game.GetFormFromFile(0x01025B22,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakGunslingerFaction    = Game.GetFormFromFile(0x01010E70,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakHangoutFaction       = Game.GetFormFromFile(0x01013451,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakHomeOutFitFaction    = Game.GetFormFromFile(0x0101FAAE,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakIgnoredFaction       = Game.GetFormFromFile(0x01068A47,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakManagedOutfit        = Game.GetFormFromFile(0x0101F312,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakMedicFaction         = Game.GetFormFromFile(0x01029B3B,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakMedicSpecialFaction  = Game.GetFormFromFile(0x0102B20B,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNinjaFaction         = Game.GetFormFromFile(0x01010E71,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoApprove            = Game.GetFormFromFile(0x01041592,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoCommentActivator   = Game.GetFormFromFile(0x01041596,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoCommentApprove     = Game.GetFormFromFile(0x01041594,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoCommentDisapprove  = Game.GetFormFromFile(0x01041595,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoCommentGeneral     = Game.GetFormFromFile(0x01041593,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoDisapprove         = Game.GetFormFromFile(0x0103FEBC,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoIdleChatter        = Game.GetFormFromFile(0x0104FB5C,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoCasFaction         = Game.GetFormFromFile(0x0103F70B,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakNoRelaxFaction       = Game.GetFormFromFile(0x0103FEBE,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakPackMuleFaction      = Game.GetFormFromFile(0x0106550A,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakPAHelmetCombatToggleFaction = Game.GetFormFromFile(0x0103FEBA,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakPosedFaction         = Game.GetFormFromFile(0x0101FF8F,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakRotateLockFollowerFaction= Game.GetFormFromFile(0x0100C1FB,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakSniperFaction        = Game.GetFormFromFile(0x01010E72,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakStandardOutfitFaction= Game.GetFormFromFile(0x0103658C,"AmazingFollowerTweaks.esp") as Faction
+	Faction TweakSwimOutfitFaction    = Game.GetFormFromFile(0x010106DC,"AmazingFollowerTweaks.esp") as Faction
+	Faction	TweakUseCombatWeaponFaction = Game.GetFormFromFile(0x010265EE,"AmazingFollowerTweaks.esp") as Faction
+	
+	if npc.IsInFaction(pTweakAllowFriendlyFire)
+		npc.RemoveFromFaction(pTweakAllowFriendlyFire)
+	endif
+	if npc.IsInFaction(pTweakAutoStanceFaction)
+		npc.RemoveFromFaction(pTweakAutoStanceFaction)
+	endif
+	if npc.IsInFaction(TweakBoomstickFaction)
+		npc.RemoveFromFaction(TweakBoomstickFaction)
+	endif
+	if npc.IsInFaction(TweakBruiserFaction)
+		npc.RemoveFromFaction(TweakBruiserFaction)
+	endif
+	if npc.IsInFaction(pTweakCampHomeFaction)
+		npc.RemoveFromFaction(pTweakCampHomeFaction)
+	endif
+	if npc.IsInFaction(TweakCampOutFitFaction)
+		npc.RemoveFromFaction(TweakCampOutFitFaction)
+	endif	
+	if npc.IsInFaction(TweakCityOutFitFaction)
+		npc.RemoveFromFaction(TweakCityOutFitFaction)
+	endif
+	if npc.IsInFaction(TweakCombatOutFitFaction)
+		npc.RemoveFromFaction(TweakCombatOutFitFaction)
+	endif
+	if npc.IsInFaction(TweakCommandoFaction)
+		npc.RemoveFromFaction(TweakCommandoFaction)
+	endif
+	if npc.IsInFaction(TweakConvNegToPos)
+		npc.RemoveFromFaction(TweakConvNegToPos)
+	endif
+	if npc.IsInFaction(TweakConvPosToNeg)
+		npc.RemoveFromFaction(TweakConvPosToNeg)
+	endif
+	if npc.IsInFaction(TweakCrimeFaction_Ignored)
+		npc.RemoveFromFaction(TweakCrimeFaction_Ignored)
+	endif
+	if npc.IsInFaction(TweakEnhancedFaction)
+		npc.RemoveFromFaction(TweakEnhancedFaction)
+	endif
+	if npc.IsInFaction(TweakEnterPAFaction)
+		npc.RemoveFromFaction(TweakEnterPAFaction)
+	endif
+	if npc.IsInFaction(pTweakEssentialFaction)
+		npc.RemoveFromFaction(pTweakEssentialFaction)
+	endif
+	if npc.IsInFaction(pTweakFollowerFaction)
+		npc.RemoveFromFaction(pTweakFollowerFaction)
+	endif
+	if npc.IsInFaction(TweakGunslingerFaction)
+		npc.RemoveFromFaction(TweakGunslingerFaction)
+	endif
+	if npc.IsInFaction(TweakHangoutFaction)
+		npc.RemoveFromFaction(TweakHangoutFaction)
+	endif
+	if npc.IsInFaction(TweakHomeOutFitFaction)
+		npc.RemoveFromFaction(TweakHomeOutFitFaction)
+	endif
+	if npc.IsInFaction(TweakIgnoredFaction)
+		npc.RemoveFromFaction(TweakIgnoredFaction)
+	endif
+	if npc.IsInFaction(TweakManagedOutfit)
+		npc.RemoveFromFaction(TweakManagedOutfit)
+	endif
+	if npc.IsInFaction(TweakMedicFaction)
+		npc.RemoveFromFaction(TweakMedicFaction)
+	endif
+	if npc.IsInFaction(TweakMedicSpecialFaction)
+		npc.RemoveFromFaction(TweakMedicSpecialFaction)
+	endif			
+	if npc.IsInFaction(pTweakNamesFaction)
+		npc.RemoveFromFaction(pTweakNamesFaction)
+	endif
+	if npc.IsInFaction(TweakNinjaFaction)
+		npc.RemoveFromFaction(TweakNinjaFaction)
+	endif
+	if npc.IsInFaction(TweakNoApprove)
+		npc.RemoveFromFaction(TweakNoApprove)
+	endif
+	if npc.IsInFaction(TweakNoCommentActivator)
+		npc.RemoveFromFaction(TweakNoCommentActivator)
+	endif
+	if npc.IsInFaction(TweakNoCommentApprove)
+		npc.RemoveFromFaction(TweakNoCommentApprove)
+	endif
+	if npc.IsInFaction(TweakNoCommentDisapprove)
+		npc.RemoveFromFaction(TweakNoCommentDisapprove)
+	endif
+	if npc.IsInFaction(TweakNoCommentGeneral)
+		npc.RemoveFromFaction(TweakNoCommentGeneral)
+	endif
+	if npc.IsInFaction(TweakNoDisapprove)
+		npc.RemoveFromFaction(TweakNoDisapprove)
+	endif
+	if npc.IsInFaction(pTweakNoHomeFaction)
+		npc.RemoveFromFaction(pTweakNoHomeFaction)
+	endif
+	if npc.IsInFaction(TweakNoIdleChatter)
+		npc.RemoveFromFaction(TweakNoIdleChatter)
+	endif
+	if npc.IsInFaction(TweakNoCasFaction)
+		npc.RemoveFromFaction(TweakNoCasFaction)
+	endif
+	if npc.IsInFaction(TweakNoRelaxFaction)
+		npc.RemoveFromFaction(TweakNoRelaxFaction)
+	endif
+	if npc.IsInFaction(TweakPackMuleFaction)
+		npc.RemoveFromFaction(TweakPackMuleFaction)
+	endif
+	if npc.IsInFaction(TweakPAHelmetCombatToggleFaction)
+		npc.RemoveFromFaction(TweakPAHelmetCombatToggleFaction)
+	endif
+	if npc.IsInFaction(TweakPosedFaction)
+		npc.RemoveFromFaction(TweakPosedFaction)
+	endif
+	if npc.IsInFaction(pTweakRangedFaction)
+		npc.RemoveFromFaction(pTweakRangedFaction)
+	endif
+	if npc.IsInFaction(pTweakReadyWeaponFaction)
+		npc.RemoveFromFaction(pTweakReadyWeaponFaction)
+	endif
+	if npc.IsInFaction(TweakRotateLockFollowerFaction)
+		npc.RemoveFromFaction(TweakRotateLockFollowerFaction)
+	endif
+	if npc.IsInFaction(pTweakSkipGoHomeFaction)
+		npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
+	endif
+	if npc.IsInFaction(TweakSniperFaction)
+		npc.RemoveFromFaction(TweakSniperFaction)
+	endif
+	if npc.IsInFaction(TweakStandardOutfitFaction)
+		npc.RemoveFromFaction(TweakStandardOutfitFaction)
+	endif
+	if npc.IsInFaction(TweakSwimOutfitFaction)
+		npc.RemoveFromFaction(TweakSwimOutfitFaction)
+	endif
+	if npc.IsInFaction(pTweakSyncPAFaction)
+		npc.RemoveFromFaction(pTweakSyncPAFaction)
+	endif
+	if npc.IsInFaction(pTweakTrackKills)
+		npc.RemoveFromFaction(pTweakTrackKills)
+	endif
+	if npc.IsInFaction(TweakUseCombatWeaponFaction)
+		npc.RemoveFromFaction(TweakUseCombatWeaponFaction)
+	endif	
+	
+	if !IsCoreCompanion(npc)
+	
+;		bool clearAll = true
 		ActorBase base  = npc.GetActorBase()
 		int ActorBaseID = base.GetFormID()
 		
-		if ActorBaseID > 0x00ffffff
-			clearfactions = false
-			
-			TweakDLC01Script pTweakDLC01 = TweakDLC01 as TweakDLC01Script
-			TweakDLC03Script pTweakDLC03 = TweakDLC03 as TweakDLC03Script
-			TweakDLC04Script pTweakDLC04 = TweakDLC04 as TweakDLC04Script
-			int pluginID = GetPluginID(ActorBaseID)
-			
-			if pTweakDLC01 && pTweakDLC01.Installed
-				if pluginID == pTweakDLC01.resourceID
-					clearfactions = true
-				endif
-			endif
-			if pTweakDLC03 && pTweakDLC03.Installed
-				if pluginID == pTweakDLC03.resourceID
-					clearfactions = true
-				endIf
-			endIf
-			if pTweakDLC04 && pTweakDLC04.Installed
-				if pluginID == pTweakDLC04.resourceID
-					clearfactions = true
-				endIf
-			endIf
-		endIf
-
-		; 0x0002C125 = Salem Faction....
-		if clearfactions && !npc.IsInFaction(Game.GetForm(0x0002C125) as Faction)
-			npc.RemoveFromAllFactions()
-			int numFactions = originalFactions.Length
-			int i = 1 ; intentionally 1
-			while (i < numFactions)
-				npc.AddToFaction(originalFactions[i])
-				i += 1
-			endWhile
-			; npc.AddToFaction(PlayerFaction)
-			if (originalCrimeFaction)
-				npc.AddToFaction(originalCrimeFaction)
-				originalCrimeFaction = None
-				npc.MakePlayerFriend() ; In case PC attacked their faction
-			endif
-		else
-			; Remove all the TweakFactions....
-			Faction TweakBoomstickFaction     = Game.GetFormFromFile(0x01010E6D,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakBruiserFaction       = Game.GetFormFromFile(0x01010E6E,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakCampOutFitFaction    = Game.GetFormFromFile(0x01035657,"AmazingFollowerTweaks.esp") as Faction			
-			Faction TweakCityOutFitFaction    = Game.GetFormFromFile(0x01035658,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakCombatOutFitFaction  = Game.GetFormFromFile(0x01035656,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakCommandoFaction      = Game.GetFormFromFile(0x01010E6F,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakConvNegToPos         = Game.GetFormFromFile(0x01041598,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakConvPosToNeg         = Game.GetFormFromFile(0x01041599,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakCrimeFaction_Ignored = Game.GetFormFromFile(0x0101BB22,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakEnhancedFaction      = Game.GetFormFromFile(0x01010E83,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakEnterPAFaction       = Game.GetFormFromFile(0x01025B22,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakGunslingerFaction    = Game.GetFormFromFile(0x01010E70,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakHangoutFaction       = Game.GetFormFromFile(0x01013451,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakHomeOutFitFaction    = Game.GetFormFromFile(0x0101FAAE,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakIgnoredFaction       = Game.GetFormFromFile(0x01068A47,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakManagedOutfit        = Game.GetFormFromFile(0x0101F312,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNinjaFaction         = Game.GetFormFromFile(0x01010E71,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoApprove            = Game.GetFormFromFile(0x01041592,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoCommentActivator   = Game.GetFormFromFile(0x01041596,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoCommentApprove     = Game.GetFormFromFile(0x01041594,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoCommentDisapprove  = Game.GetFormFromFile(0x01041595,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoCommentGeneral     = Game.GetFormFromFile(0x01041593,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoDisapprove         = Game.GetFormFromFile(0x0103FEBC,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoIdleChatter        = Game.GetFormFromFile(0x0104FB5C,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoCasFaction         = Game.GetFormFromFile(0x0103F70B,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakNoRelaxFaction       = Game.GetFormFromFile(0x0103FEBE,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakPackMuleFaction      = Game.GetFormFromFile(0x0106550A,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakPAHelmetCombatToggleFaction = Game.GetFormFromFile(0x0103FEBA,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakPosedFaction         = Game.GetFormFromFile(0x0101FF8F,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakRotateLockFollowerFaction= Game.GetFormFromFile(0x0100C1FB,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakSniperFaction        = Game.GetFormFromFile(0x01010E72,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakStandardOutfitFaction= Game.GetFormFromFile(0x0103658C,"AmazingFollowerTweaks.esp") as Faction
-			Faction TweakSwimOutfitFaction    = Game.GetFormFromFile(0x010106DC,"AmazingFollowerTweaks.esp") as Faction
-			
-			if npc.IsInFaction(pTweakAllowFriendlyFire)
-				npc.RemoveFromFaction(pTweakAllowFriendlyFire)
-			endif
-			if npc.IsInFaction(pTweakAutoStanceFaction)
-				npc.RemoveFromFaction(pTweakAutoStanceFaction)
-			endif
-			if npc.IsInFaction(TweakBoomstickFaction)
-				npc.RemoveFromFaction(TweakBoomstickFaction)
-			endif
-			if npc.IsInFaction(TweakBruiserFaction)
-				npc.RemoveFromFaction(TweakBruiserFaction)
-			endif
-			if npc.IsInFaction(pTweakCampHomeFaction)
-				npc.RemoveFromFaction(pTweakCampHomeFaction)
-			endif
-			if npc.IsInFaction(TweakCampOutFitFaction)
-				npc.RemoveFromFaction(TweakCampOutFitFaction)
-			endif	
-			if npc.IsInFaction(TweakCityOutFitFaction)
-				npc.RemoveFromFaction(TweakCityOutFitFaction)
-			endif
-			if npc.IsInFaction(TweakCombatOutFitFaction)
-				npc.RemoveFromFaction(TweakCombatOutFitFaction)
-			endif
-			if npc.IsInFaction(TweakCommandoFaction)
-				npc.RemoveFromFaction(TweakCommandoFaction)
-			endif
-			if npc.IsInFaction(TweakConvNegToPos)
-				npc.RemoveFromFaction(TweakConvNegToPos)
-			endif
-			if npc.IsInFaction(TweakConvPosToNeg)
-				npc.RemoveFromFaction(TweakConvPosToNeg)
-			endif
-			if npc.IsInFaction(TweakCrimeFaction_Ignored)
-				npc.RemoveFromFaction(TweakCrimeFaction_Ignored)
-			endif
-			if npc.IsInFaction(TweakEnhancedFaction)
-				npc.RemoveFromFaction(TweakEnhancedFaction)
-			endif
-			if npc.IsInFaction(TweakEnterPAFaction)
-				npc.RemoveFromFaction(TweakEnterPAFaction)
-			endif
-			if npc.IsInFaction(pTweakEssentialFaction)
-				npc.RemoveFromFaction(pTweakEssentialFaction)
-			endif
-			if npc.IsInFaction(pTweakFollowerFaction)
-				npc.RemoveFromFaction(pTweakFollowerFaction)
-			endif
-			if npc.IsInFaction(TweakGunslingerFaction)
-				npc.RemoveFromFaction(TweakGunslingerFaction)
-			endif
-			if npc.IsInFaction(TweakHangoutFaction)
-				npc.RemoveFromFaction(TweakHangoutFaction)
-			endif
-			if npc.IsInFaction(TweakHomeOutFitFaction)
-				npc.RemoveFromFaction(TweakHomeOutFitFaction)
-			endif
-			if npc.IsInFaction(TweakIgnoredFaction)
-				npc.RemoveFromFaction(TweakIgnoredFaction)
-			endif
-			if npc.IsInFaction(TweakManagedOutfit)
-				npc.RemoveFromFaction(TweakManagedOutfit)
-			endif
-			if npc.IsInFaction(pTweakNamesFaction)
-				npc.RemoveFromFaction(pTweakNamesFaction)
-			endif
-			if npc.IsInFaction(TweakNinjaFaction)
-				npc.RemoveFromFaction(TweakNinjaFaction)
-			endif
-			if npc.IsInFaction(TweakNoApprove)
-				npc.RemoveFromFaction(TweakNoApprove)
-			endif
-			if npc.IsInFaction(TweakNoCommentActivator)
-				npc.RemoveFromFaction(TweakNoCommentActivator)
-			endif
-			if npc.IsInFaction(TweakNoCommentApprove)
-				npc.RemoveFromFaction(TweakNoCommentApprove)
-			endif
-			if npc.IsInFaction(TweakNoCommentDisapprove)
-				npc.RemoveFromFaction(TweakNoCommentDisapprove)
-			endif
-			if npc.IsInFaction(TweakNoCommentGeneral)
-				npc.RemoveFromFaction(TweakNoCommentGeneral)
-			endif
-			if npc.IsInFaction(TweakNoDisapprove)
-				npc.RemoveFromFaction(TweakNoDisapprove)
-			endif
-			if npc.IsInFaction(pTweakNoHomeFaction)
-				npc.RemoveFromFaction(pTweakNoHomeFaction)
-			endif
-			if npc.IsInFaction(TweakNoIdleChatter)
-				npc.RemoveFromFaction(TweakNoIdleChatter)
-			endif
-			if npc.IsInFaction(TweakNoCasFaction)
-				npc.RemoveFromFaction(TweakNoCasFaction)
-			endif
-			if npc.IsInFaction(TweakNoRelaxFaction)
-				npc.RemoveFromFaction(TweakNoRelaxFaction)
-			endif
-			if npc.IsInFaction(TweakPackMuleFaction)
-				npc.RemoveFromFaction(TweakPackMuleFaction)
-			endif
-			if npc.IsInFaction(TweakPAHelmetCombatToggleFaction)
-				npc.RemoveFromFaction(TweakPAHelmetCombatToggleFaction)
-			endif
-			if npc.IsInFaction(TweakPosedFaction)
-				npc.RemoveFromFaction(TweakPosedFaction)
-			endif
-			if npc.IsInFaction(pTweakRangedFaction)
-				npc.RemoveFromFaction(pTweakRangedFaction)
-			endif
-			if npc.IsInFaction(pTweakReadyWeaponFaction)
-				npc.RemoveFromFaction(pTweakReadyWeaponFaction)
-			endif
-			if npc.IsInFaction(TweakRotateLockFollowerFaction)
-				npc.RemoveFromFaction(TweakRotateLockFollowerFaction)
-			endif
-			if npc.IsInFaction(pTweakSkipGoHomeFaction)
-				npc.RemoveFromFaction(pTweakSkipGoHomeFaction)
-			endif
-			if npc.IsInFaction(TweakSniperFaction)
-				npc.RemoveFromFaction(TweakSniperFaction)
-			endif
-			if npc.IsInFaction(TweakStandardOutfitFaction)
-				npc.RemoveFromFaction(TweakStandardOutfitFaction)
-			endif
-			if npc.IsInFaction(TweakSwimOutfitFaction)
-				npc.RemoveFromFaction(TweakSwimOutfitFaction)
-			endif
-			if npc.IsInFaction(pTweakSyncPAFaction)
-				npc.RemoveFromFaction(pTweakSyncPAFaction)
-			endif
-			if npc.IsInFaction(pTweakTrackKills)
-				npc.RemoveFromFaction(pTweakTrackKills)
-			endif
+		if ActorBaseID < 0x01000000
+			npc.RemoveFromFaction(Game.GetForm(0x000A1B85) as Faction) ; HasBeenCompanion
+			npc.RemovePerk(pCompanionInspirational)
+			npc.RemoveSpell(pAbMagLiveLoveCompanionPerks)
+			npc.RemovePerk(Sneak01)
+			npc.RemovePerk(Sneak02)
+			npc.RemovePerk(Sneak03)
+			npc.RemovePerk(Sneak04)
+			npc.RemovePerk(ImmuneToRadiation)		
 		endif
+
+		; In Case they used the Voice Menu to assign an override...
+		npc.SetOverrideVoiceType(None)
+		
+;		TweakDLC01Script pTweakDLC01 = TweakDLC01 as TweakDLC01Script
+;		TweakDLC03Script pTweakDLC03 = TweakDLC03 as TweakDLC03Script
+;		TweakDLC04Script pTweakDLC04 = TweakDLC04 as TweakDLC04Script
+;		int pluginID = GetPluginID(ActorBaseID)
+;		
+;		if pTweakDLC01 && pTweakDLC01.Installed
+;			if pluginID == pTweakDLC01.resourceID
+;				clearAll = false
+;			endif
+;		endif
+;		if pTweakDLC03 && pTweakDLC03.Installed
+;			if pluginID == pTweakDLC03.resourceID
+;				clearAll = false
+;			endIf
+;		endIf
+;		if pTweakDLC04 && pTweakDLC04.Installed
+;			if pluginID == pTweakDLC04.resourceID
+;				clearAll = false
+;			endIf
+;		endIf
+		
+;		if clearAll
+;
+;		endif
+		
+	endif
+			
+	Trace("Restoring Original Factions")
+	int numFactions = originalFactions.Length
+	int i = 1 ; intentionally 1
+	
+	; What if they were in DisallowedCompanionFaction and you force 
+	; recruited them anyway? Then they would be returned to that. But 
+	; that may be bad if the user turns around and re-installs. The 
+	; Companion would not be auto-imported in that case. 
+	
+	Faction DisallowedCompanionFaction = Game.GetForm(0x00075D76) as Faction
+	while (i < numFactions)
+		if originalFactions[i] != DisallowedCompanionFaction
+			npc.AddToFaction(originalFactions[i])
+		endif
+		i += 1
+	endWhile
+	
+	if (originalCrimeFaction)
+		npc.AddToFaction(originalCrimeFaction)
+		originalCrimeFaction = None
+		npc.MakePlayerFriend() ; In case PC attacked their faction
 	endif
 		
 	if npc.HasKeyword(pTeammateReadyWeapon_DO)
@@ -1792,24 +2188,24 @@ Function SetFollowerStanceDefensive()
 EndFunction
 
 Function SetPackMule(bool enabled=true)
+	Actor npc = self.GetActorRef()
 	if enabled
-		enforceCarryWeight = 2000		
+		if !npc.IsInFaction(pTweakPackMuleFaction)
+			npc.AddToFaction(pTweakPackMuleFaction)
+		endif		
+		if 1.0 == TweakAllowAutonomousPickup.GetValue()
+			enforceCarryWeight = 2000		
+			enforceSettings()
+		endif
 	else
-		enforceCarryWeight = -1
-		Trace("SetPackMule : Original CarryWeight [" + originalCarryWeight + "]")
-
-		if originalCarryWeight < 150
-			Trace("Adjusting to 150 (too small)")
-			originalCarryWeight = 150
+		if npc.IsInFaction(pTweakPackMuleFaction)
+			npc.RemoveFromFaction(pTweakPackMuleFaction)
 		endif
-		if originalCarryWeight > 260
-			Trace("Adjusting to 150 (Too large)")
-			originalCarryWeight = 150
+		if 1.0 == TweakAllowAutonomousPickup.GetValue()
+			ResetCarryWeight()
+			enforceSettings()
 		endif
-		Trace("Restoring")
-		self.GetActorRef().SetValue(pCarryWeight, originalCarryWeight)
-	endIf
-	enforceSettings()
+	endif
 EndFunction
 
 ; Home is more complicated than it should be. 
@@ -1879,7 +2275,7 @@ Function AssignHome()
 	bool camphomeFaction = false
 	
 	if (pTweakDismissScript)
-		choice = pTweakDismissScript.ShowMenu(npc,originalHome)
+		choice = pTweakDismissScript.ShowMenu(npc,originalHome, assignedHome)
 		trace("choice = [" + choice + "]")
 	endif
 
@@ -1909,7 +2305,7 @@ Function AssignHome()
 			; for imported NPCs), and the NPC is ghoul, human, robot and !WNS,
 			; then make them a TweakSettler
 		
-			AssignHomeHelper(npc)
+			AssignHomeHelper(npc, false)
 
 			; Note : values checked above. We shouldn't get this far if either is NONE
 			((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHome    = assignedHome
@@ -1938,7 +2334,7 @@ Function AssignHome()
 	
 	
 	if (1 == choice) ; Current Location
-	
+		bool isSettlement = false
 		; Cleanup
 		AssignCleanHelper(npc)
 				
@@ -1960,12 +2356,14 @@ Function AssignHome()
 					assignedHomeRef = workshopRef
 					assignedHome = workshopRef.GetCurrentLocation()
  					origin = pc
+					isSettlement = true
 				else					
 					workshopRef = FindNearbyWorkshop(npc)
 					if workshopRef
 						assignedHomeRef = workshopRef
 						assignedHome = workshopRef.GetCurrentLocation()
 						origin = npc
+						isSettlement = true
 					endIf
 				endIf
 			endIf
@@ -1984,16 +2382,35 @@ Function AssignHome()
 				if workshopRef
 					assignedHomeRef = workshopRef
  					origin = pc
+					isSettlement = true
 				else					
 					workshopRef = FindNearbyWorkshop(npc)
 					if workshopRef
 						assignedHomeRef = workshopRef
 						origin = npc
+						isSettlement = true
 					endIf
 				endIf				
 			endif
 			
-			AssignHomeHelper(npc) 
+			if !isSettlement
+				; Confirm
+				if AFTSettlers
+					if AFTSettlers.LocationToWorkShop(assignedHome)
+						isSettlement = true
+					elseif assignedHomeRef as WorkshopScript
+						isSettlement = true
+					endif
+				else
+					if pWorkshopParent.GetWorkshopFromLocation(assignedHome)
+						isSettlement = true
+					elseif assignedHomeRef as WorkshopScript
+						isSettlement = true
+					endif
+				endif				
+			endif
+			
+			AssignHomeHelper(npc, isSettlement) 
 			
 			; Codsworth Check
 			if npc.GetActorBase() == (Game.GetForm(0x000179FF) as ActorBase)
@@ -2009,7 +2426,8 @@ Function AssignHome()
 				
 		if !assignedHomeRef
 			dynamicAssignment = true
-			assignedHomeRef   = origin.PlaceAtMe(XMarkerHeading, 1, true)		
+			assignedHomeRef   = origin.PlaceAtMe(XMarkerHeading, 1, true)
+			assignedHomeRef.SetPersistLoc(origin.GetCurrentLocation())
 		endif
 		
 		npc.SetLinkedRef(assignedHomeRef, pTweakLocHome)
@@ -2036,7 +2454,7 @@ Function AssignHome()
 		assignedHome    = pTweakCampLocation
 		assignedHomeRef = pAftMapMarker
 		
-		AssignHomeHelper(npc)
+		AssignHomeHelper(npc, false)
 		
 		npc.SetLinkedRef(assignedHomeRef, pTweakLocHome)
 		((self as ReferenceAlias) as AFT:TweakInventoryControl).assignedHome    = assignedHome
@@ -2144,8 +2562,24 @@ Function enforceSettings()
 		npc.SetEssential(false)
 	endif
 
+;	if (0.0 == TweakAllowAutonomousPickup.GetValue())
+;		npc.SetValue(pCarryWeight,0)
+;		Utility.WaitMenuMode(1.0)
+;		float currentCarryWeight = npc.GetValue(pCarryWeight)
+;		if (currentCarryWeight > 0)
+;			npc.SetValue(pCarryWeight,(currentCarryWeight * -1))
+;		endif
+;	endif		
+	
 	if enforceCarryWeight > -1
+		npc.ModValue(pCarryWeight, 0)			
 		npc.SetValue(pCarryWeight, enforceCarryWeight)
+		Utility.WaitMenuMode(0.1)
+		float currentCarryWeight = npc.GetValue(pCarryWeight)
+		if (currentCarryWeight != enforceCarryWeight)
+			float diff = (enforceCarryWeight - currentCarryWeight)
+			npc.ModValue(pCarryWeight, diff)			
+		endif
 	endif
 	
 	if (enforceAggression < 2)
@@ -2390,6 +2824,7 @@ Function AssignCleanHelper(Actor npc)
 			Keyword	WorkshopKeyword	=	Game.GetForm(0x00054BA7) as Keyword
 			npc.SetLinkedRef(None, pTweakLocHome)
 			if !assignedHomeRef.HasKeyword(WorkshopKeyword)
+				assignedHomeRef.SetPersistLoc(None)
 				assignedHomeRef.Disable()
 				assignedHomeRef.Delete()
 			endif
@@ -2403,17 +2838,36 @@ Function AssignCleanHelper(Actor npc)
 
 endFunction
 
-Function AssignHomeHelper(Actor npc)
-
+Function AssignHomeHelper(Actor npc, bool isSettlement=true)
+	Trace("AssignHomeHelper")
+	
+	CompanionActorScript	CAS				=	npc as CompanionActorScript
+	if (CAS)
+		Trace("Updating CAS.HomeLocation")
+		CAS.HomeLocation = assignedHome
+	else
+		DogmeatActorScript   DAS = npc as DogmeatActorScript		
+		if (DAS)
+			Trace("Updating DAS.HomeLocation")
+			DAS.HomeLocation = assignedHome
+		endif
+	endif	
+	
 	; When this method is called, certain class instance variables are expeceted to be set:
 	; assignHome <- Location to assign
 	
 	WorkshopNPCScript		WNS				=	npc as WorkshopNPCScript
-	CompanionActorScript	CAS				=	npc as CompanionActorScript
 	WorkshopParentScript	pWorkshopParent	=	(Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
 	AFT:TweakSettlersScript	AFTSettlers		=	(pTweakSettlers as AFT:TweakSettlersScript)
 	
 	if AFTSettlers
+			
+		if !isSettlement
+			Trace("isSettlement is False. Calling UnMakeSettler")
+			AFTSettlers.UnMakeSettler(npc, true)
+			return
+		endif
+		
 			
 		; May want to restrict AFT Settlers to humans and robots. (No cats, dogs, Behomeths, insects, etc...)
 		; For now no restrictions
@@ -2423,12 +2877,16 @@ Function AssignHomeHelper(Actor npc)
 		; Keyword ActorTypeRobot               = Game.GetForm(0x0002CB73) as Keyword
 				
 		; if (npc.HasKeyword(ActorTypeHuman) || npc.HasKeyword(ActorTypeGhoul) || npc.HasKeyword(ActorTypeRobot))					
-			
+		
+		; MakeSettler will return false if the assignedHome Location passed in is not associated with a Workshop		
+		; It does NOT however look around for nearby workshops. 
+		
 		if AFTSettlers.MakeSettler(npc, assignedHome, false)
 			npc.AddToFaction(pTweakSkipGoHomeFaction)
 		elseif assignedHome		
 			; assignHome is not a workshop....
 			if (npc.IsInFaction(pTweakSettlerFaction))
+				Trace("Calling UnMakeSettler")			
 				AFTSettlers.UnMakeSettler(npc)
 			endif
 			if (WNS && WNS.GetWorkshopID() != -1)
@@ -2442,7 +2900,9 @@ Function AssignHomeHelper(Actor npc)
 								
 	else
 			
-		Trace("AFTSettlers failed to caste")
+		; Hopefully this never runs, but it is backup code just in case.
+		
+		Trace("ERROR : AFTSettlers failed to caste!!!!!!!")
 		if (WNS)
 			if (WNS.GetWorkshopID() != -1)
 				pWorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
@@ -2467,16 +2927,6 @@ Function AssignHomeHelper(Actor npc)
 				
 	endif
 			
-	if (CAS)
-		Trace("Updating CAS.HomeLocation")
-		CAS.HomeLocation = assignedHome
-	else
-		DogmeatActorScript   DAS = npc as DogmeatActorScript		
-		if (DAS)
-			Trace("Updating DAS.HomeLocation")
-			DAS.HomeLocation = assignedHome
-		endif
-	endif	
 
 EndFunction
 
@@ -2540,7 +2990,57 @@ EndFunction
 ;	return None
 ;EndFunction
 
+Event OnSit(ObjectReference akFurniture)
+	Trace("OnSit [" + akFurniture + "]")
+	if akFurniture.HasKeyword(pFurnitureTypePowerArmor)
+		if (1.0 == TweakAllowAutonomousPickup.GetValue())
+			ResetCarryWeight()
+		endif
+		enforceSettings()
+	endif
+EndEvent
 
+Event OnGetUp(ObjectReference akFurniture)
+	Trace("OnGetUp()")
+	if (akFurniture.HasKeyword(pFurnitureTypePowerArmor))
+		if (1.0 == TweakAllowAutonomousPickup.GetValue())
+			ResetCarryWeight()
+		endif
+		enforceSettings()
+	endif
+EndEvent
+
+Event OnItemEquipped(Form akBaseItem, ObjectReference akReference)
+	Trace("OnItemEquipped()")
+	Actor npc = self.GetActorRef()
+	if (enforceCarryWeight != npc.GetValue(pCarryWeight))
+		if (0.0 == TweakAllowAutonomousPickup.GetValue())
+			if TradeMenuOpen
+				ResetCarryWeight()
+				enforceSettings()
+			else
+				; enforceCarryWeight = 0
+				enforceSettings()
+			endif
+		endIf
+	endif
+EndEvent
+
+Event OnItemUnEquipped(Form akBaseItem, ObjectReference akReference)
+	Trace("OnItemUnEquipped()")
+	Actor npc = self.GetActorRef()
+	if (enforceCarryWeight != npc.GetValue(pCarryWeight))
+		if (0.0 == TweakAllowAutonomousPickup.GetValue())
+			if TradeMenuOpen
+				ResetCarryWeight()
+				enforceSettings()
+			else
+				; enforceCarryWeight = 0
+				enforceSettings()
+			endif
+		endIf
+	endif
+EndEvent
 
 Int Function GetPluginID(int formid)
 	int fullid = formid
@@ -2550,4 +3050,12 @@ Int Function GetPluginID(int formid)
 	int lastsix = fullid % 0x01000000
 	return (((formid - lastsix)/0x01000000) as Int)
 EndFunction 
+
+Function EventTradeBegin()
+	; Deprecated
+EndFunction
+
+Function EventTradeEnd()
+	; Deprecated
+EndFunction
 
