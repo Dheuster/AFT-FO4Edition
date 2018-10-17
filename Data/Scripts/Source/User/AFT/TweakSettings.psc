@@ -217,6 +217,7 @@ int		Property numKilled			Auto Hidden
 
 ; Constants
 int ONLOAD_FLOOD_PROTECT      = 998 const
+int	COMBATEND_DELAYED		  = 995 const
 ; int ONHIT_FLOOD_PROTECT       = 997 const
 
 float TradeHealth
@@ -358,6 +359,9 @@ Function v20upGrade()
 		endIf
 	endif
 	
+	if combatInProgress
+		OnCombatEnd()
+	endif
 	; As much as I want to do this, it could also cause population to spike and food to no longer
 	; be adequate at a number of settlements. I could see this upsetting users. So for now, we will
 	; not auto-import Managed NPCs to Settlers during an upgrade...
@@ -1967,27 +1971,29 @@ endFunction
 
 Actor[] targets = None
 
-; This is the only script that relays cstat 0
+; cState 0 is unreliable. When the player has companions, only the last companion to deal 
+; a killing blow receives the 0 state. And if the player deals the killing blow, no one
+; receives it. Pre 1.2, we attempted to centralize events so that "whoever" got state
+; 0 sent it to TweakFollowerScript who then relayed the event to eveyone else. However, 
+; that wasn't reliable. So starting with 1.20 we use a renewable timer that calls
+; a function on TweakFollowerScript to get the CombatStatus of the team. Timer will
+; keep renewing until none of the team members (or the player if playing solo) have
+; an active target. This causes a delay so that combat end event fires... 19 to 24 seconds
+; after combat actually ends. However, I felt this was a good thing. It gives the 
+; player time to initiate combat with someone else without the party do too much 
+; cleanup and is more realistic from the perspective of outfits, etc... People
+; don't put there normal clothes on the SECOND the last enemy falls. 
 Event OnCombatStateChanged(Actor akTarget, int cState)
-
-	if (1 != cState)	
-		if (0 == cState)
-			AFT:TweakFollowerScript pTweakFollowerScript = (self.GetOwningQuest() as AFT:TweakFollowerScript)
-			if pTweakFollowerScript
-				; Trace("Calling TweakFollowerScript.CombatStateChanged(0)")
-				pTweakFollowerScript.CombatStateChanged(0)
-			else
-				Trace("Cast to TweakFollowerScript failed. Unable to call CombatStateChanged(0)")
-				OnCombatEnd()
-			endif	
-		endIf
-		return		
-	endif
-
+	Trace("OnCombatStateChanged [" + cState + "]")
 	Actor npc = self.GetActorRef()
-	
+			
+	if (1 != cState)
+		Trace("cState is not 1, returning")
+		return
+	endIf
+		
+	; 1 == cState : Combat Started/ New Target Aquired
 	if (akTarget)
-		; 1 == cState
 		if (akTarget == Game.GetPlayer())
 			if !npc.IsInFaction(pTweakAllowFriendlyFire)
 				npc.StopCombat()
@@ -1996,23 +2002,13 @@ Event OnCombatStateChanged(Actor akTarget, int cState)
 				Utility.wait(0.1)
 				return
 			endif
-		elseif (akTarget.IsPlayerTeammate())
-		
-			; If NPC goes hostile on player because of friendly fire, we still
-			; want to allow companions to defend player.
-			
-			; npc.StopCombat()		
-			; npc.SetRelationshipRank(akTarget, 3)
-			; akTarget.SetRelationshipRank(npc, 3)
-			; Utility.wait(0.1)
-			
-			return
+		elseif (akTarget.IsInFaction(pTweakFollowerFaction))
+			npc.StopCombat()
+			npc.StopCombatAlarm()
+			akTarget.StopCombat()
+			akTarget.StopCombatAlarm()
 		endif
-	endIf
 		
-	if !npc.IsInFaction(pCurrentCompanionFaction)
-		Trace("Not in CurrentCompanionFaction, Bailing.")
-		return
 	endIf
 	
 	if (!combatInProgress)
@@ -2021,54 +2017,120 @@ Event OnCombatStateChanged(Actor akTarget, int cState)
 		Trace("Ignoring Event. CombatInProgress already true")
 	endif
 	
-	if !trackKills
-		return
-	endif
-	
-	int i = 0
-	int numtargets;
-	if targets
+	if trackKills && npc.IsInFaction(pCurrentCompanionFaction)
+		int i = 0
+		int numtargets;
+		if targets
+			numtargets = targets.length
+			while (i < numtargets)
+				Actor theTarget = targets[i]
+				if !theTarget.IsDead()
+					UnRegisterForRemoteEvent(theTarget, "OnDeath")
+					UnRegisterForHitEvent(theTarget, self.GetActorRef())
+				endif
+				i += 1
+			endwhile
+			targets.clear()
+		endIf
+		
+		targets = npc.GetAllCombatTargets()
 		numtargets = targets.length
+		i = 0
 		while (i < numtargets)
 			Actor theTarget = targets[i]
 			if !theTarget.IsDead()
-				UnRegisterForRemoteEvent(theTarget, "OnDeath")
-				UnRegisterForHitEvent(theTarget, self.GetActorRef())
+				; Trace("Registering for OnDeath/OnHit [" + theTarget + "]")
+				RegisterForRemoteEvent(theTarget, "OnDeath")
+				RegisterForHitEvent(theTarget, self.GetActorRef())
 			endif
 			i += 1
 		endwhile
-		targets.clear()
 	endIf
-	
-	targets = npc.GetAllCombatTargets()
-	numtargets = targets.length
-	i = 0
-	while (i < numtargets)
-		Actor theTarget = targets[i]
-		if !theTarget.IsDead()
-			; Trace("Registering for OnDeath/OnHit [" + theTarget + "]")
-			RegisterForRemoteEvent(theTarget, "OnDeath")
-			RegisterForHitEvent(theTarget, self.GetActorRef())
-		endif
-		i += 1
-	endwhile
 	
 endEvent
 
 Function OnCombatBegin()
-	AFT:TweakFollowerScript pTweakFollowerScript = (self.GetOwningQuest() as AFT:TweakFollowerScript)
-	if pTweakFollowerScript
-		Trace("Calling TweakFollowerScript.CombatStateChanged(1)")
-		pTweakFollowerScript.CombatStateChanged(1)
+	Trace("OnCombatBegin()")
+	combatInProgress = true
+	Var[] noparams = new Var[0]
+	Trace("Sending Relay Event to TweakInventoryControl")
+	ReferenceAlias r = (self as ReferenceAlias)
+	if r
+		TweakInventoryControl pTweakInventoryControl = (r as TweakInventoryControl)
+		if pTweakInventoryControl
+			Trace("Sending Event OnCombatBegin")
+			pTweakInventoryControl.CallFunctionNoWait("OnCombatBegin",noparams)
+		else
+			Trace("Caste to TweakInventoryControl Failed!")		
+		endif
+		TweakMedical pTweakMedical = (r as TweakMedical)
+		if pTweakMedical
+			Trace("Sending Event OnCombatBegin")
+			pTweakMedical.CallFunctionNoWait("OnCombatBegin",noparams)
+		else
+			Trace("Caste to TweakMedical Failed!")		
+		endif
+		
 	else
-		Trace("Cast to TweakFollowerScript failed. Unable to call CombatStateChanged(1)")
-	endif
+		Trace("Caste to ReferenceAlias Failed!")
+	endif	
+	StartTimer((20 + Utility.RandomInt(-5,5)),COMBATEND_DELAYED)
 EndFunction
+
+Function OnCombatPeriodic()
+	Trace("OnCombatPeriodic()")
+	Var[] noparams = new Var[0]
+	ReferenceAlias r = (self as ReferenceAlias)
+	if r
+		TweakInventoryControl pTweakInventoryControl = (r as TweakInventoryControl)
+		if pTweakInventoryControl
+			Trace("Sending Event OnCombatPeriodic")
+			pTweakInventoryControl.CallFunctionNoWait("OnCombatPeriodic",noparams)
+		else
+			Trace("Caste to TweakInventoryControl Failed!")		
+		endif
+		TweakMedical pTweakMedical = (r as TweakMedical)
+		if pTweakMedical
+			Trace("Sending Event OnCombatPeriodic")
+			pTweakMedical.CallFunctionNoWait("OnCombatPeriodic",noparams)
+		else
+			Trace("Caste to TweakMedical Failed!")		
+		endif
+		
+	else
+		Trace("Caste to ReferenceAlias Failed!")
+	endif		
+EndFunction
+
 
 ; Typically called by TweakFollowersScript. RelayCombatEnd, which means you can't assume the npc
 ; is still alive or enabled...
 Function OnCombatEnd()
-
+	Trace("OnCombatEnd()")
+	combatInProgress = false
+	CancelTimer(COMBATEND_DELAYED)
+	Var[] noparams = new Var[0]
+	ReferenceAlias r = (self as ReferenceAlias)
+	if r
+		TweakInventoryControl pTweakInventoryControl = (r as TweakInventoryControl)
+		if pTweakInventoryControl
+			Trace("Sending Event OnCombatEnd")
+			pTweakInventoryControl.CallFunctionNoWait("OnCombatEnd",noparams)
+		else
+			Trace("Caste to TweakInventoryControl Failed!")		
+		endif
+		TweakMedical pTweakMedical = (r as TweakMedical)
+		if pTweakMedical
+			Trace("Sending Event OnCombatEnd")
+			pTweakMedical.CallFunctionNoWait("OnCombatEnd",noparams)
+		else
+			Trace("Caste to TweakMedical Failed!")		
+		endif
+		
+	else
+		Trace("Caste to ReferenceAlias Failed!")
+	endif			
+	
 	if !trackKills
 		return
 	endif
@@ -2085,6 +2147,31 @@ Function OnCombatEnd()
 	targets = None
 		
 EndFunction
+
+Event OnTimer(int akTimerId)
+	if (ONLOAD_FLOOD_PROTECT == akTimerId)
+		OnLoadHelper()
+		return
+	endif
+	if (COMBATEND_DELAYED == akTimerID)
+		bool companionsInCombat = false
+		AFT:TweakFollowerScript pTweakFollowerScript = (self.GetOwningQuest() as AFT:TweakFollowerScript)
+		if pTweakFollowerScript
+			combatInProgress = (self.GetActorRef().IsInCombat() || pTweakFollowerScript.GetCompanionsInCombat())
+		else
+			combatInProgress = self.GetActorRef().IsInCombat()
+		endif
+				
+		if combatInProgress
+			Trace("Renewing Combat Timer")
+			StartTimer((20 + Utility.RandomInt(-5,5)),COMBATEND_DELAYED)
+			OnCombatPeriodic()
+		else
+			OnCombatEnd()
+		endif
+		return
+	endif
+EndEvent
 
 Function OnRetreatStart()
 	Actor npc = self.GetActorRef()
@@ -2140,14 +2227,6 @@ EndFunction
 Event Actor.OnKill(Actor Source, Actor akVictim)
 	; DEPRECATED 1.05. SEE Object.OnHit....
 	UnRegisterForRemoteEvent(Source, "OnKill")
-EndEvent
-
-
-Event OnTimer(int akTimerId)
-	if (ONLOAD_FLOOD_PROTECT == akTimerId)
-		OnLoadHelper()
-		return
-	endif
 EndEvent
 
 Function OnLoadHelper()

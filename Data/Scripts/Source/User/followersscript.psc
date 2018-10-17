@@ -540,19 +540,26 @@ Function CommandUnlockPlayAnim()
 	endif
 EndFunction
 
+;EDITED BY AFT
 Function CommandUnlockAttempt()
-	debug.trace(self + "CommandUnlockAttempt()")
+	trace(self, "CommandUnlockAttempt()")
+
 	objectReference source = CommandActor.GetReference()
 	objectReference target = CommandTarget.GetReference()
 	int lockLevel = target.GetLockLevel()
-	debug.trace(self + "lockLevel: " + lockLevel)
-
-	int roll = Utility.RandomInt(0, 110)
-	debug.trace(self + "roll: " + roll)
-
-	CommandUnlockSuccess = roll > lockLevel
-	debug.trace(self + "CommandUnlockSuccess: " + CommandUnlockSuccess)
-
+	
+	AFT:TweakDFScript DFScript = ((self as Quest) as AFT:TweakDFScript)
+	if DFScript
+		CommandUnlockSuccess = ((self as Quest) as AFT:TweakDFScript).CommandUnlockAttempt(source, target, lockLevel)
+	else
+		trace(self, "SetCompanion - Cast to AFT:TweakDFScript Failed")
+		debug.trace(self + "CommandUnlockAttempt()")
+		debug.trace(self + "lockLevel: " + lockLevel)
+		int roll = Utility.RandomInt(0, 110)
+		debug.trace(self + "roll: " + roll)
+		CommandUnlockSuccess = roll > lockLevel
+		debug.trace(self + "CommandUnlockSuccess: " + CommandUnlockSuccess)
+	endif
 
 	if CommandUnlockSuccess
 		target.unlock()

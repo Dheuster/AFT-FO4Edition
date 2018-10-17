@@ -1789,62 +1789,7 @@ Function FullOutfitEquip(Form[] gear, bool weapdrawcomboveride)
 EndFunction
 
 Function HandleCombatEnd()
-
-	CancelTimer(COMBATEND_DELAYED)
-	
-	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
-		return
-	endIf
-
-	Actor npc=self.GetActorRef()
-	
-	if npc.IsDead()
-		return
-	endif
-	
-	if (CombatOutfitEnabled && npc.IsInFaction(pTweakUseCombatWeaponFaction) && npc.IsPlayerTeammate())
-		if !pTrackedWeapon
-			Int n_items = CombatOutfit.length
-			if (n_items > 0)
-				Form c_item
-				Int c = 0
-				while (c < n_items)
-					c_item = CombatOutfit[c]
-					if (c_item && c_item as Weapon && 0 != npc.GetItemCount(c_item))
-						pTrackedWeapon = c_item as Weapon
-						c = n_items
-					endif
-					c += 1
-				endWhile
-			endif
-		endif
-		if pTrackedWeapon
-			Trace("EquipItem [" + pTrackedWeapon + "]")
-			npc.EquipItem(pTrackedWeapon, false, true)
-		endif
-	endif
-				
-	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
-		Trace("PowerArmor Detected")
-		if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))
-			Trace("NPC is in TweakPAHelmetCombatToggleFaction")
-			if (pTrackedPAHelmet)
-				Trace("pTrackedPAHelmet has value")
-				if (npc.IsEquipped(pTrackedPAHelmet))
-					Trace("pTrackedPAHelmet is Equipped. Attempting to UnEquip")
-					ignorePAEvents = true
-					npc.UnEquipItem(pTrackedPAHelmet)
-					ignorePAEvents = false
-					if (npc.IsEquipped(pTrackedPAHelmet))
-						Trace("UNEQUIP FAILURE ** But at least it was detected")
-					endif
-				endif
-			endif
-		endif
-		return
-	endif	
-	
-	RestoreTweakOutfit()
+	; Deprecated
 EndFunction
 
 ;===============================================================================
@@ -2414,70 +2359,6 @@ Event OnTimer(int akTimerId)
 		ScrapJunkEM()
 		return
 	endif
-	if (akTimerID == COMBATEND_DELAYED)
-		Actor npc = self.GetActorRef()
-		if combatInProgress
-			Trace("Renewing Combat Timer")
-			StartTimer((20 + Utility.RandomInt(-5,5)),COMBATEND_DELAYED)
-			
-			; 1.20 : Weapon Use Enhancements for EnhancedAI (Dynamic Combat Style)
-			if !npc.IsInFaction(pTweakEnhancedFaction)
-				Trace("NPC is not assigned to Dynamic Combat Style")
-				return
-			endif
-			if !npc.IsInFaction(pCurrentCompanionFaction)
-				Trace("NPC is not CurrentCompanion")
-				return
-			endif
-			if npc.IsBleedingOut()
-				Trace("NPC is bleeding out")
-				return
-			endif
-			if npc.IsDead()
-				Trace("NPC is dead")
-				return
-			endif
-			
-			if npc.IsInFaction(pTweakUseCombatWeaponFaction) && CombatOutfitEnabled && pTrackedWeapon
-				Trace("Bailing. User has specified to use COMBAT OUTFIT weapon")
-				; Users does not want AI switching weapons.
-				return
-			endIf
-			
-			if pTrackedWeapon && npc.IsEquipped(pTrackedWeapon)
-				Trace("UnEquipping Combat Weapon as it is likely force/locked")
-				npc.UnEquipItem(pTrackedWeapon)
-			endIf
-			
-			Trace("ReEvaluating Dynamic AI (assess Melee, Spread or ranged)")
-			npc.EvaluatePackage()
-
-			; If Far from target:			
-			; Scan inventory for:
-			;   WeaponTypeSniper
-			;   WeaponTypeGaussRifle	
-
-			; If Medium from target:
-			; Scan inventory for (anything but):
-			;   WeaponTypeJunkJet
-			;   WeaponTypeMissileLauncher
-			;   WeaponTypeFatman
-			;   WeaponTypeBroadsider
-			;   WeaponTypeCryolater
-			
-			; If Near target:
-			; Scan inventory for:
-			;   WeaponTypeMelee1H
-			;   WeaponTypeMelee2H
-			
-			Trace("ReEvaluating Weapon based on new AI")
-			BumpWeaponAI()
-			
-		else
-			HandleCombatEnd()
-		endif
-		return
-	endif	
 	if (ONLOAD_FLOOD_PROTECT == akTimerId)
 		OnLoadHelper()
 		return
@@ -2930,19 +2811,18 @@ Function OnLoadHelper()
 	
 endFunction
 
+; Called by TweakSettings: OnCombatPeriodic
 Function OnCombatBegin()
-	combatInProgress=true
-	StartTimer((20 + Utility.RandomInt(-5,5)),COMBATEND_DELAYED)
+
 	Trace("OnCombatBegin()")
-	
-	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
-		return
-	endIf
+	combatInProgress=true
 	
 	Actor npc=self.GetActorRef()
-
+	bool inPowerArmor = false
+	
 	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
 		Trace("PowerArmor Detected")
+		inPowerArmor = true
 		if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))		
 			TryToEquipPAHelmet()
 		endif
@@ -2950,6 +2830,14 @@ Function OnCombatBegin()
 		; return
 	endif
 
+	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
+		return
+	endIf
+	
+	if inPowerArmor
+		return
+	endif
+	
 	if (CombatOutfitEnabled)
 		CurrentOutfitDesired = OUTFIT_COMBAT
 		RestoreTweakOutfit(OUTFIT_COMBAT)
@@ -2957,28 +2845,131 @@ Function OnCombatBegin()
 	
 endFunction
 
+; Called by TweakSettings: OnCombatPeriodic
+Function OnCombatPeriodic()
+	Trace("OnCombatPeriodic()")
+	if combatInProgress
+		Actor npc = self.GetActorRef()
+		if !npc.IsInFaction(pCurrentCompanionFaction)
+			Trace("NPC is not CurrentCompanion")
+			return
+		endif
+		if !npc.IsInFaction(pTweakEnhancedFaction)
+			Trace("NPC is not assigned to Dynamic Combat Style")
+			return
+		endif			
+		if npc.IsBleedingOut() || npc.IsUnconscious()
+			Trace("NPC is bleeding out or Unconscious")
+			return
+		endif
+		if npc.IsInFaction(pTweakUseCombatWeaponFaction) && CombatOutfitEnabled && pTrackedWeapon
+			Trace("Bailing. User has specified to use COMBAT OUTFIT weapon")
+			; Users does not want AI switching weapons.
+			return
+		endIf
+		if npc.IsDead()
+			Trace("NPC is dead")
+			combatInProgress = false
+			return
+		endif
+		
+		if pTrackedWeapon && npc.IsEquipped(pTrackedWeapon)
+			Trace("UnEquipping Combat Weapon as it is likely force/locked")
+			npc.UnEquipItem(pTrackedWeapon)
+		endIf
+		
+		Trace("ReEvaluating Dynamic AI (assess Melee, Spread or ranged)")
+		; We do this here as it is best to do right after unequipping the 
+		; weapon. 
+		npc.EvaluatePackage()
 
-; Called by TweakFollowerScript: RelayCombatEnd
+		; If Far from target:			
+		; Scan inventory for:
+		;   WeaponTypeSniper
+		;   WeaponTypeGaussRifle	
+
+		; If Medium from target:
+		; Scan inventory for (anything but):
+		;   WeaponTypeJunkJet
+		;   WeaponTypeMissileLauncher
+		;   WeaponTypeFatman
+		;   WeaponTypeBroadsider
+		;   WeaponTypeCryolater
+		
+		; If Near target:
+		; Scan inventory for:
+		;   WeaponTypeMelee1H
+		;   WeaponTypeMelee2H
+		
+		Trace("ReEvaluating Weapon based on new AI")
+		BumpWeaponAI()		
+	endif
+EndFunction
+
+; Called by TweakSettings: OnCombatEnd
 Function OnCombatEnd()
+
 	Trace("OnCombatEnd()")
 	combatInProgress = false
+
+	Actor npc=self.GetActorRef()	
+	if npc.IsDead()
+		return
+	endif
 	
-	; ignored:
-	; 
-	;  See Timer COMBATEND_DELAYED which calls handleCombatEnd()
-	;  with 20 seconds of the end of combat. 
-	;
-	; NOTES: This gets called quicker and more often than we want, 
-	;        especially if the player stays out of the fight and
-	;        lets the companions do the fighting. The reactiveness 
-	;        is probably great for other scripts that really need
-    ;        to know the moment combat is finished. But for outfit/helmet
-	;        helmet purposes, a delay is more realistic. People are
-	;        cautious in real life and wont switch outfits or take
-	;        off their PA helmet the MOMENT combat is over.
-	;
-	;        We rely on a renewed timer that lets some time pass before
-	;        combat is officially considered over.  
+	bool inPowerArmor = false
+	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
+		Trace("PowerArmor Detected")
+		inPowerArmor = true
+		if (npc.IsInFaction(pTweakPAHelmetCombatToggleFaction))
+			Trace("NPC is in TweakPAHelmetCombatToggleFaction")
+			if (pTrackedPAHelmet)
+				Trace("pTrackedPAHelmet has value")
+				if (npc.IsEquipped(pTrackedPAHelmet))
+					Trace("pTrackedPAHelmet is Equipped. Attempting to UnEquip")
+					ignorePAEvents = true
+					npc.UnEquipItem(pTrackedPAHelmet)
+					ignorePAEvents = false
+					if (npc.IsEquipped(pTrackedPAHelmet))
+						Trace("UNEQUIP FAILURE ** But at least it was detected")
+					endif
+				endif
+			endif
+		endif
+	endif	
+	
+	if (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue())
+		return
+	endIf
+	
+	if (CombatOutfitEnabled && npc.IsInFaction(pTweakUseCombatWeaponFaction) && npc.IsPlayerTeammate())
+		if !pTrackedWeapon
+			Int n_items = CombatOutfit.length
+			if (n_items > 0)
+				Form c_item
+				Int c = 0
+				while (c < n_items)
+					c_item = CombatOutfit[c]
+					if (c_item && c_item as Weapon && 0 != npc.GetItemCount(c_item))
+						pTrackedWeapon = c_item as Weapon
+						c = n_items
+					endif
+					c += 1
+				endWhile
+			endif
+		endif
+		if pTrackedWeapon && npc.IsEquipped(pTrackedWeapon)
+			; Use false flag to mark the weapon as unequipable. 
+			Trace("Marking weapon as removable....")
+			npc.EquipItem(pTrackedWeapon, false, true)
+		endif
+	endif
+				
+	if inPowerArmor
+		return
+	endif
+	
+	RestoreTweakOutfit()	
 	
 EndFunction
 
@@ -2986,31 +2977,6 @@ EndFunction
 ; Real Events
 ;------------------------------------
 
-; See TweakSettings for master combat detection loop.
-Event OnCombatStateChanged(Actor akTarget, int cState)
-	Trace("OnCombatStateChanged [" + cState + "]")
-	Actor npc = self.GetActorRef()
-	if (1 != cState)
-		Trace("cState is not 1, returning")
-		return
-	endIf	
-	if (!npc.IsInFaction(pCurrentCompanionFaction))
-		Trace("npc is not in CurrentCompanionFaction. Returning")
-		return
-	endif
-	if (akTarget && akTarget.IsPlayerTeammate())
-		Trace("akTarget is [" + akTarget + "] and is considered a Teammate. Returning.")
-		return
-	endIf
-	
-	if (!combatInProgress)
-		Trace("Combat is not in progress. Calling OnCombatBegin()")
-		OnCombatBegin()
-	else
-		Trace("Combat is already in progress. Ignoring Event")
-	endif	
-
-endEvent
 
 Bool Function ShouldUseHomeOutfit()
 	Actor npc = self.GetActorReference()

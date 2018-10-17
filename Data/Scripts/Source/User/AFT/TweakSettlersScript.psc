@@ -484,6 +484,46 @@ Function AftReset()
 	
 EndFunction
 
+int Function GetInstKickOutCount(Faction exclude)
+	int count = 0
+	
+	Faction InstituteFaction = Game.GetForm(0x0005E558) as Faction
+	
+	; Scan Managed Map and look for RailRoad Faction members.
+	; When kicked out it is normally because you took the 
+	; eliminate RR quest, which means we need everyone unmanaged
+	; so you can kill them...
+	
+	int numSettlers = pSettlers.GetCount()
+	int numInActive = InActiveSettlers.Length
+	
+	if (0 == numSettlers)
+		if (0 == numInActive)
+			return 0
+		endif
+	endIf
+
+	int i = 0
+	while (i < numSettlers)
+		Actor settler = pSettlers.GetAt(i) as Actor
+		if settler.IsInFaction(InstituteFaction) && !settler.IsInFaction(exclude)
+			count += 1
+		endif
+		i += 1
+	endWhile
+	
+	i = 0
+	while (i < numInActive)
+		Actor settler = InActiveSettlers[i]  as Actor
+		if settler.IsInFaction(InstituteFaction) && !settler.IsInFaction(exclude)
+			count += 1
+		endif
+		i += 1
+	endWhile	
+	return count
+	
+EndFunction
+
 ; Relayed From TweakFollower Quest (Script)
 Function HandleInstKickOut()
 
@@ -519,6 +559,47 @@ Function HandleInstKickOut()
 	endWhile
 
 		
+EndFunction
+
+int Function GetBosKickOutCount(Faction exclude)
+	int count = 0
+	
+	Faction BrotherhoodofSteelFaction = Game.GetForm(0x0005DE41) as Faction
+	Faction BoS100FightFaction = Game.GetForm(0x001B513D) as Faction
+	
+	int numSettlers = pSettlers.GetCount()
+	int numInActive = InActiveSettlers.Length
+	
+	if (0 == numSettlers)
+		if (0 == numInActive)
+			return 0
+		endif
+	endIf
+
+	int i = 0
+	while (i < numSettlers)
+		Actor settler = pSettlers.GetAt(i) as Actor
+		if settler.IsInFaction(BrotherhoodofSteelFaction) || settler.IsInFaction(BoS100FightFaction)
+			if !settler.IsInFaction(exclude)
+				count += 1
+			endif
+		endif
+		i += 1
+	endWhile
+	
+	i = 0
+	while (i < numInActive)
+		Actor settler = InActiveSettlers[i]  as Actor
+		if settler.IsInFaction(BrotherhoodofSteelFaction) || settler.IsInFaction(BoS100FightFaction)
+			if !settler.IsInFaction(exclude)
+				count += 1
+			endif
+		endif
+		i += 1
+	endWhile
+	
+	return count
+	
 EndFunction
 
 ; Relayed From TweakFollower Quest (Script)
@@ -619,6 +700,48 @@ Function HandleBoSKickOut()
 	
 	
 EndFunction
+
+int Function GetRRKickOutCount(Faction exclude)
+	int count = 0
+	
+	Faction RailRoadFaction       = Game.GetForm(0x000994F6) as Faction
+	
+	; Scan Managed Map and look for RailRoad Faction members.
+	; When kicked out it is normally because you took the 
+	; eliminate RR quest, which means we need everyone unmanaged
+	; so you can kill them...
+	
+	int numSettlers = pSettlers.GetCount()
+	int numInActive = InActiveSettlers.Length
+	
+	if (0 == numSettlers)
+		if (0 == numInActive)
+			return 0
+		endif
+	endIf
+
+	int i = 0
+	while (i < numSettlers)
+		Actor settler = pSettlers.GetAt(i) as Actor
+		if settler.IsInFaction(RailRoadFaction) && !settler.IsInFaction(exclude)
+			count += 1
+		endif
+		i += 1
+	endWhile
+	
+	i = 0
+	while (i < numInActive)
+		Actor settler = InActiveSettlers[i]  as Actor
+		if settler.IsInFaction(RailRoadFaction) && !settler.IsInFaction(exclude)
+			count += 1
+		endif
+		i += 1
+	endWhile
+	
+	return count
+	
+EndFunction
+
 
 ; Relayed From TweakFollower Quest (Script)
 Function HandleRRKickOut()

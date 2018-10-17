@@ -12,6 +12,7 @@ Group Injected
 	Faction	Property pTweakMedicSpecialFaction	Auto Const
 	Faction	Property pTweakNamesFaction			Auto Const
 	Faction Property TweakManagedOutfit 		Auto Const
+	Faction Property pCurrentCompanionFaction	Auto Const
 	
 	Quest Property TweakDLC01					Auto Const
 	Quest Property TweakDLC03					Auto Const
@@ -58,6 +59,7 @@ Group Injected
 	ActorValue Property pTweakInPowerArmor		Auto Const
 	ActorValue Property TweakMedCount			Auto Const
 	ActorValue Property HC_IsCompanionInNeedOfHealing Auto Const
+	ActorValue Property Paralysis				Auto Const
 
 	Spell Property CureAddictions				Auto Const
 	
@@ -88,6 +90,7 @@ Group LocalPersisted
 EndGroup
 
 ; Hidden
+String KnockoutFramework = "Knockout Framework.esm" const
 
 ; Constants
 int TIMEOUT_STAGE_ONE		  = 997 const
@@ -120,20 +123,65 @@ Function EventOnGameLoad()
 	endif
 EndFunction
 
-
 Function UnManage()
 	Trace("UnManage() Called.")
 	CleanUp()	
 EndFunction
 
+; Called by TweakSettings: OnCombatPeriodic
+Function OnCombatBegin()
+	Trace("OnCombatBegin()")
+	combatInProgress=true
+EndFunction
+
+; Called by TweakSettings: OnCombatPeriodic
+Function OnCombatPeriodic()
+	Trace("OnCombatPeriodic()")
+	if combatInProgress
+		EvalCombatChecks()
+	endif
+EndFunction
+
+; Called by TweakSettings: OnCombatEnd
+Function OnCombatEnd()
+	Trace("OnCombatEnd()")
+	combatInProgress = false
+	EvalCombatChecks()
+EndFunction
+
+
+; Called from TweakInventoryScript during combat at 20 sec intervals while combat is running. 
+; Only called on members of the CurrentCompanionFaction
+Function EvalCombatChecks()
+	Trace("EvalCombatChecks...")
+	Actor npc = self.GetActorRef()
+	
+	; KnockOut Support
+	if !npc.IsDead() && (npc.IsBleedingOut() || npc.IsUnconscious()	|| (npc.GetValue(Paralysis) == 1))
+		Trace("NPC is Bleeding Out, Unconsious or Paralyzed at end of Combat (Final Check).")
+		OnEnterBleedout()
+	endif		
+EndFunction
+
+; Events are just specially types Functions, but at the end of the day, you can still invoke them just like
+; functions...
 Event OnEnterBleedout()
 	Trace("OnEnterBleedout")
 	
 	Actor npc = self.GetActorRef()
-	if !npc.IsInFaction(pTweakEssentialFaction)
-		Trace("NPC is mortal. Skipping")
+
+	if !(npc.IsBleedingOut() || npc.IsUnconscious() || npc.GetValue(Paralysis) == 1.0)
+		Trace("Event was not for us")
 		return
-	endif
+	endIf
+	
+	; This shouldn't happen, but other mods like Knockout Framework may allow
+	; essential NPCs to still get "knocked out". IE: Unconscious. So we remove
+	; the essential early bail checks...
+	;if npc.IsInFaction(pTweakEssentialFaction)
+	;	Trace("NPC is essential. Skipping")
+	;	return
+	; endif	
 
 	bool allowHealSelf  = (1.0 == TweakAllowHealSelf.GetValue())
 	bool allowHealOther = (1.0 == TweakAllowHealOther.GetValue())
@@ -143,7 +191,7 @@ Event OnEnterBleedout()
 	endif
 	
 	; We set this TweakMedCount to mark the state:
-	; 0 = In Bleedout, but not safe for assignment to Medical Manager
+	; 0 = Processing Bleedout, but not yet deemed safe for assignment to Medical Manager
 	; 1 = In Bleedout, failed race condition, so safe for Medical Manager assignment
 	; 2 = In Bleedout, current Medical Manager
 	npc.SetValue(TweakMedCount, 0.0)
@@ -265,7 +313,7 @@ Event OnEnterBleedout()
 	while (i < candidatesLen)
 		test = candidates[i] as Actor
 		if (test != npc)		
-			if (!test.IsDead() && !test.IsBleedingOut() && !test.IsInFaction(pTweakPosedFaction) && !test.IsDoingFavor() && test.GetCurrentPackage() != pCommandMode_Travel && test.GetValue(pFollowerState) != ComWait) 
+			if (!test.IsDead() && !test.IsBleedingOut() && !test.IsUnconscious() && (test.GetValue(Paralysis) != 1) && !test.IsInFaction(pTweakPosedFaction) && !test.IsDoingFavor() && test.GetCurrentPackage() != pCommandMode_Travel && test.GetValue(pFollowerState) != ComWait) 
 				if (test.GetActorBase() == CompanionCurie && Stimpak == requiredPotion)				
 					Trace("Candidate [" + i + "] is Curie and Stimpak is required Potion.")
 					if (requiredPotion == Stimpak) && (test.GetItemCount(PipeSyringer) > 0)
@@ -474,7 +522,6 @@ Function SaveMe(Actor pMedic)
 	HandleNext()
 EndFunction
 
-
 Function HandleSpecial(Actor pMedic)
 	Trace("HandleSpecial")								
 	Actor npc = self.GetActorRef()
@@ -643,9 +690,17 @@ Function HandleNext()
 	int i = 0
 	while (i < candidatesLen)
 		candidate = candidates[i] as Actor
-		if candidate.IsBleedingOut() && (1.0 == candidate.GetValue(TweakMedCount))
-			Trace("Calling OnEnterBleedout on Candidate [" + candidate + "]")		
-			candidate.OnEnterBleedout()
+		if (candidate.IsBleedingOut() || candidate.IsUnconscious() || (candidate.GetValue(Paralysis) == 1.0))&& (1.0 == candidate.GetValue(TweakMedCount))
+			Trace("Calling OnEnterBleedout on Candidate [" + candidate + "]")
+			
+			; I'm not sure if doing it this way releases the thread, so I decided to go through
+			; candidate.OnEnterBleedout()
+			candidate.CallFunctionNoWait("OnEnterBleedout", new Var[0])
+			
+			; TweakFollowerScript pTweakFollowerScript = (GetOwningQuest() as TweakFollowerScript)
+			; if pTweakFollowerScript
+			;	pTweakFollowerScript.RelayMedicalOnBleedOut(candidate)
+			; endif
 			return
 		endif
 		i += 1
@@ -669,7 +724,7 @@ Function CleanUp()
 		UnRegisterForRemoteEvent(medic, "OnCommandModeGiveCommand")
 		if medic.IsInFaction(pTweakMedicFaction)
 			medic.RemoveFromFaction(pTweakMedicFaction)
-			if !medic.IsBleedingOut() && !medic.IsDead()
+			if !medic.IsBleedingOut() && !medic.IsDead() && !medic.IsUnconscious() && (medic.GetValue(Paralysis) != 1.0)
 				medic.EvaluatePackage()
 			endif
 		elseif medic.IsInFaction(pTweakMedicSpecialFaction)
@@ -688,6 +743,22 @@ EndFunction
 
 Function HealAll(Actor myPatient)
 	Trace("HealAll()")
+
+	if myPatient.IsUnconscious()
+		myPatient.SetUnconscious(False)
+		if 1 == myPatient.GetValue(Paralysis)
+			myPatient.SetValue(Paralysis, 0)
+			if (Game.IsPluginInstalled(KnockoutFramework))	
+				Keyword KFKnockedOutKeyword    = Game.GetFormFromFile(7893, KnockoutFramework) as Keyword ; 0x01001ED5
+				if KFKnockedOutKeyword
+					if myPatient.Haskeyword(KFKnockedOutKeyword)
+						myPatient.RemoveKeyword(KFKnockedOutKeyword)
+					endif
+				endif
+			endif
+		endif
+	endif
+	
 	int RadsToHeal = (mypatient.GetValue(Rads) as int)
 	mypatient.RestoreValue(Rads, RadsToHeal)
 	myPatient.RestoreValue(Health, 9999)
@@ -697,7 +768,7 @@ Function HealAll(Actor myPatient)
 	myPatient.RestoreValue(RightAttackCondition, 9999)
 	myPatient.RestoreValue(RightMobilityCondition, 99999)
 	myPatient.RestoreValue(EnduranceCondition, 9999)
-
+	
 	;for new survival - curing diseases
 	if myPatient == Game.GetPlayer()
 		HC_Manager.ClearDisease()
@@ -705,6 +776,9 @@ Function HealAll(Actor myPatient)
 		myPatient.SetValue(HC_IsCompanionInNeedOfHealing, 0)
 	endif
 	CureAddictions.Cast(myPatient, myPatient)
+	myPatient.SetCanDoCommand(False)
+	myPatient.SetGhost(False)
+	
 EndFunction
 
 ; ==========================================================================
