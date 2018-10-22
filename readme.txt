@@ -1,13 +1,13 @@
-                 ___________________________________________
+                  ___________________________________________
                    
                                     - AFT - 
 
                             Amazing Follower Tweaks
                              
                               [Fallout 4 Edition]
-                   ___________________________________________
+                  ___________________________________________
 
-                                  Oct 11, 2018
+                                  Oct 22, 2018
                                  Version: 1.20
 
                         Written by:  Dheu
@@ -1313,7 +1313,7 @@ IV. > > > >  Usage
              combat begins. Distance during combat is actually determined 
              by the Combat AI Style.
              
-        d) [ ] PA Helmet Toggle
+        e) [ ] PA Helmet Toggle
                  
            Toggled on to have the follower automatically un-equip the helmet of
            their PowerArmor when outside combat and put it back on when combat
@@ -1323,7 +1323,7 @@ IV. > > > >  Usage
            this necessary as it was hard to tell who was who without being able
            to see their  faces. 
                  
-        e) [ ] Ignore Friendly Hits
+        f) [ ] Ignore Friendly Hits
                   
            Determines if follower will react to friendly fire. By default, 
            Followers have this option checked. However if you want a more 
@@ -1334,7 +1334,7 @@ IV. > > > >  Usage
            this happens, you must distance yourself from them and wait 24 
            hours (game time) before approaching them again. 
 
-        f) > Global Settings
+        g) > Global Settings
                   
            Takes you to the Global Combat Settings window. See below for 
            more detail. 		   
@@ -2633,7 +2633,6 @@ IV. > > > >  Usage
 		 Import NPC (Full/Normal)
          Import NPC (Leave Original AI intact)
          Import NPC (Only make Follow. DO NOT MANAGE)
-		 Make Settler
 		 Mark NPC as Ignored
          Cancel
          ----------------------	 
@@ -2683,7 +2682,7 @@ IV. > > > >  Usage
 		might break one of their Custom Followers. I don't really recommend
         using this on non-custom followers.
 	 
-     5) Make Settler/UnMake Settler
+     5) Make Settler
 
 	    Makes the NPC into a settler and prompts you for which settlement/city
 		to assign them to. This was primarily added so that users could help 
@@ -2996,6 +2995,7 @@ IV. > > > >  Usage
            [ ] All Followers ride Vertibird		   
            [X] Restore AFT Items on Game Load
            [ ] Allow Core Companion Import
+		   [ ] Auto Assign Stats for Combat Styles
            ----------------------
            
         DETAILS:
@@ -3058,7 +3058,7 @@ IV. > > > >  Usage
            Disable this option and AFT items will stop respawning. Untoggle
            at your own risk. 
 		   
-        h) [ ] Allow Core Companion Import
+        h) Allow Core Companion Import
            
            By default, AFT will prevent you from forcing core companions to
            follow you to prevent breaking the game. FOr example, if you force
@@ -3067,7 +3067,14 @@ IV. > > > >  Usage
            
            Toggle this setting if you wish to disable the safeties so you
            can force CORE companions to follow you. Use carefully as bad timing
-           can break the game or certain quests/factions (as pointed out above).		   
+           can break the game or certain quests/factions (as pointed out above).
+
+        i) Auto Assign Stats for Combat Styles
+
+           If this option is enabled, then you will be promoted if you wish to 
+           automatically redistribute stats to match combat styles when you
+           assign a combat style. When disabled, you will not be prompted and
+           stats will not be automatically adjusted.
 
      5) Global Cooldown Settings
 
@@ -5659,7 +5666,7 @@ X. > > > >  Version History
   1.19 : ( Compiled against FO4 version 1.10.89.0.0 )
   - Fixed F4SE compatibility bug introduced by version v1.17
 
-  1.20 : ( Compiled against FO4 version  1.10.111.0.0)
+  1.20 : ( Compiled against FO4 version  1.10.114.0.0)
   - Added Import option: Make Settler. Assign anyone to a settlement (No limit)
   - Added Outfit option: [ ] Force Combat Outfit Weapon
   - Added Voice Assignment options under Appearance (non-core only)
@@ -5669,16 +5676,22 @@ X. > > > >  Version History
   - Added Global Option : Allow Followers to Heal Self (off by default)
   - Added Global Option : Allow Followers to Heal Others (on by default)
   - Added Global Option : Allow Autonomous Item Pickup
+  - Added Companion Lockpick/Hack XP. After 6 successes, they stop failing.
+  - Updated PickLock/Hack commands to fail less as followers gain experience.
   - Updated Prepare For Uninstall to store spouse and restore on next install
   - Updated Startup Initialization to limit full import to core Companions.
   - Updated Setup Camp to teleport Dismissed followers to camp (if camp is their home)
   - Updated GatherLoose items to recognize more items.
   - Updated Unmanage to be more robust and allow trade with settlers again.
+  - Updated Endurance Boost Health to prevent health loss during some outfit changes.
   - Fixed issue with Automatron Robot dialogues going away when recruited.
   - Fixed PA Helmet removal when NPC told to exit PA using normal dialogue.
   - Fixed Combat Nudiy issues following Sculpt command  
   - Fixed player distance setting reset when dismissing followers.
-  - Fixed Uninstall to account for disallowed companions.  
+  - Fixed Uninstall to account for disallowed companions.    
+  - Fixed AI Priority bug that could break Dogmeat during Reunions Quest. 
+  - Fixed Synergy Boost to include Dogmeat.
+  
   
 -------------------------------------------------------------------------------
 XI. Credits

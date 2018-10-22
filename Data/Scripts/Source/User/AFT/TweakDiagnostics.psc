@@ -660,7 +660,7 @@ Function RunDiagnosticsHelper(Actor npc = None) debugOnly
 			debug.TraceUser(logName, "    version  : " + pTweakFollowerScript.version + "\n", 0)
 			debug.TraceUser(logName, "    pfCount  : " + pTweakFollowerScript.pfCount + "\n", 0)
 			debug.TraceUser(logName, "    pCharGenCacheEnabled  : " + pTweakFollowerScript.pCharGenCacheEnabled + "\n", 0)
-			debug.TraceUser(logName, "    combatRunningFlag  : " + pTweakFollowerScript.combatRunningFlag + "\n", 0)
+			debug.TraceUser(logName, "    GetCompanionsInCombat : " + pTweakFollowerScript.GetCompanionsInCombat() + "\n", 0)
 			debug.TraceUser(logName, "    instituteSummonMsgOnce  : " + pTweakFollowerScript.instituteSummonMsgOnce + "\n", 0)
 			debug.TraceUser(logName, "    Managed Map Size : " + pTweakFollowerScript.pManagedMap.length + "\n", 0)
 			int buffsize = pTweakFollowerScript.pFollowerMap.length

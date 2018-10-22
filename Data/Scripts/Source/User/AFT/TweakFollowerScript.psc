@@ -4,7 +4,7 @@ Scriptname AFT:TweakFollowerScript extends Quest conditional
 ; release/final archive, the scripts wont be found and everything will break...
 ; import AFT
 
-Group FollowerQuestAliasesRelayCombatEndEvent
+Group FollowerQuestAliases
 ReferenceAlias  Property pCompanion1        Auto Const
 ReferenceAlias  Property pCompanion2        Auto Const
 ReferenceAlias  Property pCompanion3        Auto Const
@@ -51,6 +51,12 @@ Message Property pTweakInstituteSummon		Auto Const
 Message Property pTweakProgress				Auto Const
 Message Property pTweakUpgradeMsg			Auto Const
 Message Property pTweakShowResourceID		Auto Const
+Message Property pTweakKickOutBOSMsg		Auto Const
+Message Property pTweakKickOutBOSAlt1Msg	Auto Const
+Message Property pTweakKickOutBOSAlt2Msg	Auto Const
+Message Property pTweakKickOutInstMsg		Auto Const
+Message Property pTweakKickOutInstAlt1Msg	Auto Const
+Message Property pTweakKickOutRRMsg			Auto Const
 EndGroup
 
 Group Conditionals_for_external_terminals
@@ -185,6 +191,7 @@ ActorValue Property pIntelligence			Auto	Const
 ActorValue Property pAgility				Auto	Const
 ActorValue Property pLuck					Auto	Const
 ActorValue Property pHealth					Auto	Const
+ActorValue Property pRadHealthMax			Auto	Const
 ActorValue Property pCarryWeight			Auto	Const
 
 ActorValue Property pEnergyResist			Auto	Const
@@ -225,6 +232,7 @@ GlobalVariable Property pTweakInfoVar21  Auto Const
 GlobalVariable Property pTweakInfoVar22  Auto Const
 GlobalVariable Property pTweakInfoVar23  Auto Const
 GlobalVariable Property pTweakInfoVar24  Auto Const
+GlobalVariable Property pTweakInfoVar25  Auto Const
 endGroup
 
 
@@ -234,7 +242,6 @@ EndGroup
 
 Group Injected_Perks
 Perk	  Property pTweakCarryBoost				Auto Const ; Perk increases carryweight with strength
-Perk	  Property pTweakHealthBoost			Auto Const ; Perk increases health with endurance
 Perk	  Property pTweakDmgResistBoost			Auto Const ; Perk increases Damage Resistance with agility
 Perk	  Property pTweakRangedDmgBoost			Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakPlayerSynergyChrPerk	Auto Const ; Perk increases Ranged Damage with perception
@@ -297,8 +304,8 @@ ReferenceAlias[] Property pFollowerMap Auto
 ReferenceAlias[] Property pManagedMap  Auto
 Float Property version Auto
 Int   Property pfCount Auto
+Bool  Property combatRunningFlag Auto 
 Bool  Property pCharGenCacheEnabled Auto hidden
-Bool  Property combatRunningFlag Auto hidden
 Bool  Property instituteSummonMsgOnce Auto hidden
 EndGroup
 
@@ -379,6 +386,8 @@ Function OnGameLoaded(bool firstTime=false)
 	Trace("OnGameLoaded() Finished")
 EndFunction
 
+; Called From TweakSettings and potentially other locations to get
+; more reliable Combat State. 
 bool Function GetCompanionsInCombat()
 	int tally = 0
 	if pCompanion1 && pCompanion1.GetReference()
@@ -425,22 +434,6 @@ bool Function GetCompanionsInCombat()
 EndFunction
 
 Event OnTimer(int aiTimerID)
-
-	if (COMBAT_MONITOR == aiTimerID)
-
-		; 1.20 : Can't trust Player.IsInCombat. If user has God Mode enabled, 
-		;        it wont return a reliable value. 
-		
-		; if Game.GetPlayer().IsInCombat()
-		;	StartTimer(16,COMBAT_MONITOR)
-	
-		if GetCompanionsInCombat()
-			StartTimer(16,COMBAT_MONITOR)
-		else
-			RelayCombatEndEvent()
-		endif
-		return
-	endif
 	
 	if (RETREAT_END == aiTimerID)
 		OnRetreatStop()
@@ -721,7 +714,7 @@ Event OnTimer(int aiTimerID)
 			
 			; 1.20
 			UnregisterForMenuOpenCloseEvent("ContainerMenu")
-			
+			combatRunningFlag = false ; deprecated. 
 			float recoverSpouse = player.GetValue(Game.GetForm(0x002486EC) as ActorValue)	
 			if (recoverSpouse == 1.23 || recoverSpouse == 2.34 || recoverSpouse == 3.45 || recoverSpouse == 4.56)
 				AFT:TweakCOMSpouseScript TweakCOMSpouseScript =  pTweakCOMSpouse as AFT:TweakCOMSpouseScript
@@ -767,9 +760,6 @@ Event OnTimer(int aiTimerID)
 						if !afix.HasPerk(pTweakCarryBoost)
 							afix.AddPerk(pTweakCarryBoost)
 						endif
-						if !afix.HasPerk(pTweakHealthBoost)
-							afix.AddPerk(pTweakHealthBoost)
-						endif
 						; 1.14
 						if !afix.HasPerk(pTweakDmgResistBoost)
 							afix.AddPerk(pTweakDmgResistBoost)
@@ -799,7 +789,7 @@ Event OnTimer(int aiTimerID)
 						endif
 						if !afix.HasPerk(ImmuneToRadiation)
 							afix.AddPerk(ImmuneToRadiation)
-						endif
+						endif						
 					endif
 				endif
 				p += 1
@@ -1558,9 +1548,6 @@ Function UnManageFollower(Actor npc)
 	if npc.HasPerk(pTweakCarryBoost)
 		npc.RemovePerk(pTweakCarryBoost)
 	endif
-	if npc.HasPerk(pTweakHealthBoost)
-		npc.RemovePerk(pTweakHealthBoost)
-	endif
 	if npc.HasPerk(pTweakDmgResistBoost)
 		npc.RemovePerk(pTweakDmgResistBoost)
 	endif
@@ -1735,7 +1722,7 @@ Function EvaluateSynergy()
 	float luckBoost     = 0
 	float charismaBoost = 0
 	
-	ReferenceAlias[] theList = GetAllTweakFollowers(excludeDog=True)
+	ReferenceAlias[] theList = GetAllTweakFollowers()
 
 	int theListLength = theList.length
 	
@@ -1779,6 +1766,20 @@ Function EvaluateSynergy()
 		pTweakSynergyChrBoost.SetValue(charismaBoost)
 	endif
 		
+EndFunction
+
+Function UpdateSpecialHealth(Actor npc)
+	int followerId = npc.GetFactionRank(pTweakFollowerFaction)
+	if (followerId < 1)
+		Trace("UpdateSpecialHealth : FollowerId Lookup Failed. Not Found in TweakFollowerFaction")
+		return
+	endif
+	ReferenceAlias a = pManagedMap[followerId]
+	if !a.GetActorRef()
+		Trace("UpdateSpecialHealth : Follower ID mapped to unfilled reference. Ignoring Event.")
+		return
+	endif
+	(a As TweakSettings).ReEvaluateHealth(true)	
 EndFunction
 
 Function SetPackMule(Actor npc, bool isPackMule)
@@ -1934,11 +1935,19 @@ Location Function GetHomeLoc(Actor npc, int type = 0) ; 0 = assigned, 1 = origin
 	
 	TweakSettings s = None	
 	int followerId = npc.GetFactionRank(pTweakFollowerFaction)
+	Trace("followerId [" + followerId + "]")
 	if (followerId > 0)
 		s = (pManagedMap[followerId] as TweakSettings)
-		if s && !s.assignedHome
-			s.AssignHome()
-			Utility.wait(0.1)
+		if s
+			if !s.assignedHome
+				Trace("s has no assignedHome. Fixing.")
+				s.AssignHome()
+				Utility.wait(0.1)
+			else
+				Trace("s has assignedHome [" + s.assignedHome + "]")
+			endif
+		else
+			Trace("Cast of ManagedMap[" + followerId + "] to TweakSettings failed!")
 		endif
 	endif	
 	
@@ -1957,22 +1966,23 @@ Location Function GetHomeLoc(Actor npc, int type = 0) ; 0 = assigned, 1 = origin
 		Location assignedHome = None
 		if (CAS)
 			assignedHome = CAS.HomeLocation
+			Trace("CAS detected. assignedHome Candidate [" + assignedHome + "]")
 		elseIf (DAS)
 			assignedHome = DAS.HomeLocation
+			Trace("DAS detected. assignedHome Candidate [" + assignedHome + "]")
 		endIf
 		If (WNS)
-			; WNS Trumps CAS for assignment, but only if it is assigned or the NPC is not CAS/DAS
+			; WNS Trumps CAS for assignment, but only if it is assigned
 			int workshopID = WNS.GetWorkshopID() ; npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
-			if (!assignedHome || workshopID > -1)
+			if (workshopID > -1)
 				WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-				RefCollectionAlias wscollection = pWorkshopParent.WorkshopsCollection
-				if (workshopID < wscollection.GetCount())
-					WorkshopScript workshopRef = wscollection.GetAt(workshopID) as WorkshopScript
+				if (workshopID < pWorkshopParent.Workshops.Length)
+					WorkshopScript workshopRef = pWorkshopParent.GetWorkshop(workshopID)
 					if workshopRef
 						assignedHome = workshopRef.GetCurrentLocation()
 					endIf
-				endIf
-			endIf			
+				endif
+			endIf
 		endIf
 		if (!assignedHome && s)
 			assignedHome = s.assignedHome
@@ -2093,7 +2103,6 @@ bool Function ImportFollower(Actor npc, bool silent = false)
 	; (after init to avoid getting baked into original values)
 	
 	npc.AddPerk(pTweakCarryBoost)
-	npc.AddPerk(pTweakHealthBoost)
 	npc.AddPerk(pTweakDmgResistBoost)
 	npc.AddPerk(pTweakRangedDmgBoost)
 	npc.AddPerk(pTweakZeroCarryInCombat)
@@ -2827,6 +2836,7 @@ Function FollowerInfo(Actor npc, int type = 0)
 		pTweakInfoVar7.SetValue(npc.GetValue(pAgility))
 		pTweakInfoVar8.SetValue(npc.GetValue(pLuck))
 		pTweakInfoVar9.SetValue(npc.GetValue(pHealth))
+		pTweakInfoVar25.SetValue(npc.GetValue(pRadHealthMax))
 		
 		if (1.0 == pTweakAllowAutonomousPickup.GetValue())
 			pTweakInfoVar10.SetValue(npc.GetValue(pCarryWeight))
@@ -4429,12 +4439,7 @@ Function MoveToPlayerByNameId(int id, bool excludeWaiting=false, float startingO
 		MoveToPlayer(npcref.GetActorReference(), excludeWaiting, startingOffset, excludeInCombat, outsideradius, cylinder_height)
 	else
 		MoveToPlayer(None, excludeWaiting, startingOffset, excludeInCombat, outsideradius, cylinder_height)
-		if combatRunningFlag
-			if !GetCompanionsInCombat()		
-				combatRunningFlag = false
-				RelayCombatEndEvent()
-			endif
-		endif		
+		RelayCombatEndEvent()
 	endIf
 	
 EndFunction
@@ -4529,38 +4534,11 @@ Function OnRetreatStop()
 	endif
 EndFunction
 
-; For combatStart events, each script is on its own. We dont want to share
-; the event incase the followers are spread out. However, we need to share
-; the combatEnd event because only the NPC that makes the killing blow gets
-; cstat value of 0. TweakSettings is the one script attached to everyone
-; That relays the 0 event here. 
-;
-; There is also a backup timer that begins monitor the player combat state 
-; every 15 seconds incase we miss cstate 0 event for some reason. (Person 
-; who makes killing blow isn't a managed NPC for example...) 
-Function CombatStateChanged(int cstate)
-	Trace("CombatStateChanged [" + cstate + "]")
-	if (1 == cState)
-		if (!combatRunningFlag)
-			combatRunningFlag = true
-			StartTimer(16,COMBAT_MONITOR)
-		else
-			Trace("Ignored. combatRunningFlag is already true")
-		endif
-	elseif (0 == cState)
-		if (combatRunningFlag)
-			combatRunningFlag = false
-			RelayCombatEndEvent()
-		else
-			Trace("Ignored. combatRunningFlag is already false")
-		endif
-	endif
-EndFunction
 
+; This is used from Summon all Followers to attempt and END combat
 Function RelayCombatEndEvent()
 	Trace("RelayCombatEndEvent()")
-
-	CancelTimer(COMBAT_MONITOR)
+	
 	int i = 0
 	int pFollowerMapLength = pFollowerMap.length	
 	Actor npc
@@ -4569,10 +4547,15 @@ Function RelayCombatEndEvent()
 		if (npc)
 			int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
 			if (followerId > 0)
+				Actor aktarget = npc.GetCombatTarget()
+				if aktarget
+					npc.StopCombat()
+					npc.StopCombatAlarm()
+					aktarget.StopCombat()
+					aktarget.StopCombatAlarm()
+				endif
 				ReferenceAlias a = pManagedMap[followerId]
-				; We can add more as needed
 				(a As TweakSettings).OnCombatEnd()
-				(a as TweakInventoryControl).OnCombatEnd()
 			endif
 		endif
 		i += 1
@@ -5684,195 +5667,428 @@ EndFunction
 
 Function HandleInstKickOut()
 
+	; Precompute:
+	int settlersRemoved       = 0
+	int followersRemoved      = 0
+	
+	bool X688AliveAndSaved = false
 	Actor X688 = CompanionX688.GetUniqueActor()
-	if !X688.IsDead()
-		if X688.IsInFaction(pTweakFollowerFaction)
-
-			; Prevent X6-88 from turning on Player/Programming
-			Faction InstituteFaction = Game.GetForm(0x0005E558) as Faction
-			Faction SynthFaction     = Game.GetForm(0x00083B31) as Faction
-			Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
-			
-			X688.RemoveFromFaction(InstituteFaction)
-			X688.RemoveFromFaction(SynthFaction)
-			
-			; Need to put him in a faction that will protect the player
-			X688.AddToFaction(HasBeenCompanion)
-		endif	
-	endIf
+	Faction InstituteFaction = Game.GetForm(0x0005E558) as Faction
+		
+	int plength = pManagedMap.Length
+	int p = 1
+	while (p < plength)
+		ReferenceAlias pfix = pManagedMap[p]
+		if pfix
+			Actor pa = pfix.GetActorReference()
+			if pa
+				if pa.GetActorBase() == CompanionX688
+					if !pa.IsDead()
+						X688AliveAndSaved = true
+					endif
+				elseif ((pfix as AFT:TweakSettings).originalFactions.Find(InstituteFaction) > -1)
+					followersRemoved += 1
+				endif
+			endif
+		endIf
+		p += 1
+	endWhile
 	
 	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
 	if pAFTSettlers
-		pAFTSettlers.HandleInstKickOut()
+		settlersRemoved = pAFTSettlers.GetInstKickOutCount(pTweakFollowerFaction)
 	endif
-	; Purge is complicates. And besides, between synths and scientists, who
-	; is to say where the members loyalty truly lies. 
-		
-EndFunction
 
-Function HandleBoSKickOut()
-
-	Actor Danse = BoSPaladinDanse.GetUniqueActor()
-	Actor Haylen = None
-	ActorBase BoSScribeHaylen = Game.GetForm(0x0005DE3F) as ActorBase
-	
-	Faction BrotherhoodofSteelFaction = Game.GetForm(0x0005DE41) as Faction
-	Faction BoS100FightFaction = Game.GetForm(0x001B513D) as Faction
-	Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
-	ActorValue pAssistance = Game.GetForm(0x000002C1) as ActorValue 
-	
-	if BoSScribeHaylen
-		Haylen = BoSScribeHaylen.GetUniqueActor()
-	endif
-	
-	if !Danse.IsDead()
-		if BoS302.GetStageDone(20) == 1
-		
-			; 20 is where you are tasked with executing Danse. Thing is, many users
-			; may decide to betray the BOS at that point. And since Danse has been
-			; marked for execution, it doesn't make sense for him to side with the 
-			; BOS if you get kicked out after this point. 
-			; 
-			; Important to note is the !ISDEAD pre-condition. Most outcomes involve
-			; Danse getting killed. So if he is still alive, you can assume you either
-			; haven't reached the decision point or things went well (stage 160). Point
-			; here is stage doesn't matter. Danse is alive. That is all that matters.
-
-			Danse.RemoveFromFaction(BrotherhoodofSteelFaction)
-			Faction BoS302DanseFaction = Game.GetForm(0x0003A5F3) as Faction 
-			Danse.AddToFaction(BoS302DanseFaction)
-			CompanionActorScript CAS = Danse as CompanionActorScript
-			if CAS
-				CAS.HomeLocation = pListeningPostBravoLocation
-			endIf
-			Danse.SetValue(pAssistance, 0)
-			Danse.SetEssential(False)
-			Danse.GetActorBase().SetEssential(false)
-			Danse.SetProtected(True)				
-			Danse.SetGhost(false)
-			
-			if Danse.IsInFaction(pTweakFollowerFaction)
-				int followerId = Danse.GetFactionRank(pTweakFollowerFaction)
-				if (followerId > 0)
-					AFT:TweakSettings pTweakSettings = (pManagedMap[followerId] as AFT:TweakSettings)
-					if pTweakSettings
-						pTweakSettings.originalHome    = pListeningPostBravoLocation
-						pTweakSettings.originalHomeRef = BoS302DanseMarker
-						pTweakSettings.assignedHome    = pListeningPostBravoLocation
-						pTweakSettings.assignedHomeRef = BoS302DanseMarker						
-					endif
-					AFT:TweakInventoryControl pTweakInventoryControl = (pManagedMap[followerId] as AFT:TweakInventoryControl)
-					if pTweakInventoryControl
-						pTweakInventoryControl.assignedHome    = pListeningPostBravoLocation
-						pTweakInventoryControl.assignedHomeRef = BoS302DanseMarker
-					endif
-				endif
-			endif
-
-			; Haylen would only side with you if Danse is alive...
-			if Haylen && !Haylen.IsDead()
-				if Haylen.IsInFaction(pTweakFollowerFaction)
-					Haylen.RemoveFromFaction(BrotherhoodofSteelFaction)
-					Haylen.RemoveFromFaction(BoS100FightFaction)				
-					; Need to put her in a faction that will protect the player
-					Haylen.AddToFaction(HasBeenCompanion)
-					Haylen.SetValue(pAssistance, 0)
-					Haylen.SetEssential(False)
-					Haylen.GetActorBase().SetEssential(false)
-					Haylen.SetProtected(True)				
-					Haylen.SetGhost(False)
-				endif
-			endif
-		else
-			if Danse.IsInFaction(pTweakFollowerFaction)	
-				UnManageFollower(Danse)
-			endif
-			
-			WorkshopNPCScript wns = Danse as WorkshopNPCScript
-			if wns
-				WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-				pWorkshopParent.UnAssignActor(Danse as WorkshopNPCScript, true)
-			endif
-				
-			Danse.SetValue(pAssistance, 1)
-			Danse.SetEssential(False)
-			Danse.GetActorBase().SetEssential(false)
-			Danse.SetProtected(False)				
-			Danse.SetGhost(False)
-
-			if Haylen && !Haylen.IsDead()
-				if Haylen.IsInFaction(pTweakFollowerFaction)
-					UnManageFollower(Haylen)
-					Haylen.SetEssential(false)
-					Haylen.GetActorBase().SetEssential(false)
-					Haylen.SetProtected(false)
-					Haylen.SetGhost(false)
-				endif
-			endif
-			
-		endif		
+	int choice = 0
+	if X688AliveAndSaved
+		choice = pTweakKickOutInstAlt1Msg.show(followersRemoved, settlersRemoved)		
 	else
-		if Haylen && !Haylen.IsDead() && Haylen.IsInFaction(pTweakFollowerFaction)
-			UnManageFollower(Haylen)
-			Haylen.SetEssential(false)
-			Haylen.GetActorBase().SetEssential(false)
-			Haylen.SetProtected(false)
-			Haylen.SetGhost(false)
-		endif
+		choice = pTweakKickOutInstMsg.show(followersRemoved, settlersRemoved)
 	endif
-	
-	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
-	if pAFTSettlers
-		pAFTSettlers.HandleBoSKickOut()
-	endif
-	
-EndFunction
 
-Function HandleRRKickOut()
-	Actor Deacon = CompanionDeacon.GetUniqueActor()
-	if !Deacon.IsDead()
-		if Deacon.IsInFaction(pTweakFollowerFaction)
-			UnManageFollower(Deacon)
-			; Unmanage will often restore their original values. So we need to make them mortal
-			Deacon.SetEssential(false)
-			Deacon.GetActorBase().SetEssential(false)
-			Deacon.GetActorBase().SetProtected(false)
-			Deacon.SetGhost(false)
-		endif
+	; choice:
+	; 0 : Yes, Unmanage ALL Members
+	; 1 : No, Only Unmanage Followers
+	; 2 : No, Only Unmanage Settlers
+	; 3 : Don't do anything
+	
+	if (3 == choice)
+		return
 	endIf
+
+	Faction SynthFaction     = Game.GetForm(0x00083B31) as Faction
+	Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
 	
-	; Scan Managed Map and look for RailRoad Faction members.
-	; When kicked out it is normally because you took the 
-	; eliminate RR quest, which means we need everyone unmanaged
-	; so you can kill them...
-	
-	Faction RailRoadFaction = Game.GetForm(0x000994F6) as Faction
-	if RailRoadFaction
-		int plength = pManagedMap.Length
-		int p = 1
+	if (2 != choice)
+		plength = pManagedMap.Length
+		p = 1
 		while (p < plength)
 			ReferenceAlias pfix = pManagedMap[p]
 			if pfix
 				Actor pa = pfix.GetActorReference()
-				if pa && ((pfix as AFT:TweakSettings).originalFactions.Find(RailRoadFaction) > -1)		
-					UnManageFollower(pa)
-					; Unmanage will often restore their original values. So we need to make them mortal
-					pa.SetEssential(false)
-					pa.GetActorBase().SetEssential(false)
-					pa.GetActorBase().SetProtected(false)
-					pa.SetGhost(false)
+				if pa
+					if pa.GetActorBase() == CompanionX688
+						if !pa.IsDead()
+							X688.RemoveFromFaction(InstituteFaction)
+							X688.RemoveFromFaction(SynthFaction)
+							
+							; Need to put him in a faction that will protect the player
+							X688.AddToFaction(HasBeenCompanion)
+						endif
+					elseif ((pfix as AFT:TweakSettings).originalFactions.Find(InstituteFaction) > -1)
+						UnManageFollower(pa)
+						; Unmanage will often restore their original values. So we need to make them mortal
+						pa.SetEssential(false)
+						pa.GetActorBase().SetEssential(false)
+						pa.GetActorBase().SetProtected(false)
+						pa.SetGhost(false)
+					endif
+				endif
+			endIf
+			p += 1
+		endWhile	
+	endIf
+	
+	if (1 != choice)	
+		if pAFTSettlers
+			pAFTSettlers.HandleInstKickOut()
+		endif
+	endif
+	
+EndFunction
+
+Function HandleBoSKickOut()
+
+	; Precompute:
+	int coreCompanionsRemoved = 0
+	int settlersRemoved       = 0
+	int followersRemoved      = 0
+
+	bool DanseAliveAndSaved = false
+	bool HaylenAliveAndSaved = false
+	
+	Actor	  Danse     = BoSPaladinDanse.GetUniqueActor()
+	ActorBase BoSScribeHaylen = Game.GetForm(0x0005DE3F) as ActorBase
+	Actor Haylen = None
+	if BoSScribeHaylen
+		Haylen = BoSScribeHaylen.GetUniqueActor()
+	endif
+	
+	Faction BrotherhoodofSteelFaction = Game.GetForm(0x0005DE41) as Faction
+	Faction BoS100FightFaction = Game.GetForm(0x001B513D) as Faction
+	
+	int plength = pManagedMap.Length
+	int p = 1
+	while (p < plength)
+		ReferenceAlias pfix = pManagedMap[p]
+		if pfix
+			Actor pa = pfix.GetActorReference()
+			if pa
+				if pa.GetActorBase() == BoSPaladinDanse
+					coreCompanionsRemoved = 1
+					if pa.IsDead()
+						coreCompanionsRemoved = 0
+					else
+						if BoS302.GetStageDone(20) == 1
+							coreCompanionsRemoved = 0
+							DanseAliveAndSaved = true
+						endIf
+					endIf
+				elseif pa.GetActorBase() == BoSScribeHaylen
+					if !Danse.IsDead()
+						if BoS302.GetStageDone(20) != 1
+							followersRemoved += 1
+						else
+							HaylenAliveAndSaved = true
+						endIf
+					endif
+				elseif ((pfix as AFT:TweakSettings).originalFactions.Find(BrotherhoodofSteelFaction) > -1) || ((pfix as AFT:TweakSettings).originalFactions.Find(BoS100FightFaction) > -1)
+					followersRemoved += 1
+				endif
+			endif
+		endIf
+		p += 1
+	endWhile
+
+	Faction HasBeenCompanion = Game.GetForm(0x000A1B85) as Faction
+	ActorValue pAssistance = Game.GetForm(0x000002C1) as ActorValue 
+	
+	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
+	if pAFTSettlers
+		settlersRemoved = pAFTSettlers.GetBosKickOutCount(pTweakFollowerFaction)
+	endif
+
+	int choice = 0
+	if DanseAliveAndSaved
+		if HaylenAliveAndSaved
+			choice = pTweakKickOutBOSAlt2Msg.show(followersRemoved, settlersRemoved)		
+		else
+			choice = pTweakKickOutBOSAlt1Msg.show(followersRemoved, settlersRemoved)		
+		endIf
+	else
+		choice = pTweakKickOutBOSMsg.show(coreCompanionsRemoved, followersRemoved, settlersRemoved)		
+	endif
+		
+	; choice:
+	; 0 : Yes, Unmanage ALL Members
+	; 1 : No, Only Unmanage Followers
+	; 2 : No, Only Unmanage Settlers
+	; 3 : Don't do anything
+
+	if (3 == choice)
+		return
+	endIf
+
+	if (2 != choice)
+	
+		Faction BoS302DanseFaction = Game.GetForm(0x0003A5F3) as Faction 
+	
+		if !Danse.IsDead()
+			if BoS302.GetStageDone(20) == 1
+		
+				; 20 is where you are tasked with executing Danse. Thing is, many users
+				; may decide to betray the BOS at that point. And since Danse has been
+				; marked for execution, it doesn't make sense for him to side with the 
+				; BOS if you get kicked out after this point. 
+				; 
+				; Important to note is the !ISDEAD pre-condition. Most outcomes involve
+				; Danse getting killed. So if he is still alive, you can assume you either
+				; haven't reached the decision point or things went well (stage 160). Point
+				; here is stage doesn't matter. Danse is alive. That is all that matters.
+
+				Danse.RemoveFromFaction(BrotherhoodofSteelFaction)
+				Danse.AddToFaction(BoS302DanseFaction)
+				CompanionActorScript CAS = Danse as CompanionActorScript
+				if CAS
+					CAS.HomeLocation = pListeningPostBravoLocation
+				endIf
+				Danse.SetValue(pAssistance, 0)
+				Danse.SetEssential(False)
+				Danse.GetActorBase().SetEssential(false)
+				Danse.SetProtected(True)				
+				Danse.SetGhost(false)				
+				
+				if Haylen && !Haylen.IsDead()
+					if Haylen.IsInFaction(pTweakFollowerFaction)
+						Haylen.RemoveFromFaction(BrotherhoodofSteelFaction)
+						Haylen.RemoveFromFaction(BoS100FightFaction)				
+						; Need to put her in a faction that will protect the player
+						Haylen.AddToFaction(HasBeenCompanion)
+						Haylen.SetValue(pAssistance, 0)
+						Haylen.SetEssential(False)
+						Haylen.GetActorBase().SetEssential(false)
+						Haylen.SetProtected(True)				
+						Haylen.SetGhost(False)
+					endif
+				endif
+			endIf
+		endIf
+	
+		plength = pManagedMap.Length
+		p = 1
+		while (p < plength)
+			ReferenceAlias pfix = pManagedMap[p]
+			if pfix
+				Actor pa = pfix.GetActorReference()
+				if pa
+					if pa.GetActorBase() == BoSPaladinDanse
+						if !pa.IsDead()
+							if BoS302.GetStageDone(20) == 1
+								if pa.IsInFaction(pTweakFollowerFaction)
+									int followerId = pa.GetFactionRank(pTweakFollowerFaction)
+									if (followerId > 0)
+										AFT:TweakSettings pTweakSettings = (pManagedMap[followerId] as AFT:TweakSettings)
+										if pTweakSettings
+											pTweakSettings.originalHome    = pListeningPostBravoLocation
+											pTweakSettings.originalHomeRef = BoS302DanseMarker
+											pTweakSettings.assignedHome    = pListeningPostBravoLocation
+											pTweakSettings.assignedHomeRef = BoS302DanseMarker
+											int findex = pTweakSettings.originalFactions.Find(BrotherhoodofSteelFaction)
+											if (findex > -1)
+												pTweakSettings.originalFactions.remove(findex)
+											endif
+											findex = pTweakSettings.originalFactions.Find(BoS100FightFaction)
+											if (findex > -1)
+												pTweakSettings.originalFactions.remove(findex)
+											endif
+											pTweakSettings.originalFactions.add(BoS302DanseFaction)
+										endif
+										AFT:TweakInventoryControl pTweakInventoryControl = (pManagedMap[followerId] as AFT:TweakInventoryControl)
+										if pTweakInventoryControl
+											pTweakInventoryControl.assignedHome    = pListeningPostBravoLocation
+											pTweakInventoryControl.assignedHomeRef = BoS302DanseMarker
+										endif
+									endif
+								endif
+							elseif pa.IsInFaction(pTweakFollowerFaction)	
+								UnManageFollower(pa)
+								; Unmanage will often restore their original values. So we need to make them mortal
+								pa.SetEssential(false)
+								pa.GetActorBase().SetEssential(false)
+								pa.GetActorBase().SetProtected(false)
+								pa.SetGhost(false)
+								
+								WorkshopNPCScript wns = pa as WorkshopNPCScript
+								if wns
+									WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+									pWorkshopParent.UnAssignActor(pa as WorkshopNPCScript, true)
+								endif
+								
+							endif
+						endIf
+					elseif pa.GetActorBase() == BoSScribeHaylen
+						if !Danse.IsDead() && BoS302.GetStageDone(20) == 1
+							if pa.GetFactionRank(pTweakFollowerFaction)	
+								int followerId = pa.GetFactionRank(pTweakFollowerFaction)
+								if (followerId > 0)
+									AFT:TweakSettings pTweakSettings = (pManagedMap[followerId] as AFT:TweakSettings)
+									if pTweakSettings
+										pTweakSettings.originalHome    = pListeningPostBravoLocation
+										pTweakSettings.originalHomeRef = BoS302DanseMarker
+										pTweakSettings.assignedHome    = pListeningPostBravoLocation
+										pTweakSettings.assignedHomeRef = BoS302DanseMarker
+										int findex = pTweakSettings.originalFactions.Find(BrotherhoodofSteelFaction)
+										if (findex > -1)
+											pTweakSettings.originalFactions.remove(findex)
+										endif
+										findex = pTweakSettings.originalFactions.Find(BoS100FightFaction)
+										if (findex > -1)
+											pTweakSettings.originalFactions.remove(findex)
+										endif
+										pTweakSettings.originalFactions.add(HasBeenCompanion)
+									endif
+									AFT:TweakInventoryControl pTweakInventoryControl = (pManagedMap[followerId] as AFT:TweakInventoryControl)
+									if pTweakInventoryControl
+										pTweakInventoryControl.assignedHome    = pListeningPostBravoLocation
+										pTweakInventoryControl.assignedHomeRef = BoS302DanseMarker
+									endif
+								endif
+							endif
+						else
+							UnManageFollower(pa)
+							; Unmanage will often restore their original values. So we need to make them mortal
+							pa.SetEssential(false)
+							pa.GetActorBase().SetEssential(false)
+							pa.GetActorBase().SetProtected(false)
+							pa.SetGhost(false)
+						endIf
+					elseif ((pfix as AFT:TweakSettings).originalFactions.Find(BrotherhoodofSteelFaction) > -1) || ((pfix as AFT:TweakSettings).originalFactions.Find(BoS100FightFaction) > -1)
+						UnManageFollower(pa)
+						; Unmanage will often restore their original values. So we need to make them mortal
+						pa.SetEssential(false)
+						pa.GetActorBase().SetEssential(false)
+						pa.GetActorBase().SetProtected(false)
+						pa.SetGhost(false)
+					endif
+				endif
+			endIf
+			p += 1
+		endWhile	
+	endIf
+	
+	if (1 != choice)
+		if pAFTSettlers
+			pAFTSettlers.HandleBoSKickOut()
+		endif
+	endif
+		
+EndFunction
+
+Function HandleRRKickOut()
+
+	Actor Deacon = CompanionDeacon.GetUniqueActor()
+	
+	Faction RailRoadFaction = Game.GetForm(0x000994F6) as Faction
+
+	int coreCompanionsRemoved = 0
+	int settlersRemoved       = 0
+	int followersRemoved      = 0
+
+	int plength = pManagedMap.Length
+	int p = 1
+	while (p < plength)
+		ReferenceAlias pfix = pManagedMap[p]
+		if pfix
+			Actor pa = pfix.GetActorReference()
+			if pa
+				if pa.GetActorBase() == CompanionDeacon
+					coreCompanionsRemoved = 1
+					if pa.IsDead()
+						coreCompanionsRemoved = 0
+					endIf
+				elseif (pfix as AFT:TweakSettings).originalFactions.Find(RailRoadFaction) > -1
+					followersRemoved += 1
+				endif
+			endif
+		endIf
+		p += 1
+	endWhile	
+
+	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
+	if pAFTSettlers
+		settlersRemoved = pAFTSettlers.GetRRKickOutCount(pTweakFollowerFaction)
+	endif
+	
+	int choice = 0
+	choice = pTweakKickOutRRMsg.show(coreCompanionsRemoved, followersRemoved, settlersRemoved)		
+	
+	; choice:
+	; 0 : Yes, Unmanage ALL Members
+	; 1 : No, Only Unmanage Followers
+	; 2 : No, Only Unmanage Settlers
+	; 3 : Don't do anything
+	
+	if (3 == choice)
+		return
+	endIf
+
+	if (2 != choice)
+	
+		plength = pManagedMap.Length
+		p = 1
+		while (p < plength)
+			ReferenceAlias pfix = pManagedMap[p]
+			if pfix
+				Actor pa = pfix.GetActorReference()
+				if pa
+					if pa.GetActorBase() == CompanionDeacon
+						if !pa.IsDead()
+							if pa.IsInFaction(pTweakFollowerFaction)
+								UnManageFollower(pa)
+								; Unmanage will often restore their original values. So we need to make them mortal
+								pa.SetEssential(false)
+								pa.GetActorBase().SetEssential(false)
+								pa.GetActorBase().SetProtected(false)
+								pa.SetGhost(false)
+								
+								WorkshopNPCScript wns = pa as WorkshopNPCScript
+								if wns
+									WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+									pWorkshopParent.UnAssignActor(pa as WorkshopNPCScript, true)
+								endif								
+							endif
+						endIf
+					elseif (pfix as AFT:TweakSettings).originalFactions.Find(RailRoadFaction) > -1
+						UnManageFollower(pa)
+						; Unmanage will often restore their original values. So we need to make them mortal
+						pa.SetEssential(false)
+						pa.GetActorBase().SetEssential(false)
+						pa.GetActorBase().SetProtected(false)
+						pa.SetGhost(false)
+					endif
 				endif
 			endIf
 			p += 1
 		endWhile
+		
 	endif
 	
-	AFT:TweakSettlersScript pAFTSettlers = (pTweakSettlers as AFT:TweakSettlersScript)
-	if pAFTSettlers
-		pAFTSettlers.HandleRRKickOut()
+	if (1 != choice)
+		if pAFTSettlers
+			pAFTSettlers.HandleRRKickOut()
+		endif
 	endif
-	
-	
+		
 endFunction
 
 ReferenceAlias[] Function GetDismissedToCamp()
@@ -6115,6 +6331,8 @@ Function FixCarryWeightForTradeEnd(Actor npc)
 	endif
 EndFunction
 
+; Deprecated 
+; ========================================================================================
 Function ReleaseSpinLock(GlobalVariable mutex, bool gotLock = true, string sourcehint = "")
 	; deprecated
 endFunction
@@ -6126,5 +6344,14 @@ EndEvent
 Function HandleCloseTradeMenu()
 	; deprecated/moved to TweakSettingsScript	
 EndFunction
+
+Function CombatStateChanged(int cstate)
+	; deprecated/moved to TweakSettingsScript
+EndFunction
+
+; Deprecated : Health Boost perks (abFortifyHealth) are lost when trading with NPC or iFollower_Com_Wait
+; NPC's gear is altered following Fast Travel into a new worldspace (outfits). This causes bleedout and
+; insta-death when mortality is enabled. So we stopped using perks for health boost.
+Perk	  Property pTweakHealthBoost			Auto Const ; Perk increases health with endurance
 
 int MAX_MANAGED	   = 32 const ; deprecated

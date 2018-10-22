@@ -1,6 +1,22 @@
 ;BEGIN FRAGMENT CODE - Do not edit anything between this and the end comment
 Scriptname AFT:Fragments:Terminals:TERM_TweakAFTSettingsMisc_0106B7E8 Extends Terminal Hidden Const
 
+;BEGIN FRAGMENT Fragment_Terminal_01
+Function Fragment_Terminal_01(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakAllowAutoStats.SetValue(0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_02
+Function Fragment_Terminal_02(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakAllowAutoStats.SetValue(1)
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;BEGIN FRAGMENT Fragment_Terminal_05
 Function Fragment_Terminal_05(ObjectReference akTerminalRef)
 ;BEGIN CODE
@@ -166,3 +182,5 @@ GlobalVariable Property pTweakShowAffinityProgress Auto Const
 GlobalVariable Property pTweakAllowHealSelf Auto Const
 
 GlobalVariable Property pTweakAllowHealOther Auto Const
+
+GlobalVariable Property pTweakAllowAutoStats Auto Const

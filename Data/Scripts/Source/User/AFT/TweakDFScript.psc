@@ -158,6 +158,7 @@ ActorBase  Property pTweakCompanionNora			Auto Const
 ActorValue Property pTweakSkipDistance			Auto Const
 ActorValue Property pSkillMagAV08				Auto Const ; If 1.32 means AFT saved the NPC on uninstall...
 ActorValue Property pTweakNextHealAllowed		Auto Const
+ActorValue Property pTweakLockExperience		Auto Const
 
 ; CommentSync Control:
 GlobalVariable	Property pTweakCommentSynch		Auto Const
@@ -784,6 +785,41 @@ Event Actor.OnLocationChange(Actor player, Location akOldLoc, Location akNewLoc)
 	endIf	
 	
 EndEvent
+
+; With AFT, followers get better with practice. After each successful lock pick attempt, the odds improve. 
+; Once you are successful 6 times, they never fail. 
+Bool Function CommandUnlockAttempt(ObjectReference source, ObjectReference target, int lockLevel)
+	Trace("CommandUnlockAttempt source [" + source + "] target[" + target + "] lockLevel [" + lockLevel + "]")
+
+	; 100 = master
+	; 101+ = barred
+	int roll = 110
+	float lockexp = source.GetValue(pTweakLockExperience)
+	Trace("lockexp [" + lockexp + "]")
+	if lockexp < 6.0
+		if lockexp > 4.0
+			roll = Utility.RandomInt(100, 110)
+		elseif lockexp > 3.0
+			roll = Utility.RandomInt(80, 110)
+		elseif lockexp > 2.0
+			roll = Utility.RandomInt(60, 110)
+		elseif lockexp > 1.0
+			roll = Utility.RandomInt(40, 110)
+		elseif lockexp > 0.0
+			roll = Utility.RandomInt(20, 110)
+		else
+			roll = Utility.RandomInt(0, 110)
+		endif
+	endif
+	
+	bool unlockSuccess = roll > lockLevel
+	if unlockSuccess
+		source.SetValue(pTweakLockExperience,(lockexp + 1.0))
+	endif
+	Trace("Roll [" + roll + "] Success [" + unlockSuccess + "]")
+	return unlockSuccess
+	
+EndFunction
 
 
 Function SetCommentSynchronous(bool value)

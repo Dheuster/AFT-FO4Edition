@@ -116,7 +116,8 @@ Group Injected
 
 	; General
 	ActorValue Property pCarryWeight	Auto const 
-	ActorValue Property pHealth			Auto const
+	ActorValue Property pHealth			Auto const ; Current Value
+	ActorValue Property pRadHealthMax	Auto const ; Max Health Value
 	
 	; ActorValue Property pActionPoints  Auto
 	; ActorValue Property pMass          Auto
@@ -168,6 +169,7 @@ Group LocalPersistance
 	Bool      Property originalIgnoreHits		Auto
 	
 	Int       Property originalCarryWeight		Auto
+	Int       Property originalHealth			Auto
 	Int       Property originalAggression		Auto
 	Int       Property originalMorality			Auto
 	Int       Property originalConfidence		Auto
@@ -175,6 +177,7 @@ Group LocalPersistance
 	Int       Property lastCommandReceived		Auto
 	
 	float     Property originalBaseCarryWeight	Auto
+	float     Property assignedMaxHealth		Auto
 	
 	float	  Property originalStrength			= 0.0 Auto  
 	float	  Property originalPerception		= 0.0 Auto
@@ -217,6 +220,7 @@ int		Property numKilled			Auto Hidden
 
 ; Constants
 int ONLOAD_FLOOD_PROTECT      = 998 const
+int	COMBATEND_DELAYED		  = 995 const
 ; int ONHIT_FLOOD_PROTECT       = 997 const
 
 float TradeHealth
@@ -235,14 +239,14 @@ Event OnInit()
 	trackKills		  = false
 	assignedHome      = None
 
-	originalStrength		= 0
-	originalPerception		= 0
-	originalEndurance		= 0
-	originalCharisma		= 0
-	originalIntelligence	= 0
-	originalAgility			= 0
-	originalLuck			= 0
-
+	originalStrength		=  0
+	originalPerception		=  0
+	originalEndurance		=  0
+	originalCharisma		=  0
+	originalIntelligence	=  0
+	originalAgility			=  0
+	originalLuck			=  0
+	assignedMaxHealth		= -1
 	originalFactions = new Faction[2]
 	
 	; 1.20 : Bug Fix - Adding HasBeenCompaninon breaks non-core Companions when unmanaged
@@ -254,8 +258,10 @@ EndEvent
 
 Function v20upGrade()
 	Trace("v20upGrade()")
+	Actor pc = Game.GetPlayer()
 	Actor npc = self.GetActorRef()
 	originalBaseCarryWeight = -1.0
+	assignedMaxHealth       = -1.0
 	
 	ActorBase base  = npc.GetActorBase()
 	int ActorBaseID = base.GetFormID()
@@ -291,7 +297,7 @@ Function v20upGrade()
 	elseif (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
 		originalBaseCarryWeight = 150.0
 		originalStrength        = 5.0
-		originalEndurance       = 4.0
+		originalEndurance       = 9.0
 	elseif (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
 		originalBaseCarryWeight = 150.0
 		originalStrength        = 5.0
@@ -348,7 +354,7 @@ Function v20upGrade()
 	if -1 == originalBaseCarryWeight
 		originalBaseCarryWeight = npc.GetBaseValue(pCarryWeight)
 	endif
-		
+	
 	if 1.0 == TweakAllowAutonomousPickup.GetValue()
 		if !npc.HasPerk(pTweakCarryBoost)
 			npc.AddPerk(pTweakCarryBoost)
@@ -356,6 +362,10 @@ Function v20upGrade()
 		if !npc.HasPerk(pTweakZeroCarryInCombat)
 			npc.AddPerk(pTweakZeroCarryInCombat)
 		endIf
+	endif
+	
+	if combatInProgress
+		OnCombatEnd()
 	endif
 	
 	; As much as I want to do this, it could also cause population to spike and food to no longer
@@ -376,6 +386,190 @@ Function v20upGrade()
 	;		endIf
 	;	endIf
 	; endIf
+	
+	ReEvaluateHealth()
+	
+	if npc.HasPerk(pTweakHealthBoost)
+		SafelyRemoveHealthBoost()		
+	endif
+
+	if (npc.GetValue(pHealth) > npc.GetValue(pRadHealthMax)) && (npc.GetValue(pRadHealthMax) > 0) && !npc.IsBleedingOut()
+		float diff = npc.GetValue(pHealth) - npc.GetValue(pRadHealthMax)
+		npc.DamageValue(pHealth,diff)
+		ReEvaluateHealth()
+	endif
+	
+EndFunction
+
+Function SafelyRemoveHealthBoost()
+	Trace("SafelyRemoveHealthBoost()")
+	Actor npc = self.GetActorRef()
+	if npc.HasPerk(pTweakHealthBoost)
+		npc.StartDeferredKill()
+		float beforeHealth = npc.GetValue(pHealth)	
+		npc.RemovePerk(pTweakHealthBoost)
+		float afterHealth  = npc.GetValue(pHealth)
+		bool endDeferred = true
+		if (beforeHealth != afterHealth)
+			if (afterHealth < 1.0)
+				npc.RestoreValue(pHealth, 9999)
+				Utility.wait(0.1)
+				bool wasEssential = npc.IsEssential()
+				npc.SetEssential(true)
+				npc.EndDeferredKill()
+				endDeferred = false
+				Utility.wait(0.1)
+				if !wasEssential
+					npc.SetEssential(false)
+				endif
+			endif
+		endif
+		if endDeferred
+			npc.EndDeferredKill()
+		endif					
+	endif
+EndFunction
+
+Function ReEvaluateHealth(bool force=false)
+	Trace("ReEvaluateHealth")	
+	float minEndurance = originalEndurance
+	
+	Actor npc = self.GetActorRef()
+	if (!force && (npc.GetBaseValue(pEndurance) == minEndurance))
+		Trace("Endurance is the same. Bailing")
+		return
+	endIf
+	
+	Actor pc = Game.GetPlayer()
+	ActorBase base  = npc.GetActorBase()
+
+	assignedMaxHealth = -1.0
+	if (base == Game.GetForm(0x00079249) as ActorBase)     ; 1 ---=== Cait ===---
+		assignedMaxHealth       = 135.0
+		Trace("Cait Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 7.0
+	elseif (base == Game.GetForm(0x000179FF) as ActorBase) ; 2 ---=== Codsworth ===---
+		assignedMaxHealth       = 95.0
+		Trace("Codsworth Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 7.0
+	elseif (base == Game.GetForm(0x00027686) as ActorBase) ; 3 ---=== Curie ===---
+		assignedMaxHealth       = 230.0
+		Trace("Curie Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 4.0		
+	elseif (base == Game.GetForm(0x00027683) as ActorBase) ; 4 ---=== Danse ===---
+		assignedMaxHealth       = 60
+		Trace("Danse Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 8.0
+	elseif (base == Game.GetForm(0x00045AC9) as ActorBase) ; 5 ---=== Deacon ===---
+		assignedMaxHealth       = 85
+		Trace("Deacon Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 7.0
+	elseif (base == Game.GetForm(0x0001D15C) as ActorBase) ; 6 ---=== Dogmeat ===---
+		assignedMaxHealth       = 140
+		Trace("Dogmeat Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 4.0
+	elseif (base == Game.GetForm(0x00022613) as ActorBase) ; 7 ---=== Hancock ===---	
+		assignedMaxHealth       = 60
+		Trace("Hancock Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 8.0
+	elseif (base == Game.GetForm(0x0002740E) as ActorBase) ; 8 ---=== MacCready ===---	
+		assignedMaxHealth       = 35
+		Trace("MacCready Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 9.0
+	elseif (base == Game.GetForm(0x00002F24) as ActorBase) ; 9 ---=== Nick Valentine ===---
+		assignedMaxHealth       = 100
+		Trace("Nick Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 8.0
+	elseif (base == Game.GetForm(0x00002F1E) as ActorBase) ; 10 ---=== Piper ===---	
+		assignedMaxHealth       = 85
+		Trace("Piper Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 7.0
+	elseif (base == Game.GetForm(0x00019FD9) as ActorBase) ; 11 ---=== Preston ===---
+		assignedMaxHealth       = 85
+		Trace("Preston Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance       = 7.0
+	elseif (base == Game.GetForm(0x00027682) as ActorBase) ; 12 ---=== Strong ===---
+		assignedMaxHealth       = 120
+		Trace("Strong Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 8.0
+	elseif (base == Game.GetForm(0x000BBEE6) as ActorBase) ; 13 ---=== X6-88 ===---	
+		assignedMaxHealth       = 135
+		Trace("X6-88 Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 17.0
+	elseif (base == pTweakCompanionNate) ; ---=== Nate ===---
+		Trace("Nate Detected: [" + assignedMaxHealth + "] base")
+		assignedMaxHealth       = 135
+		; originalEndurance    = 7.0
+	elseif (base == pTweakCompanionNora) ; ---=== Nora ===---	
+		assignedMaxHealth       = 135
+		Trace("Nora Detected: [" + assignedMaxHealth + "] base")
+		; originalEndurance    = 5.0
+	else
+		int ActorBaseID = base.GetFormID()
+		if (ActorBaseID > 0x00ffffff)		
+			int ActorBaseMask
+				
+			if ActorBaseID > 0x80000000			
+				ActorBaseMask = (ActorBaseID - 0x80000000) % (0x01000000)
+			else
+				ActorBaseMask = ActorBaseID % (0x01000000)
+			endif
+				
+			if 0x0000FD5A == ActorBaseMask ; Ada
+				assignedMaxHealth       = 145
+				Trace("Ada Detected: [" + assignedMaxHealth + "] base")
+				; originalEndurance    = 7.0
+			elseif 0x00006E5B == ActorBaseMask ; Longfellow
+				assignedMaxHealth       = 135
+				Trace("Longfellow Detected: [" + assignedMaxHealth + "] base")
+				; originalEndurance    = 7.0
+			elseif 0x0000881D == ActorBaseMask ; Porter Gage
+				assignedMaxHealth       = 135
+				Trace("Gage Detected: [" + assignedMaxHealth + "] base")
+				; originalEndurance    = 7.0
+			endif
+		endif
+	endif
+	
+	if (assignedMaxHealth < 1)
+		assignedMaxHealth = 85
+		Trace("Unrecognized: [" + assignedMaxHealth + "] base")
+	endif
+	
+	; The game provides a levelup boost of 5 per pc level
+	; In most cases, the min level is level 10. So if they 
+	; are less than level 10, just give them a boost of 50. 
+	; If they are greater, compute the boost
+	
+	if (pc.GetLevel() > 10)
+		float boost = (pc.GetLevel() * 5.0)
+		Trace("PC.LEVEL > 10 : Adding [" + boost + "]")		
+		assignedMaxHealth += boost
+	else
+		Trace("PC.LEVEL <= 10 : Adding [50]")		
+		assignedMaxHealth += 50.0
+	endif
+	
+	; Each stat allocated over 5 adds 25 points of health.
+    ; So at 10, the follower got a health boost of 125 
+    ; and at 25, the boost is 500.
+	
+	if npc.GetBaseValue(pEndurance) > minEndurance
+		minEndurance = npc.GetBaseValue(pEndurance)
+	endif
+	if (minEndurance > 5.0)
+		float boost = ((minEndurance - 5.0) * 25.0)
+		Trace("minEndurance > 5 : Adding [" + boost + "]")
+		assignedMaxHealth += boost
+	else
+		Trace("NPC.Endurance <= 5 : No Boost")
+	endif
+	
+	EnforceMaxHealth()
+	
+	if (npc.GetBaseValue(pEndurance) <= originalEndurance)
+		assignedMaxHealth = -1
+	endif
 	
 EndFunction
 
@@ -502,7 +696,6 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 					npc.RemovePerk(pTweakCarryBoost)
 				endif
 				npc.RemovePerk(pTweakZeroCarryInCombat)
-				npc.RemovePerk(pTweakHealthBoost)
 				npc.RemovePerk(pTweakRangedDmgBoost)
 				npc.RemovePerk(pCompanionInspirational)
 				npc.RemoveSpell(pAbMagLiveLoveCompanionPerks)
@@ -514,12 +707,12 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 				
 				Utility.wait(1.0)
 				Trace("Adding Perks Back")
+				npc.AddPerk(ImmuneToRadiation)
 				npc.AddPerk(pTweakDmgResistBoost)
 				if allowCarryPerk
 					npc.AddPerk(pTweakCarryBoost)
 				endif
 				npc.AddPerk(pTweakZeroCarryInCombat)
-				npc.AddPerk(pTweakHealthBoost)
 				npc.AddPerk(pTweakRangedDmgBoost)
 				npc.AddPerk(pCompanionInspirational)
 				npc.AddSpell(pAbMagLiveLoveCompanionPerks)	
@@ -527,7 +720,6 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 				npc.AddPerk(Sneak02)
 				npc.AddPerk(Sneak03)
 				npc.AddPerk(Sneak04)
-				npc.AddPerk(ImmuneToRadiation)
 				Trace("Perks restored")
 			endif
 			if !allowCarryPerk
@@ -536,7 +728,7 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 			if endDeferred
 				npc.EndDeferredKill()
 			endif				
-		
+			enforceSettings()
 		endif
 	endif
 EndEvent
@@ -637,6 +829,9 @@ Function initialize()
 	
 	originalCarryWeight     = npc.GetValue(pCarryWeight) As Int
 	originalBaseCarryWeight = -1.0
+	originalHealth     		= npc.GetValue(pHealth) As Int
+	assignedMaxHealth       = -1.0
+	
 	originalStrength        = -1.0
 	originalEndurance       = -1.0
 	
@@ -1315,6 +1510,7 @@ Function initialize()
 		originalBaseCarryWeight = 150.0
 	endif
 		
+	ReEvaluateHealth()
 
 	Trace("Original Strength        [" + originalStrength + "]")
 	Trace("Original Endurance       [" + originalEndurance + "]")
@@ -1556,7 +1752,9 @@ Function UnManage()
 	
 	npc.RemovePerk(pTweakDmgResistBoost)
 	npc.RemovePerk(pTweakCarryBoost)
-	npc.RemovePerk(pTweakHealthBoost)
+	if npc.HasPerk(pTweakHealthBoost)
+		SafelyRemoveHealthBoost()
+	endif
 	npc.RemovePerk(pTweakRangedDmgBoost)
 	
 	; 1.20 : Because of the various import options, it is near impossible 
@@ -1842,20 +2040,30 @@ Function UnManage()
 	Name=""
 	originalRace=None
 	numKilled=0
+	assignedMaxHealth = -1
 
-	float sum = originalStrength + originalPerception + originalEndurance
-	sum += originalCharisma + originalIntelligence + originalAgility + originalLuck
-	
-	if (sum > 0.0)
+	if npc.GetValue(pStrength) != originalStrength
 		npc.SetValue(pStrength, originalStrength)
+	endIf
+	if npc.GetValue(pPerception) != originalPerception
 		npc.SetValue(pPerception, originalPerception)
+	endIf
+	if npc.GetValue(pEndurance) != originalEndurance
 		npc.SetValue(pEndurance, originalEndurance)
+	endIf
+	if npc.GetValue(pCharisma) != originalCharisma
 		npc.SetValue(pCharisma, originalCharisma)
+	endIf
+	if npc.GetValue(pIntelligence) != originalIntelligence
 		npc.SetValue(pIntelligence, originalIntelligence)
+	endIf
+	if npc.GetValue(pAgility) != originalAgility
 		npc.SetValue(pAgility, originalAgility)
-		npc.SetValue(pLuck, originalLuck)	
-	endif
-	
+	endIf
+	if npc.GetValue(pLuck) != originalLuck
+		npc.SetValue(pLuck, originalLuck)
+	endIf
+			
 EndFunction
 
 Function ToggleTrackKills()
@@ -1967,27 +2175,29 @@ endFunction
 
 Actor[] targets = None
 
-; This is the only script that relays cstat 0
+; cState 0 is unreliable. When the player has companions, only the last companion to deal 
+; a killing blow receives the 0 state. And if the player deals the killing blow, no one
+; receives it. Pre 1.2, we attempted to centralize events so that "whoever" got state
+; 0 sent it to TweakFollowerScript who then relayed the event to eveyone else. However, 
+; that wasn't reliable. So starting with 1.20 we use a renewable timer that calls
+; a function on TweakFollowerScript to get the CombatStatus of the team. Timer will
+; keep renewing until none of the team members (or the player if playing solo) have
+; an active target. This causes a delay so that combat end event fires... 19 to 24 seconds
+; after combat actually ends. However, I felt this was a good thing. It gives the 
+; player time to initiate combat with someone else without the party do too much 
+; cleanup and is more realistic from the perspective of outfits, etc... People
+; don't put there normal clothes on the SECOND the last enemy falls. 
 Event OnCombatStateChanged(Actor akTarget, int cState)
-
-	if (1 != cState)	
-		if (0 == cState)
-			AFT:TweakFollowerScript pTweakFollowerScript = (self.GetOwningQuest() as AFT:TweakFollowerScript)
-			if pTweakFollowerScript
-				; Trace("Calling TweakFollowerScript.CombatStateChanged(0)")
-				pTweakFollowerScript.CombatStateChanged(0)
-			else
-				Trace("Cast to TweakFollowerScript failed. Unable to call CombatStateChanged(0)")
-				OnCombatEnd()
-			endif	
-		endIf
-		return		
-	endif
-
+	Trace("OnCombatStateChanged [" + cState + "]")
 	Actor npc = self.GetActorRef()
-	
+			
+	if (1 != cState)
+		Trace("cState is not 1, returning")
+		return
+	endIf
+		
+	; 1 == cState : Combat Started/ New Target Aquired
 	if (akTarget)
-		; 1 == cState
 		if (akTarget == Game.GetPlayer())
 			if !npc.IsInFaction(pTweakAllowFriendlyFire)
 				npc.StopCombat()
@@ -1996,23 +2206,13 @@ Event OnCombatStateChanged(Actor akTarget, int cState)
 				Utility.wait(0.1)
 				return
 			endif
-		elseif (akTarget.IsPlayerTeammate())
-		
-			; If NPC goes hostile on player because of friendly fire, we still
-			; want to allow companions to defend player.
-			
-			; npc.StopCombat()		
-			; npc.SetRelationshipRank(akTarget, 3)
-			; akTarget.SetRelationshipRank(npc, 3)
-			; Utility.wait(0.1)
-			
-			return
+		elseif (akTarget.IsInFaction(pTweakFollowerFaction))
+			npc.StopCombat()
+			npc.StopCombatAlarm()
+			akTarget.StopCombat()
+			akTarget.StopCombatAlarm()
 		endif
-	endIf
 		
-	if !npc.IsInFaction(pCurrentCompanionFaction)
-		Trace("Not in CurrentCompanionFaction, Bailing.")
-		return
 	endIf
 	
 	if (!combatInProgress)
@@ -2021,54 +2221,120 @@ Event OnCombatStateChanged(Actor akTarget, int cState)
 		Trace("Ignoring Event. CombatInProgress already true")
 	endif
 	
-	if !trackKills
-		return
-	endif
-	
-	int i = 0
-	int numtargets;
-	if targets
+	if trackKills && npc.IsInFaction(pCurrentCompanionFaction)
+		int i = 0
+		int numtargets;
+		if targets
+			numtargets = targets.length
+			while (i < numtargets)
+				Actor theTarget = targets[i]
+				if !theTarget.IsDead()
+					UnRegisterForRemoteEvent(theTarget, "OnDeath")
+					UnRegisterForHitEvent(theTarget, self.GetActorRef())
+				endif
+				i += 1
+			endwhile
+			targets.clear()
+		endIf
+		
+		targets = npc.GetAllCombatTargets()
 		numtargets = targets.length
+		i = 0
 		while (i < numtargets)
 			Actor theTarget = targets[i]
 			if !theTarget.IsDead()
-				UnRegisterForRemoteEvent(theTarget, "OnDeath")
-				UnRegisterForHitEvent(theTarget, self.GetActorRef())
+				; Trace("Registering for OnDeath/OnHit [" + theTarget + "]")
+				RegisterForRemoteEvent(theTarget, "OnDeath")
+				RegisterForHitEvent(theTarget, self.GetActorRef())
 			endif
 			i += 1
 		endwhile
-		targets.clear()
 	endIf
-	
-	targets = npc.GetAllCombatTargets()
-	numtargets = targets.length
-	i = 0
-	while (i < numtargets)
-		Actor theTarget = targets[i]
-		if !theTarget.IsDead()
-			; Trace("Registering for OnDeath/OnHit [" + theTarget + "]")
-			RegisterForRemoteEvent(theTarget, "OnDeath")
-			RegisterForHitEvent(theTarget, self.GetActorRef())
-		endif
-		i += 1
-	endwhile
 	
 endEvent
 
 Function OnCombatBegin()
-	AFT:TweakFollowerScript pTweakFollowerScript = (self.GetOwningQuest() as AFT:TweakFollowerScript)
-	if pTweakFollowerScript
-		Trace("Calling TweakFollowerScript.CombatStateChanged(1)")
-		pTweakFollowerScript.CombatStateChanged(1)
+	Trace("OnCombatBegin()")
+	combatInProgress = true
+	Var[] noparams = new Var[0]
+	Trace("Sending Relay Event to TweakInventoryControl")
+	ReferenceAlias r = (self as ReferenceAlias)
+	if r
+		TweakInventoryControl pTweakInventoryControl = (r as TweakInventoryControl)
+		if pTweakInventoryControl
+			Trace("Sending Event OnCombatBegin")
+			pTweakInventoryControl.CallFunctionNoWait("OnCombatBegin",noparams)
+		else
+			Trace("Caste to TweakInventoryControl Failed!")		
+		endif
+		TweakMedical pTweakMedical = (r as TweakMedical)
+		if pTweakMedical
+			Trace("Sending Event OnCombatBegin")
+			pTweakMedical.CallFunctionNoWait("OnCombatBegin",noparams)
+		else
+			Trace("Caste to TweakMedical Failed!")		
+		endif
+		
 	else
-		Trace("Cast to TweakFollowerScript failed. Unable to call CombatStateChanged(1)")
-	endif
+		Trace("Caste to ReferenceAlias Failed!")
+	endif	
+	StartTimer((20 + Utility.RandomInt(-5,5)),COMBATEND_DELAYED)
 EndFunction
+
+Function OnCombatPeriodic()
+	Trace("OnCombatPeriodic()")
+	Var[] noparams = new Var[0]
+	ReferenceAlias r = (self as ReferenceAlias)
+	if r
+		TweakInventoryControl pTweakInventoryControl = (r as TweakInventoryControl)
+		if pTweakInventoryControl
+			Trace("Sending Event OnCombatPeriodic")
+			pTweakInventoryControl.CallFunctionNoWait("OnCombatPeriodic",noparams)
+		else
+			Trace("Caste to TweakInventoryControl Failed!")		
+		endif
+		TweakMedical pTweakMedical = (r as TweakMedical)
+		if pTweakMedical
+			Trace("Sending Event OnCombatPeriodic")
+			pTweakMedical.CallFunctionNoWait("OnCombatPeriodic",noparams)
+		else
+			Trace("Caste to TweakMedical Failed!")		
+		endif
+		
+	else
+		Trace("Caste to ReferenceAlias Failed!")
+	endif		
+EndFunction
+
 
 ; Typically called by TweakFollowersScript. RelayCombatEnd, which means you can't assume the npc
 ; is still alive or enabled...
 Function OnCombatEnd()
-
+	Trace("OnCombatEnd()")
+	combatInProgress = false
+	CancelTimer(COMBATEND_DELAYED)
+	Var[] noparams = new Var[0]
+	ReferenceAlias r = (self as ReferenceAlias)
+	if r
+		TweakInventoryControl pTweakInventoryControl = (r as TweakInventoryControl)
+		if pTweakInventoryControl
+			Trace("Sending Event OnCombatEnd")
+			pTweakInventoryControl.CallFunctionNoWait("OnCombatEnd",noparams)
+		else
+			Trace("Caste to TweakInventoryControl Failed!")		
+		endif
+		TweakMedical pTweakMedical = (r as TweakMedical)
+		if pTweakMedical
+			Trace("Sending Event OnCombatEnd")
+			pTweakMedical.CallFunctionNoWait("OnCombatEnd",noparams)
+		else
+			Trace("Caste to TweakMedical Failed!")		
+		endif
+		
+	else
+		Trace("Caste to ReferenceAlias Failed!")
+	endif			
+	
 	if !trackKills
 		return
 	endif
@@ -2085,6 +2351,31 @@ Function OnCombatEnd()
 	targets = None
 		
 EndFunction
+
+Event OnTimer(int akTimerId)
+	if (ONLOAD_FLOOD_PROTECT == akTimerId)
+		OnLoadHelper()
+		return
+	endif
+	if (COMBATEND_DELAYED == akTimerID)
+		bool companionsInCombat = false
+		AFT:TweakFollowerScript pTweakFollowerScript = (self.GetOwningQuest() as AFT:TweakFollowerScript)
+		if pTweakFollowerScript
+			combatInProgress = (self.GetActorRef().IsInCombat() || pTweakFollowerScript.GetCompanionsInCombat())
+		else
+			combatInProgress = self.GetActorRef().IsInCombat()
+		endif
+				
+		if combatInProgress
+			Trace("Renewing Combat Timer")
+			StartTimer((20 + Utility.RandomInt(-5,5)),COMBATEND_DELAYED)
+			OnCombatPeriodic()
+		else
+			OnCombatEnd()
+		endif
+		return
+	endif
+EndEvent
 
 Function OnRetreatStart()
 	Actor npc = self.GetActorRef()
@@ -2140,14 +2431,6 @@ EndFunction
 Event Actor.OnKill(Actor Source, Actor akVictim)
 	; DEPRECATED 1.05. SEE Object.OnHit....
 	UnRegisterForRemoteEvent(Source, "OnKill")
-EndEvent
-
-
-Event OnTimer(int akTimerId)
-	if (ONLOAD_FLOOD_PROTECT == akTimerId)
-		OnLoadHelper()
-		return
-	endif
 EndEvent
 
 Function OnLoadHelper()
@@ -2483,20 +2766,75 @@ Function AssignHome()
 		CompanionActorScript CAS = npc as CompanionActorScript
 		
 		if npc.GetActorBase().IsUnique()
-			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
+			Trace("NPC [" + npc + "] is Unique")
+			bool LimitSelection = false
+			if CAS
+				Trace("NPC [" + npc + "] is CAS")
+				if CAS.AllowDismissToSettlements
+					Trace("NPC [" + npc + "] has AllowDismissToSettlements")
+					if (CAS.AllowDismissToSettlements.GetValue() > 0)
+						Trace("NPC [" + npc + "] AllowDismissToSettlements >  0")
+						if CAS.DismissCompanionSettlementKeywordList
+							Trace("NPC [" + npc + "] has DismissCompanionSettlementKeywordList")
+							LimitSelection = true
+						else
+							Trace("NPC [" + npc + "] does not have DismissCompanionSettlementKeywordList")						
+						endIf
+					else
+						Trace("NPC [" + npc + "] AllowDismissToSettlements is 0")						
+					endIf
+				else
+					Trace("NPC [" + npc + "] does not have AllowDismissToSettlements")						
+				endIf
+			else
+				Trace("NPC [" + npc + "] is not CAS")						
+			endIf
+			
+			if LimitSelection
+				Trace("Calling OpenWorkshopSettlementMenuEx with DismissCompanionSettlementKeywordList")						
 				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
 			else
+				Trace("Calling OpenWorkshopSettlementMenuEx with WorkshopSettlementMenuExcludeList")						
 				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHomePermanentActor, aLocToHighlight=selection, akExcludeKeywordList=pWorkshopParent.WorkshopSettlementMenuExcludeList)
 			endif
+			
+			
 		else
-			if (CAS && CAS.AllowDismissToSettlements && (CAS.AllowDismissToSettlements.GetValue() > 0) && CAS.DismissCompanionSettlementKeywordList)
+			Trace("NPC [" + npc + "] is not Unqiue")	
+			bool LimitSelection = false		
+			if CAS
+				Trace("NPC [" + npc + "] is CAS")
+				if CAS.AllowDismissToSettlements
+					Trace("NPC [" + npc + "] has AllowDismissToSettlements")
+					if (CAS.AllowDismissToSettlements.GetValue() > 0)
+						Trace("NPC [" + npc + "] AllowDismissToSettlements >  0")
+						if CAS.DismissCompanionSettlementKeywordList
+							Trace("NPC [" + npc + "] has DismissCompanionSettlementKeywordList")
+							LimitSelection = true
+						else
+							Trace("NPC [" + npc + "] does not have DismissCompanionSettlementKeywordList")						
+						endIf
+					else
+						Trace("NPC [" + npc + "] AllowDismissToSettlements is 0")						
+					endIf
+				else
+					Trace("NPC [" + npc + "] does not have AllowDismissToSettlements")						
+				endIf
+			else
+				Trace("NPC [" + npc + "] is not CAS")						
+			endIf
+			
+			if LimitSelection
+				Trace("Calling OpenWorkshopSettlementMenuEx with DismissCompanionSettlementKeywordList")						
 				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akIncludeKeywordList=CAS.DismissCompanionSettlementKeywordList)
 			else
+				Trace("Calling OpenWorkshopSettlementMenuEx with WorkshopSettlementMenuExcludeList")						
 				selection = npc.OpenWorkshopSettlementMenuEx(akActionKW=pWorkshopParent.WorkshopAssignHome, aLocToHighlight=selection, akExcludeKeywordList=pWorkshopParent.WorkshopSettlementMenuExcludeList)
 			endif
 		endif
 		
 		if (selection)
+			Trace("Selection [" + selection + "] detected")
 					
 			; Cleanup
 			AssignCleanHelper(npc)
@@ -2505,6 +2843,7 @@ Function AssignHome()
 			
 			if npc.IsInFaction(pTweakSkipGoHomeFaction)
 				assignedHomeRef = npc.GetLinkedRef(WorkshopLinkHome)
+				Trace("NPC [" + npc + "] is in TweakSkipGoHomeFaction. Using HomeRef [" + assignedHomeRef + "]")
 			else
 				; As the chooser only allows workshops, if selection is non-null, this would be very unusal..
 				; As the methods above should never fail on workshops.
@@ -2551,7 +2890,8 @@ EndFunction
 ; IgnoreFriendlyFire status and faction is set/handled by TweakPipBoyScript.
 
 Function enforceSettings()
-
+	Trace("enforceSettings()")
+	
 	Actor npc = self.GetActorRef()
 	npc.SetNotShowOnStealthMeter(true)
 	if (npc.IsInFaction(pTweakEssentialFaction))
@@ -2600,6 +2940,11 @@ Function enforceSettings()
 	if (!combatInProgress)
 		; Conditionalized so player can order retreat....
 		npc.SetValue(pConfidence,enforceConfidence)   ; 3 = Brave : Wont run, but also avoid putting themself in harmsway (keep distance from Deathclaw)
+
+		if assignedMaxHealth > 0
+			EnforceMaxHealth()
+		endif
+		
 	endif	
 	
 	if (npc.IsInFaction(pTweakAllowFriendlyFire) || 0.0 == pTweakIgnoreFriendlyFire.GetValue())
@@ -2633,6 +2978,88 @@ Function enforceSettings()
 	npc.EvaluatePackage()
 endFunction
 
+Function EnforceMaxHealth()
+
+	; NOTES: Most actor values are derived (volatile, always changing), so never rely on 
+	; a snopshot. Always re-evaluate. 
+	
+	; What complicates things here is that most companions have a built in handicapp of -100
+	; HP that is applied at all times. So if you say setvalue(health,300), and then do an 
+	; immediate getvalue, you see 200. 
+	
+	Trace("EnforceMaxHealth()")
+	if assignedMaxHealth < 1
+		Trace("Bailing : assignedMaxHealth < 1")
+		return
+	endif
+	
+	Actor npc = self.GetActorRef()
+	if npc.GetValue(pRadHealthMax) != assignedMaxHealth && !npc.IsBleedingOut()
+	
+		Trace("  assignedMaxHealth [" + assignedMaxHealth + "] != NPC.RADHEALTHMAX [" + npc.GetValue(pRadHealthMax) + "]")
+		
+		; Reset Script Value Modifications
+		npc.ModValue(pHealth, 0)
+		
+		; Heal/Restore to full health if need be:
+		if (npc.GetValue(pRadHealthMax) > 0)
+			if npc.GetValue(pHealth) < npc.GetValue(pRadHealthMax)
+				Trace("  Raising Current Health")
+				float diff = npc.GetValue(pRadHealthMax) - npc.GetValue(pHealth)
+				npc.RestoreValue(pHealth, diff)
+			elseif npc.GetValue(pHealth) > npc.GetValue(pRadHealthMax)
+				Trace("  Lowering Current Health")
+				float diff = npc.GetValue(pHealth) - npc.GetValue(pRadHealthMax)
+				npc.DamageValue(pHealth, diff)
+			endif
+		endif
+
+		; Compute changes from effects like armor, perks or Actor Record Handycaps:
+		float fxboost = npc.GetBaseValue(pHealth) - npc.GetValue(pHealth)
+		Trace("  fxboost [" + fxboost + "]")
+		
+		npc.SetValue(pHealth, assignedMaxHealth + fxboost)
+		Utility.WaitMenuMode(0.1)
+		bool success = false
+		
+		if (npc.GetValue(pRadHealthMax) < assignedMaxHealth)
+			; m150 < a325 
+			Trace("  NPC.RADHEALTHMAX [" + npc.GetValue(pRadHealthMax) + "] <  assignedMaxHealth [" + assignedMaxHealth + "]")
+			float diff = (assignedMaxHealth - npc.GetValue(pRadHealthMax))
+			if (diff > 0)
+				npc.ModValue(pHealth, diff)
+			elseif (diff + npc.GetValue(pHealth)) > 0
+				Trace("Unexpected negative adjustment")
+				npc.ModValue(pHealth, diff)
+			endif			
+		elseif (npc.GetValue(pRadHealthMax) > assignedMaxHealth)
+			; m700 < a400
+			Trace("  NPC.RADHEALTHMAX [" + npc.GetValue(pRadHealthMax) + "] >  assignedMaxHealth [" + assignedMaxHealth + "]")
+			float diff = (assignedMaxHealth - npc.GetValue(pRadHealthMax))
+			; As we are conteplating loweing the health, we have to be sure the final value is still > 0.
+			if (diff > 0)
+				Trace("Unexpected positive adjustment")
+				npc.ModValue(pHealth, diff)
+			elseif (diff + npc.GetValue(pHealth)) > 0
+				npc.ModValue(pHealth, diff)
+			endif			
+		else
+			Trace("  SUCCESS: NPC.RADHEALTHMAX == assignedMaxHealth")
+			success = true
+		endif
+
+		if !success
+			if (npc.GetValue(pRadHealthMax) == assignedMaxHealth)
+				Trace("  SUCCESS: NPC.RADHEALTHMAX == assignedMaxHealth (Fixed)")				
+			endif
+		endIf
+				
+	else
+		Trace("  assignedMaxHealth [" + assignedMaxHealth + "] == NPC.RADHEALTHMAX")
+	endif
+	
+EndFunction
+
 Event OnReset()
 	Trace("TweakSettings OnReset() detected. (Probably should re-apply settings)")
 EndEvent
@@ -2665,6 +3092,7 @@ Event OnLoad()
         teleportInOnLoad = false
         teleportToHere()
     endIf
+	self.GetActorRef().WaitFor3DLoad()
 	; Flood Protection
 	StartTimer(2.5,ONLOAD_FLOOD_PROTECT)	
 endEvent
@@ -2840,15 +3268,17 @@ endFunction
 
 Function AssignHomeHelper(Actor npc, bool isSettlement=true)
 	Trace("AssignHomeHelper")
-	
+	Location prevHome = None
 	CompanionActorScript	CAS				=	npc as CompanionActorScript
 	if (CAS)
-		Trace("Updating CAS.HomeLocation")
+		Trace("Updating CAS.HomeLocation [" + assignedHome + "]")
+		prevHome = CAS.HomeLocation
 		CAS.HomeLocation = assignedHome
 	else
 		DogmeatActorScript   DAS = npc as DogmeatActorScript		
 		if (DAS)
-			Trace("Updating DAS.HomeLocation")
+			Trace("Updating DAS.HomeLocation [" + assignedHome + "]")
+			prevHome = DAS.HomeLocation
 			DAS.HomeLocation = assignedHome
 		endif
 	endif	
@@ -2881,9 +3311,11 @@ Function AssignHomeHelper(Actor npc, bool isSettlement=true)
 		; MakeSettler will return false if the assignedHome Location passed in is not associated with a Workshop		
 		; It does NOT however look around for nearby workshops. 
 		
-		if AFTSettlers.MakeSettler(npc, assignedHome, false)
+		if AFTSettlers.MakeSettler(npc, assignedHome, false, prevHome)
+			Trace("AFTSettlers.MakeSettler returned true (Need to add to TweakSkipGoHomeFaction")
 			npc.AddToFaction(pTweakSkipGoHomeFaction)
 		elseif assignedHome		
+			Trace("AFTSettlers.MakeSettler returned false. AssignedHome [" +  assignedHome + "] is not a workshop.")
 			; assignHome is not a workshop....
 			if (npc.IsInFaction(pTweakSettlerFaction))
 				Trace("Calling UnMakeSettler")			
