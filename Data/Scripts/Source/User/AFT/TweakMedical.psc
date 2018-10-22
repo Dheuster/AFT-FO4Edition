@@ -27,6 +27,8 @@ Group Injected
 	Keyword Property TweakActorTypeManaged		Auto Const
 	Keyword Property CAT_Event_CompanionCrippled_Leg_Topic Auto Const
 	Keyword Property CAT_Event_HealCompanion_Topic         Auto Const
+	keyword Property playerCanStimpak 			auto const	
+	
 					
 	Potion Property Stimpak 					Auto Const
 	Potion Property RadAway 					Auto Const
@@ -75,7 +77,8 @@ Group Injected
 	Hardcore:HC_ManagerScript Property HC_Manager Auto Const
 	
 	GlobalVariable Property TweakAllowHealSelf	Auto Const
-	GlobalVariable Property TweakAllowHealOther	Auto Const
+	GlobalVariable Property TweakAllowHealOther	Auto Const	
+	GlobalVariable Property HC_Rule_CompanionNoHeal const auto
 	
 	Message	Property	TweakRescueHealedMsg	Auto Const
 	Message	Property	TweakRescueFixedMsg		Auto Const
@@ -86,6 +89,7 @@ EndGroup
 Group LocalPersisted
 	Bool	Property InBleedOut					Auto
 	Bool    Property combatInProgress			Auto
+	Bool    Property combatFollower				Auto hidden
 	; Topic   Property BleedoutShout				Auto
 EndGroup
 
@@ -107,6 +111,7 @@ EndFunction
 Event OnInit()
 	InBleedOut       = false
 	combatInProgress = false
+	combatFollower   = false
 EndEvent
 
 Function initialize()
@@ -132,6 +137,11 @@ EndFunction
 Function OnCombatBegin()
 	Trace("OnCombatBegin()")
 	combatInProgress=true
+	if self.GetActorReference().IsInFaction(pCurrentCompanionFaction)
+		combatFollower = true
+	else
+		combatFollower = false
+	endif	
 EndFunction
 
 ; Called by TweakSettings: OnCombatPeriodic
@@ -147,9 +157,40 @@ Function OnCombatEnd()
 	Trace("OnCombatEnd()")
 	combatInProgress = false
 	EvalCombatChecks()
+	; ConfirmNoAutoDismiss()
 EndFunction
 
+Function ConfirmNoAutoDismiss()
 
+	; In an ideal world, this would recover followers like Gage, but timing may not 
+	; work out (Gage may go hostile before combat kicks off) and it could result 
+	; in an infinite loop, with protection code kicking out followers who turn 
+	; on the player and this re-importing them. 
+	
+	Actor npc = self.GetActorReference()
+	if combatFollower && !npc.IsInFaction(pCurrentCompanionFaction)
+		Trace("Follower Dismissed during combat. Attempting to fix")
+		Quest Followers = Game.GetForm(0x000289E4) as Quest
+		if Followers
+			FollowersScript pFollowersScript = (Followers as FollowersScript)
+			if pFollowersScript
+				Var[] params = new Var[4]
+				params[0] = npc
+				params[1] = true
+				params[2] = true
+				params[3] = false
+				Trace("Calling Async Function FollowersScript.SetCompanion()")
+				pFollowersScript.CallFunctionNoWait("SetCompanion",params)
+			else
+				Trace("Followers Quest failed to caste to FollowersScript. Bailing")
+			endif
+		else
+			Trace("Followers Quest failed to resolve. Bailing")
+		endif
+	endif
+EndFunction
+	
+	
 ; Called from TweakInventoryScript during combat at 20 sec intervals while combat is running. 
 ; Only called on members of the CurrentCompanionFaction
 Function EvalCombatChecks()
@@ -185,7 +226,7 @@ Event OnEnterBleedout()
 
 	bool allowHealSelf  = (1.0 == TweakAllowHealSelf.GetValue())
 	bool allowHealOther = (1.0 == TweakAllowHealOther.GetValue())
-	if (!allowHealSelf && !allowHealOther)
+	if !(allowHealSelf || allowHealOther)
 		Trace("Companion Healing Disabled. Skipping")
 		return
 	endif
@@ -284,7 +325,7 @@ Event OnEnterBleedout()
 	; As a point of reference, the large floor tiles are length/width 256. 1536 is approx
     ; the width of the Player House. 	
 	
-	ObjectReference[] candidates = npc.FindAllReferencesWithKeyword(TweakActorTypeManaged, 1536)
+	ObjectReference[] candidates = npc.FindAllReferencesWithKeyword(TweakActorTypeManaged, 2048)
 	if 0 == candidates.Length
 		Trace("No nearby NPCs with keyword TweakActorTypeManaged")
 		HandleNext()
@@ -631,7 +672,9 @@ Function TweakEndBleedOut(Actor npc)
 		Utility.wait(3.0)
 		npc.PlayIdle(pInitializeMTGraphInstant)
 	endif
-	
+	if (1.0 == HC_Rule_CompanionNoHeal.GetValue())
+		npc.SetNoBleedoutRecovery(true)
+	endif
 EndFunction
 
 Event OnTimer(int aiTimerID)
@@ -712,7 +755,9 @@ Function CleanUp()
 	Trace("CleanUp")
 	Actor npc = self.GetActorRef()
 	npc.SetValue(TweakMedCount, 0.0) ; intentional. Dont want "hot potatoe" handed back to us.
-	npc.SetNoBleedoutRecovery(false)
+	if (0.0 == HC_Rule_CompanionNoHeal.GetValue())
+		npc.SetNoBleedoutRecovery(false)
+	endif
 	CancelTimer(TIMEOUT_STAGE_ONE)
 	CancelTimer(TIMEOUT_STAGE_TWO)
 	

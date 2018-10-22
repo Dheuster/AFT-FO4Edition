@@ -7,7 +7,7 @@
                               [Fallout 4 Edition]
                   ___________________________________________
 
-                                  Oct 17, 2018
+                                  Oct 22, 2018
                                  Version: 1.20
 
                         Written by:  Dheu
@@ -2995,6 +2995,7 @@ IV. > > > >  Usage
            [ ] All Followers ride Vertibird		   
            [X] Restore AFT Items on Game Load
            [ ] Allow Core Companion Import
+		   [ ] Auto Assign Stats for Combat Styles
            ----------------------
            
         DETAILS:
@@ -3057,7 +3058,7 @@ IV. > > > >  Usage
            Disable this option and AFT items will stop respawning. Untoggle
            at your own risk. 
 		   
-        h) [ ] Allow Core Companion Import
+        h) Allow Core Companion Import
            
            By default, AFT will prevent you from forcing core companions to
            follow you to prevent breaking the game. FOr example, if you force
@@ -3066,7 +3067,14 @@ IV. > > > >  Usage
            
            Toggle this setting if you wish to disable the safeties so you
            can force CORE companions to follow you. Use carefully as bad timing
-           can break the game or certain quests/factions (as pointed out above).		   
+           can break the game or certain quests/factions (as pointed out above).
+
+        i) Auto Assign Stats for Combat Styles
+
+           If this option is enabled, then you will be promoted if you wish to 
+           automatically redistribute stats to match combat styles when you
+           assign a combat style. When disabled, you will not be prompted and
+           stats will not be automatically adjusted.
 
      5) Global Cooldown Settings
 
@@ -5675,12 +5683,14 @@ X. > > > >  Version History
   - Updated Setup Camp to teleport Dismissed followers to camp (if camp is their home)
   - Updated GatherLoose items to recognize more items.
   - Updated Unmanage to be more robust and allow trade with settlers again.
+  - Updated Endurance Boost Health to prevent health loss during some outfit changes.
   - Fixed issue with Automatron Robot dialogues going away when recruited.
   - Fixed PA Helmet removal when NPC told to exit PA using normal dialogue.
   - Fixed Combat Nudiy issues following Sculpt command  
   - Fixed player distance setting reset when dismissing followers.
   - Fixed Uninstall to account for disallowed companions.    
   - Fixed AI Priority bug that could break Dogmeat during Reunions Quest. 
+  - Fixed Synergy Boost to include Dogmeat.
   
   
 -------------------------------------------------------------------------------

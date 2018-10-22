@@ -74,7 +74,7 @@ EndEvent
 
 ; Returns false if an anchor is needed because location is not Workshop or unowned
 ; I'm leaving out ownership checks for now. 
-bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHome=true)
+bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHome=true, Location prevHome=None)
 
 	Trace("MakeSettler npc [" + npc + "] settlement [" + settlement + "] PromptForHome [" + PromptForHome + "]")
 
@@ -89,12 +89,16 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 	WorkshopNPCScript WNS  				 = npc as WorkshopNPCScript
 	int workshopID         				 = LocationToWorkShopID(settlement)
 	Location selection     				 = settlement
+	int previousWorkshopID 				= -1
 	
 	; If already a WNS, not much to do....
 	if (WNS && WNS.WorkshopParent)
 		Trace("  WNS detected")
 		
 		if PromptForHome
+			Trace("  PromptForHome detected")
+			prevHome = None ; force compare to use Workshop IDs
+			previousWorkshopID = WNS.GetWorkshopID()
 			if (workshopID < 0)
 				selection = SanctuaryHillsLocation
 			endif
@@ -117,11 +121,17 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 			return false		
 		endif
 		
-		if (WNS.GetWorkshopID() != -1)
-			if (WNS.GetWorkshopID() == workshopID)
-				Trace("Worksop assignment is same as current workshop. Bailing")
+		Trace("workshopID for Location [" + settlement + "] is [" + workshopID + "]")
+		Trace("previousWorkshopID is [" + previousWorkshopID + "]")
+		
+		if (previousWorkshopID > -1)
+			if (previousWorkshopID == workshopID)
+				Trace("Prervious Worksop assignment [" + previousWorkshopID + "] is same as new workshop [" + workshopID + "]. Bailing")
 				return true
 			endif
+		elseif prevHome && (prevHome == settlement)
+			Trace("Prervious Home assignment [" + prevHome + "] is same as new Home [" + settlement + "]. Bailing")
+			return true
 		endif
 		
 		WorkshopScript workshopRef = WorkshopParent.GetWorkshop(workshopID)	
@@ -130,7 +140,7 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 			Trace("Prompt is false and no valid Workshop could be found. Using Sanctuary Hills")
 			workshopRef = LocationToWorkShop(SanctuaryHillsLocation)
 			workshopID  = WorkshopParent.GetWorkshopID(workshopRef)
-		endIf
+		endIf 
 		
 		if !workshopRef
 			Trace("Assertion Failure. Sanctuary Hills not found as workshop")
@@ -142,7 +152,7 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 		;	return false
 		; endif
 		
-		if (WNS.GetWorkshopID() != -1)
+		if (previousWorkshopID > -1 || prevHome)
 			WorkshopParent.RemoveActorFromWorkshopPUBLIC(WNS)
 		endIf
 
@@ -156,6 +166,8 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 	
 		
 	if PromptForHome
+		previousWorkshopID = TweakGetWorkshopID(npc)
+		prevHome = None ; force compare to use Workshop IDs
 		CompanionActorScript CAS = npc as CompanionActorScript
 		if (workshopID < 0)
 			selection = SanctuaryHillsLocation
@@ -193,9 +205,14 @@ bool Function MakeSettler(Actor npc, Location settlement=None, bool PromptForHom
 	endif
 	
 	if npc.IsInFaction(TweakSettlerFaction)
-		if (workshopID == TweakGetWorkshopID(npc))
-			Trace("Worksop assignment is same as current workshop. Bailing")
-			return false
+		if (previousWorkshopID > -1)
+			if (previousWorkshopID == workshopID)
+				Trace("Worksop assignment is same as current workshop. Bailing")
+				return false
+			endif
+		elseif prevHome && (prevHome == settlement)
+			Trace("Prervious Home assignment [" + prevHome + "] is same as new Home [" + settlement + "]. Bailing")
+			return true
 		endif
 	endIf
 	
@@ -2195,12 +2212,22 @@ endFunction
 
 ; Similar to GetWorkshopID, but takes location instead of Workshop
 int Function LocationToWorkShopID(Location loc)
+	Trace("LocationToWorkShopID [" + loc + "]")
 	if loc
 		WorkshopScript workshopRef = LocationToWorkShop(loc)
 		if workshopRef
+			Trace("Workshop [" + workshopRef + "] returned for Location [" + loc + "]")
+			Trace("Workshop.myLocation [" + workshopRef.myLocation + "]")
 			WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-			return pWorkshopParent.GetWorkshopID(workshopRef)		
+			int workshopId = pWorkshopParent.GetWorkshopID(workshopRef)	
+			Trace("WorkshopParent.GetWorkshopID() returned [" + workshopId + "]")
+			Trace("WorkShopIDToLocation(" + workshopId + ") == [" + WorkShopIDToLocation(workshopId) + "]")
+			return 	workshopId
+		else
+			Trace("LocationToWorkShop returned None!")
 		endIf
+	else
+		Trace("Location is None!")
 	endif
 	return -1	
 EndFunction

@@ -6,7 +6,7 @@ Function Fragment_Terminal_02(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SetCombatStyle(0)
+    pTweakPipBoyScript.TweakSetCombatStyle(0)
 endif
 ;END CODE
 EndFunction
@@ -17,7 +17,7 @@ Function Fragment_Terminal_04(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SetCombatStyle(1)
+    pTweakPipBoyScript.TweakSetCombatStyle(1)
 endif
 ;END CODE
 EndFunction
@@ -28,7 +28,7 @@ Function Fragment_Terminal_06(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SetCombatStyle(2)
+    pTweakPipBoyScript.TweakSetCombatStyle(2)
 endif
 ;END CODE
 EndFunction
@@ -39,7 +39,7 @@ Function Fragment_Terminal_08(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SetCombatStyle(3)
+    pTweakPipBoyScript.TweakSetCombatStyle(3)
 endif
 ;END CODE
 EndFunction
@@ -50,7 +50,7 @@ Function Fragment_Terminal_10(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SetCombatStyle(4)
+    pTweakPipBoyScript.TweakSetCombatStyle(4)
 endif
 ;END CODE
 EndFunction
@@ -61,7 +61,7 @@ Function Fragment_Terminal_12(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SetCombatStyle(5)
+    pTweakPipBoyScript.TweakSetCombatStyle(5)
 endif
 ;END CODE
 EndFunction
@@ -72,7 +72,7 @@ Function Fragment_Terminal_14(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SetCombatStyle(6)
+    pTweakPipBoyScript.TweakSetCombatStyle(6)
 endif
 ;END CODE
 EndFunction
@@ -83,7 +83,7 @@ Function Fragment_Terminal_16(ObjectReference akTerminalRef)
 ;BEGIN CODE
 AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
 if (pTweakPipBoyScript)
-    pTweakPipBoyScript.SetCombatStyle(7)
+    pTweakPipBoyScript.TweakSetCombatStyle(7)
 endif
 ;END CODE
 EndFunction

@@ -191,6 +191,7 @@ ActorValue Property pIntelligence			Auto	Const
 ActorValue Property pAgility				Auto	Const
 ActorValue Property pLuck					Auto	Const
 ActorValue Property pHealth					Auto	Const
+ActorValue Property pRadHealthMax			Auto	Const
 ActorValue Property pCarryWeight			Auto	Const
 
 ActorValue Property pEnergyResist			Auto	Const
@@ -231,6 +232,7 @@ GlobalVariable Property pTweakInfoVar21  Auto Const
 GlobalVariable Property pTweakInfoVar22  Auto Const
 GlobalVariable Property pTweakInfoVar23  Auto Const
 GlobalVariable Property pTweakInfoVar24  Auto Const
+GlobalVariable Property pTweakInfoVar25  Auto Const
 endGroup
 
 
@@ -240,7 +242,6 @@ EndGroup
 
 Group Injected_Perks
 Perk	  Property pTweakCarryBoost				Auto Const ; Perk increases carryweight with strength
-Perk	  Property pTweakHealthBoost			Auto Const ; Perk increases health with endurance
 Perk	  Property pTweakDmgResistBoost			Auto Const ; Perk increases Damage Resistance with agility
 Perk	  Property pTweakRangedDmgBoost			Auto Const ; Perk increases Ranged Damage with perception
 Perk	  Property pTweakPlayerSynergyChrPerk	Auto Const ; Perk increases Ranged Damage with perception
@@ -759,9 +760,6 @@ Event OnTimer(int aiTimerID)
 						if !afix.HasPerk(pTweakCarryBoost)
 							afix.AddPerk(pTweakCarryBoost)
 						endif
-						if !afix.HasPerk(pTweakHealthBoost)
-							afix.AddPerk(pTweakHealthBoost)
-						endif
 						; 1.14
 						if !afix.HasPerk(pTweakDmgResistBoost)
 							afix.AddPerk(pTweakDmgResistBoost)
@@ -791,7 +789,7 @@ Event OnTimer(int aiTimerID)
 						endif
 						if !afix.HasPerk(ImmuneToRadiation)
 							afix.AddPerk(ImmuneToRadiation)
-						endif
+						endif						
 					endif
 				endif
 				p += 1
@@ -1550,9 +1548,6 @@ Function UnManageFollower(Actor npc)
 	if npc.HasPerk(pTweakCarryBoost)
 		npc.RemovePerk(pTweakCarryBoost)
 	endif
-	if npc.HasPerk(pTweakHealthBoost)
-		npc.RemovePerk(pTweakHealthBoost)
-	endif
 	if npc.HasPerk(pTweakDmgResistBoost)
 		npc.RemovePerk(pTweakDmgResistBoost)
 	endif
@@ -1727,7 +1722,7 @@ Function EvaluateSynergy()
 	float luckBoost     = 0
 	float charismaBoost = 0
 	
-	ReferenceAlias[] theList = GetAllTweakFollowers(excludeDog=True)
+	ReferenceAlias[] theList = GetAllTweakFollowers()
 
 	int theListLength = theList.length
 	
@@ -1771,6 +1766,20 @@ Function EvaluateSynergy()
 		pTweakSynergyChrBoost.SetValue(charismaBoost)
 	endif
 		
+EndFunction
+
+Function UpdateSpecialHealth(Actor npc)
+	int followerId = npc.GetFactionRank(pTweakFollowerFaction)
+	if (followerId < 1)
+		Trace("UpdateSpecialHealth : FollowerId Lookup Failed. Not Found in TweakFollowerFaction")
+		return
+	endif
+	ReferenceAlias a = pManagedMap[followerId]
+	if !a.GetActorRef()
+		Trace("UpdateSpecialHealth : Follower ID mapped to unfilled reference. Ignoring Event.")
+		return
+	endif
+	(a As TweakSettings).ReEvaluateHealth(true)	
 EndFunction
 
 Function SetPackMule(Actor npc, bool isPackMule)
@@ -1926,11 +1935,19 @@ Location Function GetHomeLoc(Actor npc, int type = 0) ; 0 = assigned, 1 = origin
 	
 	TweakSettings s = None	
 	int followerId = npc.GetFactionRank(pTweakFollowerFaction)
+	Trace("followerId [" + followerId + "]")
 	if (followerId > 0)
 		s = (pManagedMap[followerId] as TweakSettings)
-		if s && !s.assignedHome
-			s.AssignHome()
-			Utility.wait(0.1)
+		if s
+			if !s.assignedHome
+				Trace("s has no assignedHome. Fixing.")
+				s.AssignHome()
+				Utility.wait(0.1)
+			else
+				Trace("s has assignedHome [" + s.assignedHome + "]")
+			endif
+		else
+			Trace("Cast of ManagedMap[" + followerId + "] to TweakSettings failed!")
 		endif
 	endif	
 	
@@ -1949,22 +1966,23 @@ Location Function GetHomeLoc(Actor npc, int type = 0) ; 0 = assigned, 1 = origin
 		Location assignedHome = None
 		if (CAS)
 			assignedHome = CAS.HomeLocation
+			Trace("CAS detected. assignedHome Candidate [" + assignedHome + "]")
 		elseIf (DAS)
 			assignedHome = DAS.HomeLocation
+			Trace("DAS detected. assignedHome Candidate [" + assignedHome + "]")
 		endIf
 		If (WNS)
-			; WNS Trumps CAS for assignment, but only if it is assigned or the NPC is not CAS/DAS
+			; WNS Trumps CAS for assignment, but only if it is assigned
 			int workshopID = WNS.GetWorkshopID() ; npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
-			if (!assignedHome || workshopID > -1)
+			if (workshopID > -1)
 				WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
-				RefCollectionAlias wscollection = pWorkshopParent.WorkshopsCollection
-				if (workshopID < wscollection.GetCount())
-					WorkshopScript workshopRef = wscollection.GetAt(workshopID) as WorkshopScript
+				if (workshopID < pWorkshopParent.Workshops.Length)
+					WorkshopScript workshopRef = pWorkshopParent.GetWorkshop(workshopID)
 					if workshopRef
 						assignedHome = workshopRef.GetCurrentLocation()
 					endIf
-				endIf
-			endIf			
+				endif
+			endIf
 		endIf
 		if (!assignedHome && s)
 			assignedHome = s.assignedHome
@@ -2085,7 +2103,6 @@ bool Function ImportFollower(Actor npc, bool silent = false)
 	; (after init to avoid getting baked into original values)
 	
 	npc.AddPerk(pTweakCarryBoost)
-	npc.AddPerk(pTweakHealthBoost)
 	npc.AddPerk(pTweakDmgResistBoost)
 	npc.AddPerk(pTweakRangedDmgBoost)
 	npc.AddPerk(pTweakZeroCarryInCombat)
@@ -2819,6 +2836,7 @@ Function FollowerInfo(Actor npc, int type = 0)
 		pTweakInfoVar7.SetValue(npc.GetValue(pAgility))
 		pTweakInfoVar8.SetValue(npc.GetValue(pLuck))
 		pTweakInfoVar9.SetValue(npc.GetValue(pHealth))
+		pTweakInfoVar25.SetValue(npc.GetValue(pRadHealthMax))
 		
 		if (1.0 == pTweakAllowAutonomousPickup.GetValue())
 			pTweakInfoVar10.SetValue(npc.GetValue(pCarryWeight))
@@ -6331,5 +6349,9 @@ Function CombatStateChanged(int cstate)
 	; deprecated/moved to TweakSettingsScript
 EndFunction
 
+; Deprecated : Health Boost perks (abFortifyHealth) are lost when trading with NPC or iFollower_Com_Wait
+; NPC's gear is altered following Fast Travel into a new worldspace (outfits). This causes bleedout and
+; insta-death when mortality is enabled. So we stopped using perks for health boost.
+Perk	  Property pTweakHealthBoost			Auto Const ; Perk increases health with endurance
 
 int MAX_MANAGED	   = 32 const ; deprecated

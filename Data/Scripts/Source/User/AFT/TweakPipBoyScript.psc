@@ -316,6 +316,7 @@ GlobalVariable Property pTweakScoutAhead	Auto Const
 
 GlobalVariable Property TweakAllowHealSelf	Auto Const
 GlobalVariable Property TweakAllowHealOther	Auto Const
+GlobalVariable Property pTweakAllowAutoStats Auto Const
 
 
 ActorValue	Property pFavorsPerDay			Auto Const
@@ -330,12 +331,15 @@ Message Property pTweakAppearanceHint Auto Const
 Message Property pTweakDisallowedWarn Auto Const
 Message Property pTweakInvisibleFix Auto Const
 Message Property pTweakUniqueOnly Auto Const
+Message Property pTweakAssignStatsMsg Auto Const
 
 FormList Property pTweakNewBodyData Auto Const
 Topic Property WorkshopVendorSharedTopicB Auto Const
 Perk Property pTweakRangedDmgBoost Auto Const
 
 Quest Property TweakSettlers Auto Const
+
+Quest Property HC_Manager Auto Const
 ; 227 Properties....
 
 ActorBase[] pHasBody
@@ -1779,7 +1783,7 @@ Function Test()
 			; 6  = Spouse Infatuated
 			; 7  = Energy Shield
 			; 8  = Synth Eyes
-			; 9  = Sculpt Curie
+			; 9  = End Survival
 			; 10 = Cancel
 			
 			Trace("Diagnostics Choice [" + dchoice + "]")
@@ -1878,8 +1882,13 @@ Function Test()
 				endIf
 			endIf
 			if (9 == dchoice)
-				AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
-				pTweakFollowerScript.SculptLeveledByNameId(3)
+				Hardcore:HC_ManagerScript pHCManager = (HC_Manager as Hardcore:HC_ManagerScript)
+				if pHCManager
+					Trace("Shutting down Hardcore")				
+					pHCManager.ShutdownHardcore()
+				else
+					Trace("Cast of HC_Manager to HC_ManagerScript failed")				
+				endif
 			endIf			
 		endIf
 	else
@@ -2399,6 +2408,7 @@ Function IncreaseSPECIAL(int letter)
 		return
 	endIf
 	
+	bool updateHealth = false
 	ActorValue attribute
 	GlobalVariable gTweakSpecial 
 	if (1 == letter)
@@ -2408,6 +2418,7 @@ Function IncreaseSPECIAL(int letter)
 		attribute = Perception
 		gTweakSpecial = pTweakSpecialPer
 	elseif (3 == letter)
+		updateHealth = true
 		attribute = Endurance
 		gTweakSpecial = pTweakSpecialEnd
 	elseif (4 == letter)
@@ -2439,6 +2450,9 @@ Function IncreaseSPECIAL(int letter)
 			AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 			if (pTweakFollowerScript)
 				pTweakFollowerScript.EvaluateSynergy()
+				if updateHealth
+					pTweakFollowerScript.UpdateSpecialHealth(TerminalTarget)
+				endif
 			endIf
 		endIf
 	endIf
@@ -2635,6 +2649,7 @@ Function SetSPECIAL(Actor Target=None, int pStrength=1, int pPerception=1, int p
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.EvaluateSynergy()
+		pTweakFollowerScript.UpdateSpecialHealth(Target)
 	endIf
 	
 	; Ranged Damage Perk only applies change when added (doesn't monitor for changes). 
@@ -2656,8 +2671,12 @@ Function SetLoiterCooldown(float value)
 EndFunction
 
 Function SetCombatStyle(int option, bool backToPip=True)
+	; To Remove....
+EndFunction
 
-	Trace("SetCombatStyle() Called")
+Function TweakSetCombatStyle(int option, bool backToPip=True)
+
+	Trace("TweakSetCombatStyle() Called")
 	
 	Utility.waitmenumode(0.1)
 	
@@ -2665,7 +2684,7 @@ Function SetCombatStyle(int option, bool backToPip=True)
 		Var[] params = new Var[2]
 		params[0] = option
 		params[1] = backToPip
-		self.CallFunctionNoWait("SetCombatStyle", params)
+		self.CallFunctionNoWait("TweakSetCombatStyle", params)
 		return
 	endIf
 
@@ -2682,44 +2701,79 @@ Function SetCombatStyle(int option, bool backToPip=True)
 		if 1 == option
 			TerminalTarget.AddToFaction(pTweakGunslingerFaction)
 			pTweakCombatStyle.SetValue(1)
-			; S P E C I A L : 15 35 20 5 5 10 10
-			SetSPECIAL(TerminalTarget, 15, 35, 20, 5, 5, 10, 10, true)
+			if (1.0 == pTweakAllowAutoStats.GetValue())
+				; S P E C I A L : 15 35 20 5 5 10 10
+				int schoice = pTweakAssignStatsMsg.Show()
+				if (0 == schoice)
+					SetSPECIAL(TerminalTarget, 15, 35, 20, 5, 5, 10, 10, true)
+				endif
+			endif
 		elseif 2 == option 
 			TerminalTarget.AddToFaction(pTweakBruiserFaction)
 			pTweakCombatStyle.SetValue(2)
-			; S P E C I A L : 40 5 40 1 4 5 5
-			SetSPECIAL(TerminalTarget, 40, 5, 40, 1, 4, 5, 5, true)
+			if (1.0 == pTweakAllowAutoStats.GetValue())
+				; S P E C I A L : 40 5 40 1 4 5 5
+				int schoice = pTweakAssignStatsMsg.Show()
+				if (0 == schoice)
+					SetSPECIAL(TerminalTarget, 40, 5, 40, 1, 4, 5, 5, true)
+				endif
+			endif
 		elseif 3 == option 
 			TerminalTarget.AddToFaction(pTweakCommandoFaction)
 			pTweakCombatStyle.SetValue(3)
-			; S P E C I A L : 25 25 25 5 5 10 5
-			SetSPECIAL(TerminalTarget, 25, 25, 25, 5, 5, 10, 5, true)
+			if (1.0 == pTweakAllowAutoStats.GetValue())
+				; S P E C I A L : 25 25 25 5 5 10 5
+				int schoice = pTweakAssignStatsMsg.Show()
+				if (0 == schoice)
+					SetSPECIAL(TerminalTarget, 25, 25, 25, 5, 5, 10, 5, true)
+				endif
+			endif
 		elseif 4 == option
 			TerminalTarget.AddToFaction(pTweakBoomstickFaction)
 			pTweakCombatStyle.SetValue(4)
-			; S P E C I A L : 25 10 25 5 15 15 5
-			SetSPECIAL(TerminalTarget, 25, 10, 25, 5, 15, 15, 5, true)
+			if (1.0 == pTweakAllowAutoStats.GetValue())
+				; S P E C I A L : 25 10 25 5 15 15 5
+				int schoice = pTweakAssignStatsMsg.Show()
+				if (0 == schoice)
+					SetSPECIAL(TerminalTarget, 25, 10, 25, 5, 15, 15, 5, true)
+				endif
+			endif
 		elseif 5 == option 
 			TerminalTarget.AddToFaction(pTweakNinjaFaction)
 			pTweakCombatStyle.SetValue(5)
-			; S P E C I A L : 25 10 25 5 15 15 5
-			SetSPECIAL(TerminalTarget, 20, 10, 25, 1, 12, 20, 12, true)
+			if (1.0 == pTweakAllowAutoStats.GetValue())
+				; S P E C I A L : 25 10 25 5 15 15 5
+				int schoice = pTweakAssignStatsMsg.Show()
+				if (0 == schoice)
+					SetSPECIAL(TerminalTarget, 20, 10, 25, 1, 12, 20, 12, true)
+				endif
+			endif
 		elseif 6 == option 
 			TerminalTarget.AddToFaction(pTweakSniperFaction)
 			pTweakCombatStyle.SetValue(6)
-			; S P E C I A L : 12 40 15 1 8 4 20
-			SetSPECIAL(TerminalTarget, 12, 40, 15, 1,  8, 4, 20, true)
+			if (1.0 == pTweakAllowAutoStats.GetValue())
+				; S P E C I A L : 12 40 15 1 8 4 20
+				int schoice = pTweakAssignStatsMsg.Show()
+				if (0 == schoice)
+					SetSPECIAL(TerminalTarget, 12, 40, 15, 1,  8, 4, 20, true)
+				endif
+			endif
 		elseif 7 == option 
 			TerminalTarget.AddToFaction(pTweakEnhancedFaction)
 			pTweakCombatStyle.SetValue(7)
-			; S P E C I A L : 22 22 21 1 5 21 8
-			SetSPECIAL(TerminalTarget, 22, 22, 21, 1, 5, 21, 8, true)
+			if (1.0 == pTweakAllowAutoStats.GetValue())
+				; S P E C I A L : 22 22 21 1 5 21 8
+				int schoice = pTweakAssignStatsMsg.Show()
+				if (0 == schoice)
+					SetSPECIAL(TerminalTarget, 22, 22, 21, 1, 5, 21, 8, true)
+				endif
+			endif
 		else
 			pTweakCombatStyle.SetValue(0)		
 		endIf
-		if (option > 0 && option < 8)
-			pTweakStatUpdate.Show()
-		endIf
+;		if (option > 0 && option < 8)
+;			pTweakStatUpdate.Show()
+;		endIf
 		
 		if backToPip
 			pTweakCombatStyleTerminal.ShowOnPipBoy()
@@ -3052,21 +3106,21 @@ Function handleCommand(float theCommand)
 				
 				
 				elseif 39.0 == theCommand ; Default
-					SetCombatStyle(0, false)
+					TweakSetCombatStyle(0, false)
 				elseif 40.0 == theCommand ; Gunslinger
-					SetCombatStyle(1, false)
+					TweakSetCombatStyle(1, false)
 				elseif 41.0 == theCommand ; Bruiser
-					SetCombatStyle(2, false)
+					TweakSetCombatStyle(2, false)
 				elseif 42.0 == theCommand ; Commando
-					SetCombatStyle(3, false)
+					TweakSetCombatStyle(3, false)
 				elseif 43.0 == theCommand ; Boomstick
-					SetCombatStyle(4, false)
+					TweakSetCombatStyle(4, false)
 				elseif 44.0 == theCommand ; Ninja
-					SetCombatStyle(5, false)
+					TweakSetCombatStyle(5, false)
 				elseif 45.0 == theCommand ; Sniper
-					SetCombatStyle(6, false)
+					TweakSetCombatStyle(6, false)
 				elseif 46.0 == theCommand ; Dynamic
-					SetCombatStyle(7, false)
+					TweakSetCombatStyle(7, false)
 				elseif 47.0 == theCommand ; Set Aggressive
 					StyleAggRelay()
 				elseif 48.0 == theCommand ; Set Defensive
@@ -4640,11 +4694,11 @@ Function ToggleConvNegToPos(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakConvNegToPos)
 		else
 			TerminalTarget.AddToFaction(pTweakConvNegToPos)
-			if !TerminalTarget.IsInFaction(pTweakNoCommentDisapprove)
-				TerminalTarget.AddToFaction(pTweakNoCommentDisapprove)
-				TerminalTargetNoCommentDisapprove = true
-				pTweakNegativeCommentsAlert.Show()
-			endIf
+			; if !TerminalTarget.IsInFaction(pTweakNoCommentDisapprove)
+			;	TerminalTarget.AddToFaction(pTweakNoCommentDisapprove)
+			;	TerminalTargetNoCommentDisapprove = true
+			;	pTweakNegativeCommentsAlert.Show()
+			; endIf
 		endIf
 		
 		if backToPip
@@ -4674,11 +4728,11 @@ Function ToggleConvPosToNeg(bool backToPip=True)
 			TerminalTarget.RemoveFromFaction(pTweakConvPosToNeg)
 		else
 			TerminalTarget.AddToFaction(pTweakConvPosToNeg)
-			if !TerminalTarget.IsInFaction(pTweakNoCommentApprove)
-				TerminalTarget.AddToFaction(pTweakNoCommentApprove)
-				TerminalTargetNoCommentApprove = true
-				pTweakPositiveCommentsAlert.Show()
-			endIf			
+			; if !TerminalTarget.IsInFaction(pTweakNoCommentApprove)
+			;	TerminalTarget.AddToFaction(pTweakNoCommentApprove)
+			;	TerminalTargetNoCommentApprove = true
+			;	pTweakPositiveCommentsAlert.Show()
+			; endIf			
 		endIf
 		
 		if backToPip

@@ -1479,6 +1479,7 @@ endFunction
 ; items in the requested outfit and unequip differences.  This is more
 ; prone to bugs, but prevents nudity flashing. 
 Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
+
 	Trace("RestoreTweakOutfit [" + targetOutfit + "]")
 	if !managed
 		Trace("NPC is not managed. Ignoring Call")
@@ -1490,7 +1491,8 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 	endif
 	
 	bool weapdrawcomboveride = (weaponDrawn && (1.0 == pTweakCombatOutfitOnWeapDraw.GetValue()))
-
+	bool didFullRefresh = false
+	
 	Actor npc = self.GetActorReference()
 	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
 		Trace("Ignoring RestoreTweakOutfit. NPC is wearing PowerArmor")
@@ -1601,15 +1603,94 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 		
 	; NOTE : !empty_array evaluates as true. Even (None == empty_array) evaluates as true. 
 	; So, you need to track it independently. 
-		
-	if(!AvoidUnequipAll)
-		FullOutfitEquip(gear, weapdrawcomboveride)
-		return
-	endif
 
-	; Normal/Default case: AvoidUnequipAll is true (which is default)
 	managed = false ; We need to freeze CurrentOutfit so we can compare later
+	int numitems = gear.length	
 	
+	if(AvoidUnequipAll)
+		TweakEquipOutfit(targetOutfit, gear, weapdrawcomboveride)
+		
+		; Hopefully all slots were cleared. But sometimes (one-piece) outfits will
+		; not clear. The only recoarse is to start over, with an UnEquipAll command.
+		
+		; Compare what they HAD on with what they SHOULD have on....
+		bool needsSecond = false
+		int i = 0
+		int curr_len = CurrentOutfit.length
+		while (i < curr_len)
+			Form item = CurrentOutfit[i]
+			if !(item as Weapon) && !(item as Ammo)
+				if (npc.IsEquipped(item) && (gear.Find(item) < 0) )
+					Trace("Item [" + item + "] is still equipped. Unequipping.")
+					npc.UnEquipItem(item,false,true)
+					needsSecond = true
+					int pos = myHead.Find(item)
+					if (pos > -1)
+						Trace("Item [" + item + "] found on Head. Removing from myHead collection.")
+						myHead.Remove(pos)
+					endif
+				endif
+			endif
+			i += 1
+		endWhile
+		
+		bool needsThird = false
+		
+		if needsSecond
+			; sometimes unequipping items causes the follower to go nude. So we need to 
+			; re-confirm that the follower has the items on that we think they should 
+			; have.
+			i = 0
+			while (i < numitems)
+				Form item = gear[i]
+				if !(item as Weapon) && !(item as Ammo)
+					if (!npc.IsEquipped(item))
+						Trace("Item [" + item + "] not equipped. (and it should be)")
+						needsThird = true
+					endif
+				endif
+				i += 1
+			endWhile
+		endif
+		
+		if needsThird
+			didFullRefresh = true
+			FullOutfitEquip(gear, weapdrawcomboveride)
+		endif	
+	else
+		didFullRefresh = true
+		FullOutfitEquip(gear, weapdrawcomboveride)
+	endif
+	
+	Trace("Syncing CurrentOutfit with Chosen outfit")
+	CurrentOutfit.Clear()
+	myHead.Clear()
+	int i = 0
+	while (i < numitems)
+		Form akBaseItem = gear[i]
+		int formid = akBaseItem.GetFormID()
+		if (akBaseItem.HasKeyword(ArmorBodyPartHead) || akBaseItem.HasKeyword(ArmorTypeHat) || formid == 0x00125891 || \
+								formid == 0x0004A520 || formid == 0x001C4BE8 || formid == 0x000FD9AA || \
+								formid == 0x001738AA || formid == 0x000E628A || formid == 0x000A81AF)
+			myHead.Add(akBaseItem)
+		endif
+		CurrentOutfit.Add(akBaseItem)
+		i += 1
+	endWhile
+	
+	managed = true
+	Trace("Done")
+	
+	if didFullRefresh
+		; When we do a full refresh, stats often reset. So we have to 
+		; re-enforce...
+		((self as ReferenceAlias) as TweakSettings).enforceSettings()
+	endif
+	
+endFunction
+
+Function TweakEquipOutfit(int targetOutfit, Form[] gear, bool weapdrawcomboveride)
+	Actor npc = self.GetActorReference()
 	Int numitems = gear.length
 	Trace("Snapshot [" + targetOutfit + "] has [" + numitems + "] pieces")
 	
@@ -1675,54 +1756,7 @@ Function RestoreTweakOutfit(int targetOutfit = 0, bool AvoidUnequipAll = true)
 			endWhile
 		endif
 	endif
-
-	; Hopefully all slots were cleared. But sometimes (one-piece) outfits will
-	; not clear. The only recoarse is to start over, with an UnEquipAll command.
-	
-	bool needsSecond = false
-	int i = 0
-	int curr_len = CurrentOutfit.length
-	while (i < curr_len)
-		Form item = CurrentOutfit[i]
-		if !(item as Weapon) && !(item as Ammo)
-			if (npc.IsEquipped(item) && (gear.Find(item) < 0) )
-				Trace("Item [" + item + "] is still equipped. Unequipping.")
-				; npc.UnEquipItem(item,false,true)
-				needsSecond = true
-				int pos = myHead.Find(item)
-				if (pos > -1)
-					Trace("Item [" + item + "] found on Head. Removing from myHead collection.")
-					myHead.Remove(pos)
-				endif
-			endif
-		endif
-		i += 1
-	endWhile
-	
-	if needsSecond
-		FullOutfitEquip(gear, weapdrawcomboveride)
-	endif
-	
-	Trace("Syncing CurrentOutfit with Chosen outfit")
-	CurrentOutfit.Clear()
-	myHead.Clear()
-	i = 0
-	while (i < numitems)
-		Form akBaseItem = gear[i]
-		int formid = akBaseItem.GetFormID()
-		if (akBaseItem.HasKeyword(ArmorBodyPartHead) || akBaseItem.HasKeyword(ArmorTypeHat) || formid == 0x00125891 || \
-								formid == 0x0004A520 || formid == 0x001C4BE8 || formid == 0x000FD9AA || \
-								formid == 0x001738AA || formid == 0x000E628A || formid == 0x000A81AF)
-			myHead.Add(akBaseItem)
-		endif
-		CurrentOutfit.Add(akBaseItem)
-		i += 1
-	endWhile
-	
-	managed = true
-	Trace("Done")
-	
-endFunction
+EndFunction
 
 Function FullOutfitEquip(Form[] gear, bool weapdrawcomboveride)
 	Trace("FullOutfitEquip")

@@ -49,6 +49,10 @@ Location        Property pVault111Location			Auto Const
 Location		Property pPrewarVault111Location	Auto Const
 Location		Property pMQ203Location				Auto Const
 
+; RRR03 Bug Fix
+Quest		Property RRR03					Auto Const
+MiscObject	Property pRRR03RFIDDevice		Auto Const
+
 int  maxwait    = 30
 bool allowdraw  = true
 bool allowsneak = true
@@ -518,6 +522,20 @@ Function OnGameLoaded()
 	TweakDebugMode.SetValue(0.0)
 	UpdateTweakDebugMode()
 
+	if RRR03.IsRunning()
+		if (100 == RRR03.GetCurrentStageID())
+			if (player.GetItemCount(pRRR03RFIDDevice) == 0.0)
+				ReferenceAlias Alias_RFID = RRR03.GetAlias(5) as ReferenceAlias
+				if Alias_RFID
+					ObjectReference pRFID = player.PlaceAtMe(pRRR03RFIDDevice)
+					Alias_RFID.ForceRefTo(pRFID)
+					player.AddItem(pRFID,1,true)
+				endif
+			endif
+		endif
+		
+	endif
+	
 	Trace("OnGameLoad() Finished")
 	
 EndFunction
