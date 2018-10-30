@@ -7,7 +7,7 @@
                               [Fallout 4 Edition]
                   ___________________________________________
 
-                                  Oct 22, 2018
+                                  Oct 29, 2018
                                  Version: 1.20
 
                         Written by:  Dheu
@@ -734,8 +734,8 @@ IV. > > > >  Usage
               --------------------------
               Actions                   
               --------------------------
-              Get Behind Me             
               Gather Loose Items        
+              Get Behind Me             
 			  Command Mode
               Wait Here                 
               Hangout Here              
@@ -750,17 +750,8 @@ IV. > > > >  Usage
               --------------------------
              
         DETAILS:
-             
-        a) Get Behind Me
-             
-           Causes the follower you are speaking with to teleport behind you.
-              
-           Note: 
-           
-           - If you are bumping into an active follower and you draw your 
-             weapon, this Method is executed automatically. 
-		   
-        b) Gather Loose Items
+             		   
+        a) Gather Loose Items
              
            The Follower searches around the player (Radius = 1.5X the size of 
            AFT CAMP) and gather up any items they see. In Follower Mode, the
@@ -774,6 +765,16 @@ IV. > > > >  Usage
                   and ignores followers carry weight limits. If you are
                   opposed to followers carrying more than their limit 
                   allows, then don't use this method. 
+				  
+        b) Get Behind Me
+             
+           Causes the follower you are speaking with to teleport behind you.
+              
+           Note: 
+           
+           - If you are bumping into an active follower and you draw your 
+             weapon, this Method is executed automatically. 
+				  
         
 		c) Command Mode
 		
@@ -2208,8 +2209,8 @@ IV. > > > >  Usage
               --------------------------
               Actions                   
               --------------------------
-              Summon All
 			  Gather Loose Items
+              Summon All
 			  Command Mode
               All Retreat               
               All Attack                
@@ -2224,19 +2225,8 @@ IV. > > > >  Usage
               --------------------------
              
         DETAILS:
-             
-        a) Summon All
-             
-           Teleports all active followers in front of you and causes
-           them to begin following you again if they were told to 
-           wait/hangout or individually stay somewhere.
-              
-           Note: 
-           
-           - There are some areas of the game where Summon All is disabled
-             for immersion reasons.
-			 
-        b) Gather Loose Items
+             			 
+        a) Gather Loose Items
              
            Followers search around the player (Radius = 1.5X the size of 
            AFT CAMP) and gather up any items they see. If the crosshair
@@ -2267,6 +2257,17 @@ IV. > > > >  Usage
                   opposed to followers carrying more than their limit 
                   allows, then don't use this method. 
 
+        b) Summon All
+             
+           Teleports all active followers in front of you and causes
+           them to begin following you again if they were told to 
+           wait/hangout or individually stay somewhere.
+              
+           Note: 
+           
+           - There are some areas of the game where Summon All is disabled
+             for immersion reasons.
+			 
 		c) Command Mode
 		
 		   Places the previously commanded actor back into command
@@ -5679,11 +5680,14 @@ X. > > > >  Version History
   - Added Companion Lockpick/Hack XP. After 6 successes, they stop failing.
   - Updated PickLock/Hack commands to fail less as followers gain experience.
   - Updated Prepare For Uninstall to store spouse and restore on next install
+  - Updated Action Menu so that Gather Loose Items is now first item
+  - Updated Now only manages follower inventory if you set an outfit.
   - Updated Startup Initialization to limit full import to core Companions.
   - Updated Setup Camp to teleport Dismissed followers to camp (if camp is their home)
   - Updated GatherLoose items to recognize more items.
   - Updated Unmanage to be more robust and allow trade with settlers again.
   - Updated Endurance Boost Health to prevent health loss during some outfit changes.
+  - Fixed various bugs involving the quest Blind Betrayal 
   - Fixed issue with Automatron Robot dialogues going away when recruited.
   - Fixed PA Helmet removal when NPC told to exit PA using normal dialogue.
   - Fixed Combat Nudiy issues following Sculpt command  

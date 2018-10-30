@@ -1196,14 +1196,23 @@ EndFunction
 
 ; ScriptSource means source is from automated script. Example: NPC uses a scripted
 ; furniture. If it comes from a pipboy directed command, it should be false.
-Function UnequipAllGear(bool InvokedFromFurniture=false)
-
+Function UnequipAllGear(bool InvokedFromFurniture=false, bool startManaging=false)
+	Trace("UnequipAllGear() Called")
+	
 	if (InvokedFromFurniture && !managed)
 		trace("Ignoring UnequipAllGear request. NPC is not managed.")
 		return
 	endif
 	
 	Actor npc = self.GetActorRef()
+	
+	; 1.20 : Only start managing outfit if user sets an outfit. Otherwise, just
+	; strip the NPC down. 
+	if !startManaging && !managed
+		npc.UnEquipAll()
+		return
+	endIf
+	
 	
 	bool wasInPA = false
 	if 1.0 == npc.GetValue(pTweakInPowerArmor) || npc.WornHasKeyword(pArmorTypePower)
@@ -1364,7 +1373,7 @@ Function SetTweakOutfit(int targetOutfit = 0, bool silent = false)
 	Utility.wait(0.10)
 	
 	if (!managed)
-		UnequipAllGear() ; This will enable management
+		UnequipAllGear(startManaging=true)
 		Utility.wait(0.1)
 	endif
 
@@ -1762,7 +1771,7 @@ Function FullOutfitEquip(Form[] gear, bool weapdrawcomboveride)
 	Trace("FullOutfitEquip")
 	Actor npc = self.GetActorRef()
 	
-	UnequipAllGear()
+	UnequipAllGear(startManaging=true)
 	Int numitems = gear.length
 	Int i = 0
 	Form item

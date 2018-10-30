@@ -917,7 +917,9 @@ Function initialize()
 	bool clearfactions = true
 	bool corecompanion = false
 	
-	if ActorBaseID > 0x00ffffff
+	; 0x000A7D35 = Original Female Spouse
+	; 0x000A7D34 = Original Male Spouse
+	if ActorBaseID > 0x00ffffff || ActorBaseID == 0x000A7D35 || ActorBaseID == 0x000A7D34
 		clearfactions = false
 	endIf
 	; Ada is 0x0100FD5A
