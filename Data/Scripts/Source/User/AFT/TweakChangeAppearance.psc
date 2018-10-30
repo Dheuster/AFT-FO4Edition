@@ -503,7 +503,17 @@ Function Sculpt(TweakAppearance pTweakAppearance, int uiMenu=1)
 	pSculptTarget.ForceRefTo(npc)
 	
 	Trace("Removing gear for sculpt")
-	wasManaged = true
+	wasManaged = false
+	
+	; 1.20: Sculpt should not automatically kick off Inventory Management
+    ; - On Sculpt:
+    ;   if first sculpt:
+    ;     - if managed, restoreOutfit after race switch
+    ;     - if not managed, unequipall
+    ;   When sculpt ends (first or not)
+    ;     - if managed, restoreOutfit
+    ;     - if not managed, place in road leathers.	
+	
 	
 	AFT:TweakInventoryControl pTweakInventoryControl = (pTweakAppearance as ReferenceAlias) as AFT:TweakInventoryControl
 	if (pTweakInventoryControl)
@@ -526,7 +536,6 @@ Function Sculpt(TweakAppearance pTweakAppearance, int uiMenu=1)
 			
 			wasManaged = pTweakInventoryControl.IsManaged()
 			
-			; This will strip them down and begin inventory management....
 			pTweakInventoryControl.UnEquipAllGear()
 			Utility.wait(0.1)			
 		endif		
@@ -782,7 +791,7 @@ Function SculptLeveled(TweakAppearance pTweakAppearance, int uiMenu=1)
 	pSculptTarget.ForceRefTo(realNPC)
 		
 	Trace("SculptLeveled: Removing gear for sculpt")
-	wasManaged = true
+	wasManaged = false
 	realNPC.UnEquipAll()
 	Utility.wait(0.1)
 		
@@ -1048,7 +1057,7 @@ Function NewBody(TweakAppearance pTweakAppearance)
 	npc.SetPosition(posdata[0],posdata[1],posdata[2])
 	npc.SetAngle(0.0, 0.0,  Enforce360Bounds(pc.GetAngleZ()))	
 
-	wasManaged = true
+	wasManaged = false
 	; Take SnapShot:
 	AFT:TweakInventoryControl pTweakInventoryControl = (pTweakAppearance as ReferenceAlias) as AFT:TweakInventoryControl
 	if (pTweakInventoryControl)

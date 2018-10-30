@@ -3791,7 +3791,7 @@ Function FlagCompanionChatEventOverride(actorvalue ActorValueRepresentingEvent) 
 				; We just learned Danse is a Synth. Problem is, he keeps barking BOS
 				; propoganda even if we let him live. So when this fires, disable his
 				; idle chatter
-
+				
 				ActorBase DanseBase = Game.GetForm(0x00027683) as ActorBase
 				Actor Danse = DanseBase.GetUniqueActor()
 				if Danse
@@ -3802,6 +3802,7 @@ Function FlagCompanionChatEventOverride(actorvalue ActorValueRepresentingEvent) 
 					; 	Danse.AddToFaction(TweakNoCommentGeneral)
 					; endIf
 				endIf
+				this.HandleDanseIsSynth()
 				
 			elseif (0x002488D0 == acreID)
 				; ==== COMQC_MQ204VirgilAV
@@ -4033,6 +4034,14 @@ Function UpdateIdleCoolDownActive(float min, float max)
 		f += 1
 	endWhile
 	
+EndFunction
+
+Function HandleDanseIsSynth()
+	trace("HandleDanseIsSynth() Called")
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower as AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)
+		pTweakFollowerScript.CallFunctionNoWait("HandleDanseIsSynth", new Var[0])
+	endif
 EndFunction
 
 bool Function IsCoreCompanion(Actor npc)

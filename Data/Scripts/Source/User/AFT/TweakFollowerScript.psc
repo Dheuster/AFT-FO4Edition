@@ -285,6 +285,7 @@ Spell		Property TeleportInSpell				Auto Const
 FormList	Property pTweakHumanoidKeywords			Auto Const
 Location	Property InstituteLocation				Auto Const
 Location	Property pListeningPostBravoLocation	Auto Const
+Location	Property pPrydwenLocation				Auto Const
 
 ; You may only use this command [3] more time(s). Continue? 0=No 1=yes
 Message		Property TweakSummonAllWarning			Auto Const 
@@ -2430,6 +2431,7 @@ Function UnEquipGearByNameId(int id = 0)
 		return
 	endif
 	
+	trace("Calling UnEquipAllGear()")
 	(npcref as TweakInventoryControl).UnEquipAllGear()
 	
 endFunction
@@ -5866,7 +5868,8 @@ Function HandleBoSKickOut()
 				Danse.SetEssential(False)
 				Danse.GetActorBase().SetEssential(false)
 				Danse.SetProtected(True)				
-				Danse.SetGhost(false)				
+				Danse.SetGhost(false)
+				Danse.RemoveFromFaction(pDisallowedCompanionFaction)
 				
 				if Haylen && !Haylen.IsDead()
 					if Haylen.IsInFaction(pTweakFollowerFaction)
@@ -5897,8 +5900,9 @@ Function HandleBoSKickOut()
 								if pa.IsInFaction(pTweakFollowerFaction)
 									int followerId = pa.GetFactionRank(pTweakFollowerFaction)
 									if (followerId > 0)
+									
 										AFT:TweakSettings pTweakSettings = (pManagedMap[followerId] as AFT:TweakSettings)
-										if pTweakSettings
+										if pTweakSettings && pPrydwenLocation == pTweakSettings.originalHome
 											pTweakSettings.originalHome    = pListeningPostBravoLocation
 											pTweakSettings.originalHomeRef = BoS302DanseMarker
 											pTweakSettings.assignedHome    = pListeningPostBravoLocation
@@ -5912,11 +5916,20 @@ Function HandleBoSKickOut()
 												pTweakSettings.originalFactions.remove(findex)
 											endif
 											pTweakSettings.originalFactions.add(BoS302DanseFaction)
-										endif
-										AFT:TweakInventoryControl pTweakInventoryControl = (pManagedMap[followerId] as AFT:TweakInventoryControl)
-										if pTweakInventoryControl
-											pTweakInventoryControl.assignedHome    = pListeningPostBravoLocation
-											pTweakInventoryControl.assignedHomeRef = BoS302DanseMarker
+											
+											Keyword pTweakLocHome = Game.GetFormFromFile(0x0105AD99,"AmazingFollowerTweaks.esp") as Keyword
+											if pTweakLocHome
+												Danse.SetLinkedRef(BoS302DanseMarker, pTweakLocHome)
+											else
+												Trace("Lookup for TweakLocHome Failed!")
+											endif
+											
+											AFT:TweakInventoryControl pTweakInventoryControl = (pManagedMap[followerId] as AFT:TweakInventoryControl)
+											if pTweakInventoryControl
+												pTweakInventoryControl.assignedHome    = pListeningPostBravoLocation
+												pTweakInventoryControl.assignedHomeRef = BoS302DanseMarker
+											endif
+											
 										endif
 									endif
 								endif
@@ -5957,6 +5970,12 @@ Function HandleBoSKickOut()
 										endif
 										pTweakSettings.originalFactions.add(HasBeenCompanion)
 									endif
+									Keyword pTweakLocHome = Game.GetFormFromFile(0x0105AD99,"AmazingFollowerTweaks.esp") as Keyword
+									if pTweakLocHome
+										Danse.SetLinkedRef(BoS302DanseMarker, pTweakLocHome)
+									else
+										Trace("Lookup for TweakLocHome Failed!")
+									endif									
 									AFT:TweakInventoryControl pTweakInventoryControl = (pManagedMap[followerId] as AFT:TweakInventoryControl)
 									if pTweakInventoryControl
 										pTweakInventoryControl.assignedHome    = pListeningPostBravoLocation
@@ -6090,6 +6109,77 @@ Function HandleRRKickOut()
 	endif
 		
 endFunction
+
+; Called From TweakDFScript attached to Quest Followers. 
+Function HandleDanseIsSynth()
+	Trace("HandleDanseIsSynth() Called")
+	
+	Actor	  Danse     = BoSPaladinDanse.GetUniqueActor()
+	if Danse.IsDead()
+		Trace("Danse is Dead")
+		return
+	endif
+	if !Danse.IsInFaction(pTweakFollowerFaction)
+		Trace("Danse is not managed by AFT")		
+		return
+	endIf
+	
+	int followerId = Danse.GetFactionRank(pTweakFollowerFaction)
+	if (followerId < 1)
+		Trace("FollowerID is 0 or less. Bailing")
+		return
+	endif
+	
+	AFT:TweakSettings pTweakSettings = (pManagedMap[followerId] as AFT:TweakSettings)
+	if !pTweakSettings
+		Trace("Cast to TweakSettings Failed")
+		return
+	endif
+	
+	if (pPrydwenLocation == pTweakSettings.originalHome)
+		Trace("Changing Original Home Location")
+		
+		pTweakSettings.originalHome    = pListeningPostBravoLocation
+		pTweakSettings.originalHomeRef = BoS302DanseMarker
+		pTweakSettings.assignedHome    = pListeningPostBravoLocation
+		pTweakSettings.assignedHomeRef = BoS302DanseMarker
+			
+		Keyword pTweakLocHome = Game.GetFormFromFile(0x0105AD99,"AmazingFollowerTweaks.esp") as Keyword
+		if pTweakLocHome
+			Danse.SetLinkedRef(BoS302DanseMarker, pTweakLocHome)
+		else
+			Trace("Lookup for TweakLocHome Failed!")
+		endif
+	
+		AFT:TweakInventoryControl pTweakInventoryControl = (pManagedMap[followerId] as AFT:TweakInventoryControl)
+		if pTweakInventoryControl
+			pTweakInventoryControl.assignedHome    = pListeningPostBravoLocation
+			pTweakInventoryControl.assignedHomeRef = BoS302DanseMarker
+		endif
+	
+		
+		CompanionActorScript CAS = Danse as CompanionActorScript
+		if CAS
+			CAS.HomeLocation = pListeningPostBravoLocation
+		endIf
+		
+		WorkshopNPCScript WNS = Danse as WorkshopNPCScript
+		If (WNS)
+			int workshopID = WNS.GetWorkshopID() ; npc.GetValue(pWorkshopParent.WorkshopIDActorValue) as int
+			if (workshopID > -1)
+				WorkshopParentScript pWorkshopParent = (Game.GetForm(0x0002058E) as Quest) as WorkshopParentScript
+				pWorkshopParent.UnAssignActor(WNS, true)				
+			endIf
+		endIf
+		
+	else
+		Trace("Original Home Location is NOT the Prydwen. Skipping Home Re-Assignment")
+	endif
+	
+	Danse.RemoveFromFaction(pDisallowedCompanionFaction)
+
+	
+EndFunction
 
 ReferenceAlias[] Function GetDismissedToCamp()
 	ReferenceAlias[] result = new ReferenceAlias[0]
