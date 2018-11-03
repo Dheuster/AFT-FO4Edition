@@ -821,7 +821,8 @@ Function HealAll(Actor myPatient)
 		myPatient.SetValue(HC_IsCompanionInNeedOfHealing, 0)
 	endif
 	CureAddictions.Cast(myPatient, myPatient)
-	myPatient.SetCanDoCommand(False)
+	
+	; 1.21 : I think this was a copy/paste bug.
 	myPatient.SetGhost(False)
 	
 EndFunction
