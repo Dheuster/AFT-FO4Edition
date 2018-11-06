@@ -7,12 +7,12 @@
                               [Fallout 4 Edition]
                   ___________________________________________
 
-                                  Oct 29, 2018
-                                 Version: 1.20
+                                  Nov 6, 2018
+                                 Version: 1.21
 
                         Written by:  Dheu
                              Email:  Dheuster@gmail.com
-                       Use subject:  AFT FO4 Version 1.20
+                       Use subject:  AFT FO4 Version 1.21
 
 
                                  QUICK SUMMARY
@@ -53,8 +53,8 @@ PC ONLY: Save Settlement snapshots to sharable batch file or papyrus code
      
  IV.   Usage
     A.   AFT Activator Overview
-	
-    B.   AFT Activator : Follower Mode	
+     
+    B.   AFT Activator : Follower Mode     
       1.  Actions
       2.  Gear
       3.  Combat AI
@@ -63,13 +63,13 @@ PC ONLY: Save Settlement snapshots to sharable batch file or papyrus code
       6.  Settings
       7.  Tools
       8.  Select All Followers
-	  
-    C.   AFT Activator : All Follower Mode	
+       
+    C.   AFT Activator : All Follower Mode     
       1.  Actions
       2.  Gear
       3.  Tools
       4.  Select Follower
-	  
+       
     D.   AFT Activator : Import/Recruitment Mode
       1.  Scan
       2.  Make Follower (Full Import)
@@ -77,16 +77,16 @@ PC ONLY: Save Settlement snapshots to sharable batch file or papyrus code
       4.  Make Follower (Follow Only. DO NOT MANAGE)
       5.  Make Settler/UnMake Settler
       6.  Ignore NPC
-		  
+            
     E.   Global Settings
       1.  Follower Limit
       2.  Global Chat Settings
-      3.  Global Combat Settings	  
+      3.  Global Combat Settings       
       4.  Global Misc Settings
       5.  Global Cooldown Settings
       6.  View Readme
       7.  Restore Aft Activator
-	  8.  Summon Everyone!
+      8.  Summon Everyone!
       9.  Prepare for Uninstall
           
     F.   AFT Camp
@@ -150,7 +150,7 @@ I. > > > > Feature List:
           
   1) Multiple Follower support
        
-     Allows dogmeat + (up to) 5 additional followers. 
+     Allows dogmeat + 5 additional followers. 
        
   2) Appearance Sculpting
        
@@ -218,10 +218,10 @@ I. > > > > Feature List:
      caution levels. Maybe you want your followers to stay out of the
      fight so you can do all the fighting. Or have Danse scout ahead
      of the player like dogmeat to draw enemy fire.
-	 
-	 Followers with Stimpaks and Repair kits will also heal each other
-	 and help each other out. You can create a "medic" type Follower
-	 by simply loading them up with stimpaks.
+      
+      Followers with Stimpaks and Repair kits will also heal each other
+      and help each other out. You can create a "medic" type Follower
+      by simply loading them up with stimpaks.
          
   11) NPC Info
          
@@ -265,7 +265,9 @@ I. > > > > Feature List:
       - Ignore Friendly Fire : In Fallout 4, by default Companions ignore
         friendly fire. This setting allows you to turn that off if you 
         wish for more realistic responses to being shot.
-            
+          
+      - No Collision : Instead of having to wait for followers to back up
+        and get out of your way, just walk through them.             
          
   13) Clear Settlement
             
@@ -280,7 +282,6 @@ I. > > > > Feature List:
       you. Prefabs include options for building a parameter fence only and 
       options to build the entire settlement. Sanctuary is Free. The others 
       will cost you.
-         
                
   15) Additional Outfits for Nick
          
@@ -324,11 +325,6 @@ II. > > > >  DLC Compatibility
      additional commentary for Porter Gage. Advise including him in your 
      load-out while in Nuka world (once available). 
 
-     Camp turrets may fire on friendly Raiders. Disable them if this happens
-	 and you don't want that behavior. Leave them on if you do. NOTE: Despite 
-	 occasionally killing raiders, enabling the turrets will not cause raiders
-	 to turn against you.
-
   C. Far Harbor
 
      All companions will work fine in Far Harbor however the DLC only provides
@@ -342,7 +338,7 @@ III. > > > >  Installation
         
   A. Requirements
         
-     This mod was compiled against Fallout 4 patch 1.10.89.  To minimize the
+     This mod was compiled against Fallout 4 patch 1.10.114.  To minimize the
      possibility of bugs, it is advised that users have the same patch or
      newer. The mod may work with older versions of the game, but may be 
      be less stable. To see what version you have, hit ESC within the game 
@@ -365,7 +361,7 @@ III. > > > >  Installation
      2) Once 7-zip is installed, open the .7z file downloaded from NexusMods 
         Typically you need only double click the file:
          
-          AmazingFollowerTweaksFO4_v1_18.7z
+          AmazingFollowerTweaksFO4_v1_21.7z
          
      3) Within the 7-zip window, select the menu options: 
          
@@ -377,7 +373,7 @@ III. > > > >  Installation
      4) The 7-zip window will show 2 files:
            
           /Data
-          readme_aft_1_18.txt
+          readme_aft_1_21.txt
           
         Make sure BOTH items are hi-lighted. To hi-light both entries quickly, 
         hit CTRL + A
@@ -408,7 +404,7 @@ III. > > > >  Installation
          
      7) When you start up Fallout 4, go to Mods (Hit Home to skip the login) 
         and make sure AmazingFollowerTweaks mod is checked. Move the mod to 
-	the BOTTOM of your load order.
+        the BOTTOM of your load order.
             
      8) For what to expect after starting a new game or loading a save game, 
         see Usage below. 
@@ -457,7 +453,7 @@ III. > > > >  Installation
        naked or wearing the wrong clothes)
 
      - The sculpt command is fragile. It lets you do something the game never
-       intended to let users do. So here are some hints to avoid issues:
+       intended to let users do. So here are some pointers to avoid issues:
 
        -- Only use from a safe location where you wont get attacked. 
 
@@ -485,7 +481,7 @@ III. > > > >  Installation
               cause her model to reload and the changes to take
               effect. Typically you must fast travel into/outof
               Diamond City. Sometimes telling her to enter/exit
-			  PA will also reload her model.
+                 PA will also reload her model.
 
           --- On XBOX, Curie will become invisible after the edits. 
               You need to save your game, then shutdown Fallout 4
@@ -511,14 +507,24 @@ III. > > > >  Installation
      First Steps: 
      
      1) Ensure AFT is at the Bottom of your Load Order
+	 
      2) Ensure the file <installdir>/Data/Scripts/followersscript.pex 
         does not exist. install directory for most user is:
-	
+     
         C:\Program Files\steam\steamapps\common\Fallout 4
-     3) Visit the mods home page and check the forum that tracks 
-        known incompatible mods. Make sure you are not using one 
+		
+     3) Visit the mods home page at nexusmods and check the forum that 
+        tracks known incompatible mods. Make sure you are not using one 
         of the mods listed.
-	
+		
+     4) TGM (God Mode) stops player combat events. When activated mid-combat, 
+        it makes the game think the player is forever in combat, which can 
+        break things like outfits, auto-relax and even idle chatter. For those
+        who use TGM, go to 3rd person view, open console, click on the player
+        and use the command "IsInCombat". If it says the player is in combat
+        when they are not, you need to disable TGM and get into a fight to 
+        fix the state.
+     
      Second Steps:
      
      If the above steps do not fix the issue, then confirm the following:
@@ -533,8 +539,8 @@ III. > > > >  Installation
           AFT Version 1.06-1.14 : FO4 Patch 1.10.40
           AFT Version 1.15-1.16 : FO4 Patch 1.10.64
           AFT Version 1.17-1.19 : FO4 Patch 1.10.89
-          AFT Version 1.20+     : FO4 Patch 1.10.111
-		  
+          AFT Version 1.20+     : FO4 Patch 1.10.114
+            
      2) Did you clean your Cache?
            
         Steam -> Library -> (All Games) Fallout 4 -> Properties 
@@ -545,13 +551,13 @@ III. > > > >  Installation
         If you are starting a new game, the AFT items will not appear in your  
         inventory until you emerge from Vault 111 (AFT delays initialization 
         until the quest Out of Time begins). 
-	
-	Some Alt-Start mods do not start the quest Out of Time, which can 
-	cause AFT to not initialize properly. If you use an ALT START mod, you 
-	should leave AFT disabled until you do something within your play-through
-	to start/finished the quest Out of Time (such as talking to Codsworth and
-	then rescuing the MinuteMen in Concord.)
-	
+     
+        Some Alt-Start mods do not start the quest Out of Time, which can 
+        cause AFT to not initialize properly. If you use an ALT START mod, you 
+        should leave AFT disabled until you do something within your play-through
+        to start/finished the quest Out of Time (such as talking to Codsworth and
+        then rescuing the MinuteMen in Concord.)
+     
         #4 below can also cause the AFT Master Control to now show up. 
                
      4) Were you using another multi-follower mod before AFT?
@@ -567,22 +573,22 @@ III. > > > >  Installation
         previous Follower mod). Follow the previous mods uninstall instructions 
         (Similar to the instructions this mod provides). If you used a Follower 
         mod that has no uninstall instructions, your only option may be 
-        starting a new game.
+        starting a new game or reverting back to a save from before installing
+        the other follower mod.
 
      Mod Conflict Diagnosis:
      -----------------------
-     Issue these two console commands to check if AFT owns the mandatory Resources
-     needed to function. If either method reports an error, then there is a 
-     mod conflict (possibly baked into your save game).
+     Issue these two console commands. If either method reports an error, then 
+     there is a mod conflict (possibly baked into your save game).
 
-     cqf Followers GetStandardLoiterCoolDownTime
-     cqf Followers GetInfatuatedFollowers
+        cqf Followers GetStandardLoiterCoolDownTime
+        cqf Followers GetInfatuatedFollowers
 
      Users can attempt to force initialize AFT with the following command:
      Some users have reported this command can correct a rare issue where
      the prefabs do not properly initialize.
 
-     cqf TweakMonitorPlayer InitializeAft
+        cqf TweakMonitorPlayer InitializeAft
                               
 -------------------------------------------------------------------------------
 IV. > > > >  Usage
@@ -597,9 +603,13 @@ IV. > > > >  Usage
     spouse could be saved).
            
     Upon exiting Vault 111, AFT will initialize, a thank you will appear and 
-    you will find 2 new items in your inventory:  The AFT Activator and the AFT
-    Settings holotape. The AFT Activator will automatically be assigned to 
-    Quick Slot 3.
+    you will find 2 new items in your inventory:  The AFT Readme, the 
+    AFT Activator and the AFT Settings holotape. The AFT Activator will 
+    automatically be assigned to Quick Slot 3.
+	
+    ** Sometimes the police baton will override the AFT favorite assignment.
+       If this happens, you will need to manually assign the favorite by
+       hi-lighting the AFT Activator and hit the Fav key (Normally Q).
 
   Loading an Existing Save Game:
            
@@ -616,9 +626,9 @@ IV. > > > >  Usage
     You don't have to do anything special to manage one of the games original
     companions with AFT. Just talk to them and ask them to follow you when the
     time comes.
-	
+     
     AFT also allows you to import NPCs who were not originally companion
-	options. To do this, you use a special item called the AFT Activator
+    options. To do this, you use a special item called the AFT Activator
     on an NPC and select how you wish to import them. More on that below.
     
   Terminology : 
@@ -675,7 +685,7 @@ IV. > > > >  Usage
         > Make Settler
         > Cancel
         ----------------------
-     		   
+                  
      If the cross-hair had no target, you will see a list of commands that 
      affect ALL Active Followers (Equivalent to selecting everyone). Not all 
      menu options will appear in this mode of operation. 
@@ -706,11 +716,11 @@ IV. > > > >  Usage
          to spawn another one. 
      
   B. AFT Activator : Follower Mode
-	 
+      
      We start follower mod by placing the cross hair on someone who is already
-     following us (or managed and told to stay put somewhere) and activate
-     the AFT Activator. The following Menu will appear:
-	 
+     following us (and activate the AFT Activator. The following Menu will 
+     appear:
+      
          ----------------------
          [FOLLOWER NAME]:
          ----------------------
@@ -725,7 +735,7 @@ IV. > > > >  Usage
          > Select ALL Followers
          > Cancel
          ----------------------
-	 
+      
      1) Actions
            
         A list of commands you can issue to the Follower(s). Many of these 
@@ -736,13 +746,13 @@ IV. > > > >  Usage
               --------------------------
               Gather Loose Items        
               Get Behind Me             
-			  Command Mode
+              Command Mode
               Wait Here                 
               Hangout Here              
               Come with Me      
-              Follow Me			  
+              Follow Me                 
               Enter Power Armor
-              Exit Power Armor          			  
+              Exit Power Armor                           
               Fetch my Power Armor      
               Setup Camp                
               Teardown Camp
@@ -750,7 +760,7 @@ IV. > > > >  Usage
               --------------------------
              
         DETAILS:
-             		   
+                          
         a) Gather Loose Items
              
            The Follower searches around the player (Radius = 1.5X the size of 
@@ -765,25 +775,23 @@ IV. > > > >  Usage
                   and ignores followers carry weight limits. If you are
                   opposed to followers carrying more than their limit 
                   allows, then don't use this method. 
-				  
+                      
         b) Get Behind Me
              
            Causes the follower you are speaking with to teleport behind you.
-              
-           Note: 
-           
-           - If you are bumping into an active follower and you draw your 
-             weapon, this Method is executed automatically. 
-				  
+           while no clip support may allow you to pass through them, they
+           may still choose to stand somewhere that is in the way. For example,
+           if you need to pick a lock or hit a button they are standing in front
+           of.
         
-		c) Command Mode
-		
-		   The follower will enter command mode. Usefull for imported NPCs
-		   that may not normally support command mode. Also supports remote
-		   access. If used from ALL FOLLOWER MODE or as a hotkey, this
-		   command places the previously commanded actor back into command
-		   mode. Activating a second time toggles command mode off.
-		   
+        c) Command Mode
+          
+             The follower will enter command mode. Usefull for imported NPCs
+             that may not normally support command mode. Also supports remote
+             access. If used from ALL FOLLOWER MODE or as a hotkey, this
+             command places the previously commanded actor back into command
+             mode. Activating a second time toggles command mode off.
+             
         d) Wait Here 
               
              Appears if the follower is an Active Follower currently in Follow
@@ -793,31 +801,32 @@ IV. > > > >  Usage
               
              Appears if the follower is an Active Follower currently in Follow
              mode. Selecting will cause follower to enter Wait mode and Sandbox.
-			 Hangout Mode is also more persistant that Wait mode. If the player
-			 fast travels or causes a loading screen, the follower will not catch 
-			 up until summoned using Summon All Followers. 
+
+             Hangout Mode is also more persistant that Wait mode. If the player
+             fast travels or causes a loading screen, the follower will not catch 
+             up until summoned using Summon All Followers. 
 
         f) Come with Me
               
-             Appears on followers you dismissed. THat is, they are managed, but 
-			 not active. Causes the previously dismissed Follower to begin
+             Appears on followers you dismissed. That is, they are managed, but 
+             not active. Causes the previously dismissed Follower to begin
              following you once again.
 			 
+             For many imported followers, this is the only way to make them follow
+             you once dismissed.
+                
              If you are at the maximum active follower limit, another follower
              will automatically be dismissed. 
 
-             For any imported Followers, this may be the only way to tell them 
-             to follow you again after being dismissed.
-			 
         g) Follow Me
-			 
+                
              Appears if an Active follower is in WAIT or HANGOUT Mode. Causes 
              them to begin following you again.
            
         h) Enter Power Armor
            
             Appears if Follower is not wearing Power Armor but has one assigned.
-            Causes the NPC ti enter their PA. They will run up to it if it is 
+            Causes the NPC to enter their PA. They will run up to it if it is 
             nearby or the PA will be teleported to them if it is not.
             
            POWER ARMOR ASSIGNEMENT:
@@ -836,11 +845,11 @@ IV. > > > >  Usage
              
                The easiest way to un-assign PowerArmor is to have the player
                enter a followers PA.
-			
+               
         i) Exit Power Armor
                
             Appears if NPC is wearing PowerArmor. Causes them to exit.
-			   
+                  
         j) Fetch My PowerArmor
            
             Causes the players PowerArmor to teleport to the follower, as if the
@@ -963,7 +972,7 @@ IV. > > > >  Usage
              a minimum of 3 seconds before the outfit(s) will activate. Once 
              swimming, you must be on dry land for at least 5 seconds before 
              the outfit(s) will deactivate.
-          		   
+                       
            [ ] SET/Use [TYPE] OUTFIT:
                  
              When you "Set" an outfit, the trade menu will open allowing you to
@@ -975,16 +984,16 @@ IV. > > > >  Usage
              Off/On to make updates or just get a glimpse of what is assigned. 
           
            Force Combat Outfit Weapon:
-		   
-		     Toggle indicates if AFT should force the follower to use the weapon 
-			 assigned to the combat outfit when combat begins. When toggled, the 
-			 combat outfit weapon is equipped with flags indicating the game should
-			 not allow the NPC to unequip it. When not toggled, the weapon is
-			 still equipped, but the follower is free to switch weapon mid-combat.
+             
+             Toggle indicates if AFT should force the follower to use the weapon 
+             assigned to the combat outfit when combat begins. When toggled, the 
+             combat outfit weapon is equipped with flags indicating the game should
+             not allow the NPC to unequip it. When not toggled, the weapon is
+             still equipped, but the follower is free to switch weapon mid-combat.
 
             (unceck this box and don't assign a weapon to the combat outfit if you 
-             want the AI to handle weapon selection at all times)			
-		   
+             want the AI to handle weapon selection at all times)               
+             
            CLEAR ALL OUTFITS:
                  
              Unsets all outfits assigned to the selected NPC (SELECTED 
@@ -1022,7 +1031,7 @@ IV. > > > >  Usage
            The scan list excludes a number of items such as Fusion Cores, 
            Stimpaks, lock picks, ammo and other rare or valuable stackables. 
                  
-           Like this command ignores the follower's Carry Limits.
+           This command ignores the follower's Carry Limits.
                  
         d) Dejunk
                  
@@ -1107,11 +1116,9 @@ IV. > > > >  Usage
             considered part of the outfit even if the ammo wasn't equipped 
             when the outfit was created.
              
-          - A special command called "Add Nick Items" Appears at the top of the
-            Gear menu if the follower is specifically Nick Valentine. This
-            command adds an assortment of Nick-Compatible accessories and 
-            outfits to Nicks inventory that you can see and use to optionally
-            change his look and appearance.  
+          - If you setup any outfit for Nick Valentine, AFT adds an assortment
+            of Nick-Compatible accessories and outfits to Nicks inventory that
+            you can see and use to optionally change his look and appearance.  
              
           - Any items assigned to an outfit are protected from Bulk inventory 
             commands. For example, if you say "Give me unused Gear", you will 
@@ -1137,7 +1144,7 @@ IV. > > > >  Usage
               > Player Distance
               [ ] PA Helmet Toggle
               [ ] Ignore Friendly Hits
-			  > Global Settings
+              > Global Settings
               ----------------------
                   
         DETAILS:  
@@ -1239,10 +1246,10 @@ IV. > > > >  Usage
              Sets follower aggression to "Aggressive" however follower 
              automatically changes to Defensive when they player begins
              sneaking. 
-			 
+                
              ** NOTE : Activating Info (reading a book) ends sneak mode, so 
                 INFO will not show Unaggressive when sneaking.
-			 
+                
         c) Flee Settings
                  
            These settings determine when a follower decides to run from combat. 
@@ -1279,14 +1286,14 @@ IV. > > > >  Usage
                  ----------------------
                  Player Distance
                  ----------------------
-				 [X] Scout Ahead
+                 [X] Scout Ahead
                  ( ) Near
                  (*) Medium
                  ( ) Far
                  ----------------------
            
-		   SCOUT Ahead
-		   
+           [X] SCOUT Ahead
+             
              Should the follower attempt to stay in front of the player? In this
              mode, Near/Med/Far determine how far ahead of the player. Dogmeat
              uses scout ahead by default. However AFT allows you to enable or 
@@ -1322,7 +1329,7 @@ IV. > > > >  Usage
                   
            When traveling with multiple followers wearing PowerArmor, I found
            this necessary as it was hard to tell who was who without being able
-           to see their  faces. 
+           to see their faces. 
                  
         f) [ ] Ignore Friendly Hits
                   
@@ -1338,8 +1345,8 @@ IV. > > > >  Usage
         g) > Global Settings
                   
            Takes you to the Global Combat Settings window. See below for 
-           more detail. 		   
-		   
+           more detail.              
+             
      4) Info
                   
         Scan followers to learn things about them. You can generate a full 
@@ -1592,7 +1599,7 @@ IV. > > > >  Usage
               > Scale
               > Parts
               > Race
-			  > Voice
+              > Voice
               Sculpt/Edit Body
               Posture
               Expression
@@ -1750,8 +1757,8 @@ IV. > > > >  Usage
            AFT restricts the available options on a per-companion basis to 
            those deemed "safe". So for example, Piper has very few options 
            because testing revealed she wasn't compatible with most races.  
-		   
-		e) Voice
+             
+          e) Voice
            
                  ----------------------
                  Voice
@@ -1763,55 +1770,54 @@ IV. > > > >  Usage
                  ----------------------
            
            When you use AFT to force recruit other non-player characters, sometimes
-		   those characters are silent and have nothing to say. The Voice option
+             those characters are silent and have nothing to say. The Voice option
            allows you to assign a Voice to a companion that falls into that category. 
            
-           This option only appears on force recruited NPCs. 		   
+           This option only appears on force recruited NPCs.              
 
-		     Female Voice Options: 
-                 Female BOS1
-                 Female BOS2
-                 Female BOS3
-                 Female Atom
-                 Female Boston
-                 Female EvenToned
-                 Female Rough
-                 Female Child
-                 Female Old
-                 Female Ghoul
-                 Female Institute
-                 Female Guard
+             Female Voice Options: 
+                Female BOS1
+                Female BOS2
+                Female BOS3
+                Female Atom
+                Female Boston
+                Female EvenToned
+                Female Rough
+                Female Child
+                Female Old
+                Female Ghoul
+                Female Institute
+                Female Guard
            
              Male Voice Options:
-                 Male BOS1
-                 Male BOS2
-                 Male BO33
-                 Male Atom1
-                 Male Atom2
-                 Male Boston
-                 Male EvenToned
-                 Male Rough
-                 Male Child
-                 Male Old
-                 Male Ghoul
-                 Male Institute
-                 Male Coarser
-                 Male Guard1
-                 Male Guard2
-                 Male Guard3
+                Male BOS1
+                Male BOS2
+                Male BO33
+                Male Atom1
+                Male Atom2
+                Male Boston
+                Male EvenToned
+                Male Rough
+                Male Child
+                Male Old
+                Male Ghoul
+                Male Institute
+                Male Coarser
+                Male Guard1
+                Male Guard2
+                Male Guard3
            
              Other Voice Options:
-                 SuperMutant1
-                 SuperMutant2
-                 SuperMutant3
-                 Mr Handy
-                 Mr Gutsy
-                 Ms Nanny
-                 Protectron
-                 Sentry Bot
-                 Assaultron
-		   
-           
+                SuperMutant1
+                SuperMutant2
+                SuperMutant3
+                Mr Handy
+                Mr Gutsy
+                Ms Nanny
+                Protectron
+                Sentry Bot
+                Assaultron
+            
         f) Sculpt/Edit Body
                   
            The Sculpt command starts up the games surgery menu, only with the 
@@ -2162,11 +2168,11 @@ IV. > > > >  Usage
              complete.)
                         
      7) Tools    
-	 
+      
         The Tools Menu is actually a Global menu available under both Follower
-		Mode and All FOllower Mode. Access is included from Follower Mode primarily
+         Mode and All Follower Mode. Access is included from Follower Mode primarily
         as a convenience. See See section C.3 below for more details. 
-		                          
+                                    
      8) Follower Selection
              
         Allows you to switch to ALL FOLLOWERS mode. In ALL FOLLOWERS mode,  only 
@@ -2186,11 +2192,11 @@ IV. > > > >  Usage
         same behavior that occurs if you reach the managed follower limit 
         (32) and ask someone new to follow you through conversation. 
 
-  C. AFT Activator : All Follower Mode	
+  C. AFT Activator : All Follower Mode     
 
      We start all follower mod by Activating the AFT Activator when the 
      crosshair is NOT located on any NPC. The following Menu will appear:
-	 
+      
          ----------------------
          [ALL FOLLOWER MODE]:
          ----------------------
@@ -2201,7 +2207,7 @@ IV. > > > >  Usage
          > Select Follower
          > Cancel
          ----------------------
-	 
+      
      1) Actions
            
         A list of group commands you can issue to all followers.
@@ -2209,9 +2215,9 @@ IV. > > > >  Usage
               --------------------------
               Actions                   
               --------------------------
-			  Gather Loose Items
+              Gather Loose Items
               Summon All
-			  Command Mode
+              Command Mode
               All Retreat               
               All Attack                
               All Wait
@@ -2225,7 +2231,7 @@ IV. > > > >  Usage
               --------------------------
              
         DETAILS:
-             			 
+                             
         a) Gather Loose Items
              
            Followers search around the player (Radius = 1.5X the size of 
@@ -2267,34 +2273,34 @@ IV. > > > >  Usage
            
            - There are some areas of the game where Summon All is disabled
              for immersion reasons.
-			 
-		c) Command Mode
-		
-		   Places the previously commanded actor back into command
-		   mode. Activating a second time toggles command mode off.
-		   Recommend using as a HOTKEY.
-				  
+                
+        c) Command Mode
+          
+           Places the previously commanded actor back into command
+           mode. Activating a second time toggles command mode off.
+           Recommend using as a HOTKEY.
+                      
         d) All Retreat
            
            Causes all followers to stop fighting and retreat for 20 
            seconds.
-		   
+             
            After 20 seconds, they will continue to fight and defend
            themselves unless you renew the command with another call.
 
         e) All Attack
-		
+          
            Typically used when sneaking to have your followers attack 
            nearby enemies that have not yet spotted you. (You want everyone
            else to attack so the attention is not on you). It can also be
            used to cancel a retreat that is in progress.
-		   
+             
            All Attack will direct your followers to attack any non-allies.
            This can include neutral NPCs such as merchants, so use with 
            caution.
-		   
+             
         f) All Wait
-		
+          
            All followers enter WAIT Mode. (As if you walked up to them
            and told them to STAY)
            
@@ -2309,7 +2315,7 @@ IV. > > > >  Usage
            cancel individual states like STAY HERE.
 
         i) All Dismiss
-		
+          
            Dismisses all followers after presenting you with a 
            confirmation prompt. 
 
@@ -2340,9 +2346,9 @@ IV. > > > >  Usage
         k) All Exit Power Armor
 
            Any follower wearing Power Armor will immediately exit.
-		   
+             
 
-		l) Fetch My PowerArmor
+        l) Fetch My PowerArmor
            
            Causes the players PowerArmor to teleport to the Player, as if a
            follower fetched it.
@@ -2416,17 +2422,17 @@ IV. > > > >  Usage
              
              Transfers only raw scrap to the player. Does NOT transfer 
              non-scrapped Junk.
-			 
+                
         d) Give me ALL Unused Gear
              
              Transfers any items that are not assigned to a follower outfit to 
              the player. 
-			 
+                
         e) Give me ALL Gear
 
              Transfers all follower items to the player, even those belonging
              to an outfit.
-		
+          
         NOTES:
           
           - If an outfit has a weapon, the ammo that the weapon uses is also 
@@ -2434,7 +2440,7 @@ IV. > > > >  Usage
             when the outfit was created.
                        
      3) Tools
-	 
+      
               ----------------------
               Tools
               ----------------------
@@ -2541,10 +2547,10 @@ IV. > > > >  Usage
                a progress bar to indicate time until completion. Typically 
                takes about a minute. When finished, it will tell you the name 
                of the log file  (Basically the name of the settlement). 
-			   
-			   For an example see the link:
-			   
-			   https://www.youtube.com/watch?v=uCYX_mUH4bY&t=11s
+                  
+                  For an example see the link:
+                  
+                  https://www.youtube.com/watch?v=uCYX_mUH4bY&t=11s
                
                See III.E Below for more details.
                                    
@@ -2557,8 +2563,8 @@ IV. > > > >  Usage
                settlement). 
                      
                Papyrus is used when you wish to export your settlement as another
-			   option visible within AFT. You must use the code in a series of 
-			   additional steps to create an addon mod (Requires Creation kit)
+                  option visible within AFT. You must use the code in a series of 
+                  additional steps to create an addon mod (Requires Creation kit)
                The steps are outlined below in:
 
                "Section IX: Making an AFT addon mod"
@@ -2570,9 +2576,9 @@ IV. > > > >  Usage
              NOTES:  
                      
                AFT prefabs only support a limited set of items. (About 1200 items in 
-			   total). By default, the list includes all constructable and scrapable 
-			   vanilla game items as well as a handful of non-constructable/scrap-able
-			   items. A simple way to see what will be included in the snapshot is to 
+                  total). By default, the list includes all constructable and scrapable 
+                  vanilla game items as well as a handful of non-constructable/scrap-able
+                  items. A simple way to see what will be included in the snapshot is to 
                use Tools -> Settlement -> ClearSettlement. Any items remaining 
                after Clear Settlement will not be included in the Save.  
                
@@ -2581,11 +2587,11 @@ IV. > > > >  Usage
                DLC items will not work outside areas that belong to the DLC. For 
                example, the Barn Kit that comes with Far Harbor will only be 
                recorded if the prefab is for a Far Harbor settlement.
-			   
+                  
                Starting with version 1.17, AFT Prefab Addon Mods (Papyrus only) 
                can include their own custom resources (furnitures, walls, etc..)
                and use them within the settlement(s) provided by the addon mod. 
-			   
+                  
         c) Unmanage NPC
                     
            If the target hair was on an NPC before issuing the command, that
@@ -2615,113 +2621,116 @@ IV. > > > >  Usage
            offer a buy-out option if you have the caps. Once AFT Camp Expansion
            is complete, this menu option goes away. (Camp can be further 
            expanded with purchases from the Camp Terminal)
-					 
+                          
      4) Select Follower
              
         Opens a menu that lists all active followers. (even followers who are 
         waiting somewhere far away). This allows you to remotely issue commands
         even when you can't reach them
-					 
+                          
   D. AFT Activator : Import/Recruitment Mode
   
      The Import/Recruitment Menu will appear if you use the AFT Activator on
-	 an NPC who is not managed by AFT. 
-	 
+     an NPC who is not managed by AFT. 
+      
          ----------------------
          [Recruit NPC]:
          ----------------------
          Scan NPC
-		 Import NPC (Full/Normal)
-         Import NPC (Leave Original AI intact)
-         Import NPC (Only make Follow. DO NOT MANAGE)
-		 Mark NPC as Ignored
+         Make Follower (Full Import)
+         Make Follower (Leave AI intact)
+         Make Follower (Follow Only. DO NOT MANAGE)
+		 Make Settler/UnMake Settler
+         Ignored NPC
          Cancel
-         ----------------------	 
-	 
-	 NOTES:
-	 
-	 - Import will work on any NPC who is not actively hostile towards the 
-	   Player. 
-	   
-	 - DO NOT use Import on core companions such as Ada, Cait, Curie, 
-	   Codsworth, Danse, Deacon, Dogmeat, Gage, Hancock, Long Fellow, MacCready, 
-	   Nick Valentine, Piper, Preston, Strong, X6-88. You should recruit
-	   core companions normally through regular dialog. 
-	   
+         ----------------------      
+      
+      NOTES:
+      
+      - Import will work on any NPC who is not actively hostile towards the 
+        Player. 
+        
+      - DO NOT use Import on core companions such as Ada, Cait, Curie, 
+        Codsworth, Danse, Deacon, Dogmeat, Gage, Hancock, Long Fellow, MacCready, 
+        Nick Valentine, Piper, Preston, Strong, X6-88. You should recruit
+        core companions normally through regular dialog. 
+        
      1) Scan NPC
-	 
+      
         Examines the NPC and brings up an INFO SCAN report. Used to evaluate
         if an NPC is worth making a follower or not. 
-	 
+      
      2) Make Follower (Full Import)
 
         If you force recruit a BOS soldier and an Institute Synth, under normal
         conditions they would open fire on each other. FULL import ensures no 
         internal fighting between followers by stripping away the NPCs original 
         AI and replacing it with AFT's custom AI.
-	 
+      
      3) Make Follower (Leave AI intact)
-	 
+      
         Fully imports the follower into AFT EXCEPT it leaves their AI intact. 
-		(which includes loyalty and disdain towards certain groups). 
-		
+        (which includes loyalty and disdain towards certain groups). 
+          
         This option is best used on Custom Followers provided and installed
         by other mods. Specifically mods where the follower comes with their
-		own AI and doesn't use a follower slot.
-		
-		I do NOT recommend using this on BOS, Insititute or Railroad members
+        own AI and doesn't use a follower slot.
+          
+        I do NOT recommend using this on BOS, Insititute or Railroad members
         as it can cause them to open fire on the NPCs around you when you 
         visit opposing group headquarters. (Unless you dont mind since you
         are siding heavily with a specific group anyway).
-	 	 
+            
      4) Make Follower (Follow only. DO NOT MANAGE)
-	 
+      
         This option places the NPC in one of your 5 follower slots, so that
         they will follow you around. You gain access to their inventory and
         a few basic commands like get behind me. But that is about the extent
         of it. This is the safest option for users that are paranoid that Aft
-		might break one of their Custom Followers. I don't really recommend
+        might break one of their Custom Followers. I don't really recommend
         using this on non-custom followers.
-	 
+      
      5) Make Settler
 
-	    Makes the NPC into a settler and prompts you for which settlement/city
-		to assign them to. This was primarily added so that users could help 
-		out those NPCs that they rescue or aid during the coarse of the game 
-		than seem to have no place to go. 
-				
-		There is no limit to how many settlers you can import nor are there 
-		any race restrictions. However, imported settlers retain their Faction 
-		loyalty, so if you force certain NPCs to the same settlement (Say 
-		members of the railroad and insttitute), there may be internal 
-		fighting.
-		
-		AFT's Settler system and AFT's Follower system are integrated together.
+        Makes the NPC into a settler and prompts you for which settlement/city
+        to assign them to. This was primarily added so that users could help 
+        out those NPCs that they rescue or aid during the coarse of the game 
+        than seem to have no place to go. 
+                    
+        There is no limit to how many settlers you can import nor are there 
+        any race restrictions. However, imported settlers retain their Faction 
+        loyalty, so if you force certain NPCs to the same settlement (Say 
+        members of the railroad and insttitute), there may be internal 
+        fighting.
+          
+        AFT's Settler system and AFT's Follower system are integrated together.
         If you assign a Managed Follower to a settlement, and the follower lacks
         the scripts needed to be a settler, AFT will automatically use its own 
         Settler management system. Conversly, if you UnManage a follower who 
-		was assigned to a settlement, they may return to the settlement anyway
-		as an AFT Settler. You will need to use the AFT Activator on them a
-		second time and select "UnMake Settler" to end management.
-		
-		Known Issue: Fallout 4 doesn't completely recognize AFT settlers for
-		the sake of computing population. At times population will reflect 
-		a number that doesn't include AFT settlers (and sometimes it will. It
-		is a toss up). However, this appears to only affect population and not
-		resources such as food, water or defense. 
-		
-     6) Mark NPC as Ignored
+        was assigned to a settlement, they may return to the settlement anyway
+        as an AFT Settler. You will need to use the AFT Activator on them a
+        second time and select "UnMake Settler" to end management.
+          
+          Known Issue: 
+		  
+            Fallout 4 doesn't completely recognize AFT settlers for the sake 
+            of computing population. At times population will reflect a number
+            that doesn't include AFT settlers (and sometimes it will. It is a 
+            toss up). However, this appears to only affect population and not
+            resources such as food, water or defense. 
+          
+     6) Ignore NPC
 
         This option makes AFT ignore the NPC completely. Using the AFT 
         Activator on them will go strait to all follower mode, as if they
         aren't even there. Should a conversation cause the game to make them 
-        a companions, AFT will treat them like you imported them with the
-		"DO NOT MANAGE" option above. 
-		
-		NOTE: Because AFT completely ignores the NPC, there is no way to
+        a companion, AFT will treat them like you imported them with the
+        "DO NOT MANAGE" option above. 
+          
+        NOTE: Because AFT completely ignores the NPC, there is no way to
         undo this flag without using console commands or installing
         and reinstalling AFT.
-	        
+             
   E. Global Settings
 
      Global settings are used for settings that affect all followers. It also 
@@ -2752,7 +2761,7 @@ IV. > > > >  Usage
         
         The Follower limit indicates how many followers you may have in 
         addition to the dog. The default value is also the maximum. 3
-        is recommended for slower hardware and game consoles.	
+        is recommended for slower hardware and game consoles.     
            
            ----------------------
            Global Follower Limit
@@ -2769,10 +2778,10 @@ IV. > > > >  Usage
           Follower Limit does not affect the maximum number of MANAGED NPCs, 
           which remains hard coded at 32. A Managed NPC is any NPC that you
           are enhancing with AFT (think outfits and combat settings). 
-		  
-		  Managed NPCs do not include NPCs who you turned into Settlers
-		  using AFT's Make Settler import command. 
-		  
+            
+          Managed NPCs do not include NPCs who you turned into Settlers
+          using AFT's Make Settler import command. 
+            
           
      2) Global Chat Settings
            
@@ -2790,7 +2799,7 @@ IV. > > > >  Usage
                ( ) 3 comments
                ( ) 4 comments
            [X] Limit Loot Comments
-	   [ ] Lock Comment Rotation to ...
+           [ ] Lock Comment Rotation to ...
            ----------------------
            
         DETAILS:
@@ -2866,13 +2875,13 @@ IV. > > > >  Usage
            "Companion 1" every 15 seconds so that the commentary is distributed 
            among all followers. This also causes cut-scenes to effectively select
            a follower at random as the primary camera target.
-	   
+        
            This method allows users to turn that rotation off and force a 
            specific NPC into the Companion 1 slot. Selecting the option will 
            bring up a list of Active Followers and the selected follower will
            remain locked in the "Companion 1" slot until dismissed or until the 
            option is disabled.
-	   
+        
      3) Global Combat Settings
 
            ----------------------
@@ -2886,7 +2895,7 @@ IV. > > > >  Usage
            [ ] Followers Stealth when Sneaking
            [ ] Use Combat Outfit on Weapon Draw
            ----------------------
-		   
+             
         a) [ ] Ignore Murder
            
            Toggle this setting if you want companions to ignore Murder events. 
@@ -2910,33 +2919,33 @@ IV. > > > >  Usage
            
            - When you import an NPC into AFT, they are removed from all 
              factions. So, you can import an NPC (Such as Marcy Long) and then
-             eliminate them without reactions or consequences.	
+             eliminate them without reactions or consequences.     
              
         b) [ ] Allow Followers to Heal Self
-		
-		   When this option is enabled, any follower who possess a stimpak (repairkit
-		   for robots if DLC01 is installed) can heal themself when they enter 
-		   bleedout. Note that when you enable this option, the player loses the 
-		   oppoortunity of getting an affinity boost from healing companions themself. 
+          
+             When this option is enabled, any follower who possess a stimpak (repairkit
+             for robots if DLC01 is installed) can heal themself when they enter 
+             bleedout. Note that when you enable this option, the player loses the 
+             oppoortunity of getting an affinity boost from healing companions themself. 
 
         c) [X] Allow Followers to Heal Others
-		
-		   When this option is enabled, followers with stimpaks or repairskits will 
-		   run to each others aid when another follower falls into bleedout.  Note 
-		   that when you enable this option, the player may lose the oppoortunity of 
-		   getting an affinity boost from healing companions themself. 
-		   
-        d) [X] Allow Autonomous Item Pickup		 
-		
-		   When this option is enabled, Aft allows followers to pick up items outside
-           combat that look valuable and are not owned by others. When you disable
-           this option, it prevents autonomous pickup by making the carryweight of 
-           all followers zero (unless the player is trading with them). 
-		   
-		   This setting does not affect combat. Followers will still seek "better" 
-		   weapons during combat if they spot one that can do more damage than the
-		   one they have. 
-		   
+          
+             When this option is enabled, followers with stimpaks or repairskits will 
+             run to each others aid when another follower falls into bleedout.  Note 
+             that when you enable this option, the player may lose the oppoortunity of 
+             getting an affinity boost from healing companions themself. 
+             
+        d) [X] Allow Autonomous Item Pickup           
+          
+             When this option is enabled, Aft allows followers to pick up items outside
+             combat that look valuable and are not owned by others. When you disable
+             this option, it prevents autonomous pickup by making the carryweight of 
+             all followers zero (unless the player is trading with them). 
+             
+             This setting does not affect combat. Followers will still seek "better" 
+             weapons during combat if they spot one that can do more damage than the
+             one they have. 
+             
         e) [X] Followers Catch up on Weapon Draw
            
            When this box is checked, any Active followers who are not waiting
@@ -2945,7 +2954,7 @@ IV. > > > >  Usage
            
            NOTES:
            
-             Followers will not teleport behind the player if they are actively 
+           - Followers will not teleport behind the player if they are actively 
              in combat. This allows the player to switch weapons during combat 
              without constantly interrupting follower combat. 
            
@@ -2970,17 +2979,17 @@ IV. > > > >  Usage
              
              The recommended stealth approach for larger parties is to tell 
              followers to "hang out here", sneak into an enemy camp solo and then 
-			 summon them to your side once you are clear using the Summon All 
-			 Action. 
-			 
+             summon them to your side once you are clear using the Summon All 
+             Action. 
+                
         g) Use Combat Outfit on Weapon Draw
            
            This option causes followers to equip their Combat Outfit 
            when you have your weapon drawn instead of waiting for 
            combat to begin. The Combat Outfit will remain on as
            long as your weapon is drawn. 
-			 
-	 4) Global Misc Settings
+                
+      4) Global Misc Settings
            
         An assortment of unrelated global settings that don't fall into a 
         single category:
@@ -2990,13 +2999,14 @@ IV. > > > >  Usage
            ----------------------
            [X] Info Reveals Synths
            [X] Treat Settlements as Cities
-           [X] Add Progress to Affinity Feedback		   
+           [X] Add Progress to Affinity Feedback             
+           [X] No Collision with Followers
            [X] Follower Flee in Workshop Mode
-           [ ] Disable AutoRelax (Global Override)		   
-           [ ] All Followers ride Vertibird		   
+           [ ] Disable AutoRelax (Global Override)             
+           [ ] All Followers ride Vertibird             
            [X] Restore AFT Items on Game Load
            [ ] Allow Core Companion Import
-		   [ ] Auto Assign Stats for Combat Styles
+           [ ] Auto Assign Stats for Combat Styles
            ----------------------
            
         DETAILS:
@@ -3013,12 +3023,12 @@ IV. > > > >  Usage
 
         b) Treat Settlements as Cities
 
-           This option affects Outfit selection. By default, Cities are 
-           considered trading hubs such as Bunker Hill, Diamond City, 
-           Covenant, Vault 81 and GoodNeighbor. When this global toggle
-           is checked, all player settlements will also be treated as 
-           cities for the purpose of outfit enforcement. 
-		              
+           This option affects Outfit selection. City Outfit normally applies
+           to trading hubs such as Bunker Hill, Diamond City, Covenant, Vault 81
+           and GoodNeighbor. When this global toggle is checked, all player 
+           settlements will also be treated as cities for the purpose of outfit
+           enforcement. 
+                        
         c) Add Progress to Affinity Feedback
            
            Adds [##/100] progress indicator to the end of like/love
@@ -3027,30 +3037,48 @@ IV. > > > >  Usage
            menu on them constantly. Note that the game allows
            a buffer so that you can actually raise your companions
            score to 110/100. (So you dont loose their admiration
-           just because you do 1 thing they dislike).		
+           just because you do 1 thing they dislike).          
 
-        d) Follower Flee in Workshop Mode
+        d) No Collision with Followers
+
+           When you approach a follower, AFT disables their clipping at the
+           moment you would normally bump into them. This allows you to walk
+           through them.
+		   
+		   Notes: 
+		   
+		   - Followers animations become locked when clipping is disabled. If 
+		     they are in motion, they will continue forward (possibly through 
+			 walls) until they get some distance from you. If they were standing
+			 still, they will be unable to move or talk until you back off a 
+			 little bit. For this reason, AFT will not remove clipping if the
+             follower is using furniture like a workbench, so that they can
+             finish their animation and stop using the device.
+			 
+           - Not sure why, but No Collision doesn't work on Dogmeat. 
+		   
+        e) Follower Flee in Workshop Mode
 
            This option turns on an AI setting so that the follower flees 
            the player when in Workshop mode. Note that it can take up to 
            a minute for the AI to kick in. 
 
-        e) Disable AutoRelax
+        f) Disable AutoRelax
 
            You can individually disable AutoRelax on followers, but often
            times you may want to just disable it on everyone at once. This
            setting disables autorelax for everyone at once.
            
-        f) All Followers ride Vertibird
+        g) All Followers ride Vertibird
 
            By default, AFT will limit the number of followers who will ride
            the vertibird to 2 (and sometimes less). Toggle this option on
            to allow all followers to board. This typically results in 
-           followers overlapping on certain seats, but it also means every
+           followers overlapping on certain seats, but it also means everyone
            gets out at the destination instead of the others teleporting
            to you to catch up. 
 
-        g) Restore AFT Items on Game Load
+        h) Restore AFT Items on Game Load
 
            This option was added for users who configure FO4Hotkeys who may
            not need the AFT Activator to restore itself on game load if 
@@ -3058,8 +3086,8 @@ IV. > > > >  Usage
 
            Disable this option and AFT items will stop respawning. Untoggle
            at your own risk. 
-		   
-        h) Allow Core Companion Import
+             
+        i) Allow Core Companion Import
            
            By default, AFT will prevent you from forcing core companions to
            follow you to prevent breaking the game. FOr example, if you force
@@ -3070,7 +3098,7 @@ IV. > > > >  Usage
            can force CORE companions to follow you. Use carefully as bad timing
            can break the game or certain quests/factions (as pointed out above).
 
-        i) Auto Assign Stats for Combat Styles
+        j) Auto Assign Stats for Combat Styles
 
            If this option is enabled, then you will be promoted if you wish to 
            automatically redistribute stats to match combat styles when you
@@ -3186,25 +3214,25 @@ IV. > > > >  Usage
 
            TALK IDLE FOLLOWING 
 
-		   Controls the games Idle Commentary cooldown when a companion
-		   is following you.  
+             Controls the games Idle Commentary cooldown when a companion
+             is following you.  
 
            TALK IDLE DISMISSED
 
-		   Controls the games Idle Commentary cooldown when a companion
-		   has been dismissed. However, if you assign followers to a 
-		   settlement, the idle cooldown is ignored by the settlement AI. 
-		   If you assign followers to CAMP or their original home, the 
-		   setting works. However camp is a small enclosed space, so you 
-		   will still hear your followers speaking their HELLOS, GREETINGS 
-		   and PLAYER EVENT reactions like using a workbench. You wont get 
-		   the 15 min of silence you were expecting.
+             Controls the games Idle Commentary cooldown when a companion
+             has been dismissed. However, if you assign followers to a 
+             settlement, the idle cooldown is ignored by the settlement AI. 
+             If you assign followers to CAMP or their original home, the 
+             setting works. However camp is a small enclosed space, so you 
+             will still hear your followers speaking their HELLOS, GREETINGS 
+             and PLAYER EVENT reactions like using a workbench. You wont get 
+             the 15 min of silence you were expecting.
 
         c) AUTORELAX DELAY
 
            When auto-relax is enabled, this delay controls how long you 
            must/can linger before auto-relax kicks in.
-		   		   
+                          
      6) View Readme
            
         Opens up the In-Game Readme. The In-Game readme is an abbreviated
@@ -3219,11 +3247,11 @@ IV. > > > >  Usage
      8) Summon Everyone!
         
         This is a convenience command for summoning all managed NPCs. It is 
-		provided to aid in uninstall. To prevent abuse of the command, it 
-		can only be used 3 times in a single save and a week of game time
-		must pass between each use. Then the command goes away.
-		
-     7) Prepare for Uninstall
+        provided to aid in uninstall. To prevent abuse of the command, it 
+        can only be used 3 times in a single save and a week of game time
+        must pass between each use. Then the command goes away.
+          
+     9) Prepare for Uninstall
         
         This option unmanages all of your NPCs, attempting to undo any
         changes AFT made to them. It also shuts down all AFT related 
@@ -3341,7 +3369,7 @@ IV. > > > >  Usage
            ----------------------
            Buildings
            ----------------------
-		   [X] Foundation
+             [X] Foundation
                [X] Module 1
                [X] Module 2
                [X] Module 3
@@ -3355,12 +3383,12 @@ IV. > > > >  Usage
         Each module has a sliding door and light switch that lets you 
         customize the interior lighting of your camp. The first module 
         (Module 1) also includes a water fountain.
-		
-		You can also disable the Foundation. This causes camp items to 
-		get placed with the lay of the land (as best as possible). As 
-		the UI implies, Modules (and their light sources) will not appear
-		if you disable the foundation. But all other items will still
-		appear when foundation is disabled.
+          
+          You can also disable the Foundation. This causes camp items to 
+          get placed with the lay of the land (as best as possible). As 
+          the UI implies, Modules (and their light sources) will not appear
+          if you disable the foundation. But all other items will still
+          appear when foundation is disabled.
 
      4) Camp Terminal : Amenities
         
@@ -3646,11 +3674,11 @@ IV. > > > >  Usage
      later than the start of Chapter 2 and in some cases earlier. For best 
      results, proceed immediately to vault 81 (You can rescue the Minutemen on 
      the way, but I wouldn't do much more than that)
-	 
-	 If you are in a rush and don't mind cheating a bit, AFT also include a batch
-	 script which will complete most of the steps below for you (so that you can
-	 almost instantly gain Curie when you emerge from Vault 111).  See #5 below
-	 for usage instructions.
+      
+      If you are in a rush and don't mind cheating a bit, AFT also include a batch
+      script which will complete most of the steps below for you (so that you can
+      almost instantly gain Curie when you emerge from Vault 111).  See #5 below
+      for usage instructions.
        
      1) Where is Vault 81?
        
@@ -3731,29 +3759,29 @@ IV. > > > >  Usage
         Codsworth if you wish) to begin the rescue scene.
 
      5) How to cheat and gain Curie Quickly:
-	 
-	    Open Console and type: bat unlockcurie
-		Unpause console and wait for all the messages to finish displaying
-		Open Console again and type:
-		
-		prid 102249
-		moveto player
-		
-		Curie will appear, ready to join you. 
-		
-		SPECIAL NOTE : If you visit Vault 81 later in the game, the vault
-		door will be closed. To open it, open console and click on the vault
-		door with the mouse while the console is open. Then type the command:
-		
-		SendAnimEvent "Stage2"
-		
-		That will open the door. 
-	 
+      
+         Open Console and type: bat unlockcurie
+         Unpause console and wait for all the messages to finish displaying
+         Open Console again and type:
+          
+            prid 102249
+            moveto player
+          
+          Curie will appear, ready to join you. 
+          
+          SPECIAL NOTE : If you visit Vault 81 later in the game, the vault
+          door will be closed. To open it, open console and click on the vault
+          door with the mouse while the console is open. Then type the command:
+          
+            SendAnimEvent "Stage2"
+          
+          That will open the door. 
+      
      6) Maximizing Spouse Interactions
         
         AFT reuses pre-existing audio to support spouse scenes. When it comes 
         time to play a scene, it checks to see if the required audio is 
-        available and if so,  the scene plays. If not, the scene is skipped.
+        available and if so, the scene plays. If not, the scene is skipped.
         
         Some audio is only available in specific locations.  So if you wish 
         to ensure all scenes are played, you need to make sure you are in the
@@ -3844,17 +3872,17 @@ IV. > > > >  Usage
         You can use the technique to move Settlements between save games or
         share the settlement with a friend who also has AFT installed. 
 
-		See this video for a demonstration:
-		https://www.youtube.com/watch?v=uCYX_mUH4bY&t=11s
-		
+          See this video for a demonstration:
+          https://www.youtube.com/watch?v=uCYX_mUH4bY&t=11s
+          
         NOTE: If you are playing in Survival Mode, the console will not work
               without the aid of a console enabling mod.
-			  
-		If you wish to distribute your batch file to others without requiring
-		them to use/install all of AFT, you can place a requirement on the
-		mod: PrefabBatchLoader. This file includes a single, stand-alone, 
-		non-conflicting script to support AFT Batch File expansion (for 
-		PC users). 
+                 
+          If you wish to distribute your batch file to others without requiring
+          them to use/install all of AFT, you can place a requirement on the
+          mod: PrefabBatchLoader. This file includes a single, stand-alone, 
+          non-conflicting script to support AFT Batch File expansion (for 
+          PC users). 
 
 -------------------------------------------------------------------------------
 V. > > > > Hot Keys
@@ -3924,17 +3952,17 @@ V. > > > > Hot Keys
      --------
        1: SummonAllFollowers
      125: Gather Loose Items
-	 131: Command Mode
+      131: Command Mode
        2: All Wait
        3: All Hangout
        4: All Follow
-	 128: All Retreat
-	 129: All Attack
+      128: All Retreat
+      129: All Attack
        5: Enter PowerArmor
        6: Exit Powerarmor
        7: Setup Camp
        8: Teardown Camp
-	   
+        
      Gear:
      -----
      9: UnequipAll
@@ -3973,9 +4001,9 @@ V. > > > > Hot Keys
      29:  Set/Unset Standard Outfit
      30:  Set/Unset City Outfit
      31:  Set/Unset Camp Outfit
-     32:  Set/Unset Home Outfit	  
-	 127: Set/Unset Swim Outfit
-	 132: Force/Unforce Combat Outfit Weapon
+     32:  Set/Unset Home Outfit       
+     127: Set/Unset Swim Outfit
+     132: Force/Unforce Combat Outfit Weapon
      33:  Clear All Outfits
      34:  Unmanage Outfits
 
@@ -4025,7 +4053,7 @@ V. > > > > Hot Keys
      66: Info Perks
      67: Info Factions
      68: Info Keywords
-			 
+                
      Appearance:
      -----------
      69: Pose
@@ -4063,47 +4091,47 @@ V. > > > > Hot Keys
      98: Set Race Deathclaw
      99: Set Race Behemoth
 
-	 133: Restore Original Voice
-	 134: Set Voice Female BOS1
-	 135: Set Voice Female BOS2
-	 136: Set Voice Female BOS3
-	 137: Set Voice Female Atom
-	 138: Set Voice Female Boston
-	 139: Set Voice Female EvenToned
-	 140: Set Voice Female Rough
-	 141: Set Voice Female Child
-	 142: Set Voice Female Old
-	 143: Set Voice Female Ghoul
-	 144: Set Voice Female Institute
-	 145: Set Voice Female Guard
+     133: Restore Original Voice
+     134: Set Voice Female BOS1
+     135: Set Voice Female BOS2
+     136: Set Voice Female BOS3
+     137: Set Voice Female Atom
+     138: Set Voice Female Boston
+     139: Set Voice Female EvenToned
+     140: Set Voice Female Rough
+     141: Set Voice Female Child
+     142: Set Voice Female Old
+     143: Set Voice Female Ghoul
+     144: Set Voice Female Institute
+     145: Set Voice Female Guard
 
-	 146: Set Voice Male BOS1
-	 147: Set Voice Male BOS2
-	 148: Set Voice Male BO33
-	 149: Set Voice Male Atom1
-	 150: Set Voice Male Atom2
-	 151: Set Voice Male Boston
-	 152: Set Voice Male EvenToned
-	 153: Set Voice Male Rough
-	 154: Set Voice Male Child
-	 155: Set Voice Male Old
-	 156: Set Voice Male Ghoul
-	 157: Set Voice Male Institute
-	 158: Set Voice Male Coarser
-	 159: Set Voice Male Guard1
-	 160: Set Voice Male Guard2
-	 161: Set Voice Male Guard3
+     146: Set Voice Male BOS1
+     147: Set Voice Male BOS2
+     148: Set Voice Male BO33
+     149: Set Voice Male Atom1
+     150: Set Voice Male Atom2
+     151: Set Voice Male Boston
+     152: Set Voice Male EvenToned
+     153: Set Voice Male Rough
+     154: Set Voice Male Child
+     155: Set Voice Male Old
+     156: Set Voice Male Ghoul
+     157: Set Voice Male Institute
+     158: Set Voice Male Coarser
+     159: Set Voice Male Guard1
+     160: Set Voice Male Guard2
+     161: Set Voice Male Guard3
 
-	 162: Set Voice SuperMutant1
-	 163: Set Voice SuperMutant2
-	 164: Set Voice SuperMutant3
-	 165: Set Voice Mr Handy
-	 166: Set Voice Mr Gutsy
-	 167: Set Voice Ms Nanny
-	 168: Set Voice Protectron
-	 169: Set Voice Sentry Bot
-	 170: Set Voice Assaultron
-	 
+     162: Set Voice SuperMutant1
+     163: Set Voice SuperMutant2
+     164: Set Voice SuperMutant3
+     165: Set Voice Mr Handy
+     166: Set Voice Mr Gutsy
+     167: Set Voice Ms Nanny
+     168: Set Voice Protectron
+     169: Set Voice Sentry Bot
+     170: Set Voice Assaultron
+      
      100: Sculpt
      101: New Body
      102: Posture
@@ -4182,15 +4210,30 @@ VI. > > > >  Advanced Trouble Shooting
        .pex files in your Fallout 4/Data/Scripts directory. Some mods don't 
        properly use BSA archives. When a PEX file is in your Fallout 4
        directory, it can override any mods you have installed regardless of
-       mod priority.
+       mod priority.	   
 
   4) AFT Activator acts like NPC is not under target hair when activated.
-
+   
      As long as AFT Activator is working on SOMEONE, then it is safe to 
-     say this behavior is by design. For example, if you are in Combat and 
-     you try to to use AFT on a companion, it will act like they are not 
-     there.  There are also cases of NPCs that are marked as non-manageable 
-     by AFT because they are essential to the plot.
+     say AFT is installed correctly. 
+    
+    In most cases, this behavior is by design. For example, if you are in 
+     Combat and you try to to use AFT on a companion, it will act like they 
+     are not there.  There are also cases of NPCs that are marked as 
+     non-manageable by AFT because they are essential to the plot.
+    
+     Edge Cases include:
+   
+     - NPC is marked as Ghost. Activator wont work when IsGhost returns true.
+       A vanilla bug would cause Followers to get marked as Ghost when exiting
+       a vertibird. So use console to check the Ghost status.
+   
+    - If NPC is in a scene, AFT will not allow force import.
+   
+       This sometimes occures when meeting travelers who aren't moving or 
+       are having a discussion.
+   
+     - If NPC is Red, then they are hostile. AFT will not allow force import.
 
   5) AFT does not initialize.
 
@@ -4265,7 +4308,7 @@ VII. > > > >  Uninstall
         > Global Cooldown Settings
         > View Readme
         > Restore Aft Activator
-		> Summon Everyone!
+          > Summon Everyone!
         > Prepare for Uninstall
         ----------------------
 
@@ -5101,8 +5144,8 @@ endif
             PrefabFurniture : Fill with [AuthorName][PrefabName]Furn
             PrefabLocation  : Fill with the Location of a Vanilla Settlement
             MaskedPrefabLocation : Fill with FORMID of DLC settlement mod 0x01000000
-			
-			** You will only fill in Prefab location OR MaskedPrefabLocation. Not both. 
+               
+               ** You will only fill in Prefab location OR MaskedPrefabLocation. Not both. 
 
               ** Standard Locations for the Original Settlements:
 
@@ -5138,22 +5181,22 @@ endif
                    HomePlate           : DiamondCityPlayerHouseLocatio
 
               ** If it is a DLC, use special negative values:
-			  
+                 
                    FarHarbor - Longfellows Cabin : -50464329 
                    FarHarbor - NationalPark      : -50369363
                    FarHarbor - EchoLake          : -50393345
                    FarHarbor - DaltonFarm        : -50564782
-				   
+                       
               ** Value for Farharbor is based on FormID of original location
                  masked against a forced resid of -03.  ie: EchoLake normally
                  has formid (0x0100F101). Here that maps to (-0x0300F101), 
                  which is -50393345 in decimal.
 
               ** Settlements provided by mods are supported (Batch transfer
-			     is fine), but generally will not work on different machines
-				 as the resource ID of the mod location will vary based on 
-				 load order. 
-				 				 
+                    is fine), but generally will not work on different machines
+                     as the resource ID of the mod location will vary based on 
+                     load order. 
+                                          
         - Click OK (twice) until you are back at the scripts tab. 
 
           NOTES: You can use this single script to Register multiple Prefabs by
@@ -5197,7 +5240,7 @@ EndFunction
           "BuildFull" function to "BuildWallOnly" and also change the
           default for "clearFirst" and "requireNoFood" to be 0 and paste
           the edited function below the BuildFull() version. You also 
-		  want to add a skip_powerup() option. IE: 
+            want to add a skip_powerup() option. IE: 
 
 --------------------------------------------------------------------------          
 ScriptName Example Extends Quest Const
@@ -5220,17 +5263,17 @@ requireNoFood = 0)
         return
     endif
 
-	tbs.init(######, requireNoFood) ; SomeSettlement
-	
-	; Options
-	tbs.skip_powerup()
+     tbs.init(######, requireNoFood) ; SomeSettlement
+     
+     ; Options
+     tbs.skip_powerup()
 
-	if 0 != clearFirst
-		tbs.clearsettlement(#####)
-	endif
-	
-	tbs.buildstart(####)
-	
+     if 0 != clearFirst
+          tbs.clearsettlement(#####)
+     endif
+     
+     tbs.buildstart(####)
+     
     ...
 EndFunction
 --------------------------------------------------------------------------          
@@ -5238,24 +5281,24 @@ EndFunction
         - Finally, you need to compile the script. Do this by opening the 
           script with the CK's default editor. Go to the File menu of the 
           Editor and Select compile.
-		  
-		  ** NOTE: Compile Debug will generally work. But Compile Release
-		  will sometimes complain about an unrecognized 9th or 10th paramater. 
-		  Turns out that Papyrus can't can't handle small negative numbers 
-		  when optimizations are turned on. You can fix by searching for 
-		  the following values and replacing with suggested value:
-		  
-		  -0.000020  ->  -0.000021
-		  -0.000010  ->  -0.000011
-		  -0.000009  ->  -0.000011
-		  -0.000008  ->  -0.000011
-		  -0.000007  ->  -0.000011
-		  -0.000006  ->  -0.000011
-		  -0.000005  ->  0.000000
-		  -0.000004  ->  0.000000
-		  -0.000003  ->  0.000000
-		  -0.000002  ->  0.000000
-		  -0.000001  ->  0.000000
+            
+            ** NOTE: Compile Debug will generally work. But Compile Release
+            will sometimes complain about an unrecognized 9th or 10th paramater. 
+            Turns out that Papyrus can't can't handle small negative numbers 
+            when optimizations are turned on. You can fix by searching for 
+            the following values and replacing with suggested value:
+            
+            -0.000020  ->  -0.000021
+            -0.000010  ->  -0.000011
+            -0.000009  ->  -0.000011
+            -0.000008  ->  -0.000011
+            -0.000007  ->  -0.000011
+            -0.000006  ->  -0.000011
+            -0.000005  ->  0.000000
+            -0.000004  ->  0.000000
+            -0.000003  ->  0.000000
+            -0.000002  ->  0.000000
+            -0.000001  ->  0.000000
 
     10) Update Furniture
 
@@ -5678,7 +5721,6 @@ X. > > > >  Version History
   - Added Global Option : Allow Followers to Heal Others (on by default)
   - Added Global Option : Allow Autonomous Item Pickup
   - Added Companion Lockpick/Hack XP. After 6 successes, they stop failing.
-  - Updated PickLock/Hack commands to fail less as followers gain experience.
   - Updated Prepare For Uninstall to store spouse and restore on next install
   - Updated Action Menu so that Gather Loose Items is now first item
   - Updated Now only manages follower inventory if you set an outfit.
@@ -5690,11 +5732,16 @@ X. > > > >  Version History
   - Fixed various bugs involving the quest Blind Betrayal 
   - Fixed issue with Automatron Robot dialogues going away when recruited.
   - Fixed PA Helmet removal when NPC told to exit PA using normal dialogue.
-  - Fixed Combat Nudiy issues following Sculpt command  
+  - Fixed Combat Nudity issues following Sculpt command  
   - Fixed player distance setting reset when dismissing followers.
   - Fixed Uninstall to account for disallowed companions.    
   - Fixed AI Priority bug that could break Dogmeat during Reunions Quest. 
   - Fixed Synergy Boost to include Dogmeat.
+  
+  1.21 : ( Compiled against FO4 version  1.10.114.0.0 )
+  - Added Global Option [X] No Collision with Followers 
+  - Updated In-Game Readme
+  - Fixed Command Mode loss associated with Auto-Heal
   
   
 -------------------------------------------------------------------------------
@@ -5730,9 +5777,9 @@ XI. Credits
       The Castle            - Raven Rock         by Dheuster (6350/1025)
       The Slog              - Tarnation          by Dheuster (2875/400)
       Warwick Homestead     - The Plunge         by Dheuster (2625/1250)
-	  
+       
                             Far Harbor Settlements
-			
+               
       Longfellows Cabin     - Bridge to NoWhere  by Dheuster (8675/4250)
       Echo Lake             - Tauron             by Dheuster (7100/2250)
       National Park         - Trailer Park       by Dheuster (6530/1900)
