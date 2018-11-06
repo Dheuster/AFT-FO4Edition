@@ -317,7 +317,9 @@ GlobalVariable Property pTweakScoutAhead	Auto Const
 GlobalVariable Property TweakAllowHealSelf	Auto Const
 GlobalVariable Property TweakAllowHealOther	Auto Const
 GlobalVariable Property pTweakAllowAutoStats Auto Const
+GlobalVariable Property pTweakAllowNoClip	Auto Const
 
+Perk Property pTweakNoClipPerk	Auto Const
 
 ActorValue	Property pFavorsPerDay			Auto Const
 
@@ -1360,6 +1362,24 @@ Function BuildPrefab(int type)
 	
 EndFunction
 
+Function ToggleAllowNoClip()
+
+	Actor pc = Game.GetPlayer()
+	if (1.0 == pTweakAllowNoClip.GetValue())
+		pTweakAllowNoClip.SetValue(0.0)
+		Utility.waitmenumode(0.1)
+		if pc.HasPerk(pTweakNoClipPerk)
+			pc.RemovePerk(pTweakNoClipPerk)
+		endIf
+	else
+		pTweakAllowNoClip.SetValue(1.0)
+		if !pc.HasPerk(pTweakNoClipPerk)
+			pc.AddPerk(pTweakNoClipPerk)
+		endIf
+	endif
+
+EndFunction
+
 Function ToggleReadyWeapon(bool backToPip=True)
 	Utility.waitmenumode(0.1)
 	
@@ -1761,7 +1781,7 @@ Function Test()
 	
 	Actor pc = Game.GetPlayer()
 	Utility.wait(0.1)
-			
+		
 	If TerminalTarget
 				
 		; Scene interception?

@@ -1185,19 +1185,19 @@ Function StopPosing(bool abRemoveFromFaction = false)
 		elseif (npc.GetFactionRank(pTweakPosedFaction) > 2)
 			npc.SetFactionRank(pTweakPosedFaction, 2)
 			npc.EvaluatePackage()
-		endif
+		endif	
+	endif
 	
-		npc.SetPosition(npc.GetPositionX(),npc.GetPositionY(),npc.GetPositionZ())
-		npc.SetAngle(0.0,0.0,npc.GetAngleZ())
-		npc.SetMotionType(npc.Motion_Dynamic)
-	
-		ObjectReference marker = npc.GetLinkedRef(pTweakPoseTarget)
-		npc.PlayIdle( pInitializeMTGraphInstant )
-		if (marker)
-			npc.SetLinkedRef(None, pTweakPoseTarget)
-			npc.SetRestrained(false)
-			marker.delete()
-		endif
+	npc.SetPosition(npc.GetPositionX(),npc.GetPositionY(),npc.GetPositionZ())
+	npc.SetAngle(0.0,0.0,npc.GetAngleZ())
+	npc.SetMotionType(npc.Motion_Dynamic)
+
+	ObjectReference marker = npc.GetLinkedRef(pTweakPoseTarget)
+	npc.PlayIdle( pInitializeMTGraphInstant )
+	if (marker)
+		npc.SetLinkedRef(None, pTweakPoseTarget)
+		npc.SetRestrained(false)
+		marker.delete()
 	endif
 		
 EndFunction

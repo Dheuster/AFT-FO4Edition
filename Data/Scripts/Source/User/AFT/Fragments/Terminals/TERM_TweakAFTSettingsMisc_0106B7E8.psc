@@ -17,6 +17,28 @@ pTweakAllowAutoStats.SetValue(1)
 EndFunction
 ;END FRAGMENT
 
+;BEGIN FRAGMENT Fragment_Terminal_03
+Function Fragment_Terminal_03(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.ToggleAllowNoClip()
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_04
+Function Fragment_Terminal_04(ObjectReference akTerminalRef)
+;BEGIN CODE
+AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy as AFT:TweakPipBoyScript)
+if (pTweakPipBoyScript)
+    pTweakPipBoyScript.ToggleAllowNoClip()
+endif
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;BEGIN FRAGMENT Fragment_Terminal_05
 Function Fragment_Terminal_05(ObjectReference akTerminalRef)
 ;BEGIN CODE
@@ -184,3 +206,5 @@ GlobalVariable Property pTweakAllowHealSelf Auto Const
 GlobalVariable Property pTweakAllowHealOther Auto Const
 
 GlobalVariable Property pTweakAllowAutoStats Auto Const
+
+Quest Property pTweakPipBoy Auto Const
