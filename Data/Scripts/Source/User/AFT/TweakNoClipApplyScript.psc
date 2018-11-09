@@ -1,6 +1,7 @@
 Scriptname AFT:TweakNoClipApplyScript extends activemagiceffect
 
 Formlist Property TweakElevatorList Auto Const
+Faction	 Property TweakPosedFaction Auto Const
 ActorValue Property Paralysis Auto Const
 
 bool Function Trace(string asTextToPrint, Actor npc = None, int aiSeverity = 0) debugOnly
@@ -22,14 +23,33 @@ Event OnEffectStart(Actor akTarget, Actor akCaster)
 	Trace("  Target [" + akTarget + "] Caster [" + akCaster + "]", akTarget)
 		
 	if (0 == akTarget.GetValue(Paralysis) )
+	
 		if (0 != (akCaster.FindAllReferencesOfType(TweakElevatorList,200)).Length)
 			Trace("  Aborting: Nearby Elevators Found:",akTarget)
 			return
 		endif
-		if (akTarget.GetActorBase().GetFormID() == 0x0001D15C)
+		
+		int ActorBaseID = akTarget.GetActorBase().GetFormID()
+		if (ActorBaseID > 0x00ffffff)
+			if ActorBaseID > 0x80000000
+				ActorBaseID -= 0x80000000
+			endif
+			int ActorBaseMask = ActorBaseID % (0x01000000) 
+			if 0x0000FD5A == ActorBaseMask ; Ada
+				float[] posdata = TraceCircle(akCaster, 100.0, 180.0)
+				akTarget.SetPosition(posdata[0],posdata[1],posdata[2])
+				akTarget.SetAngle(0.0,0.0, akCaster.GetAngleZ())
+				return
+			endif
+		elseif (ActorBaseID == 0x0001D15C)
 			float[] posdata = TraceCircle(akCaster, 100.0, 180.0)
 			akTarget.SetPosition(posdata[0],posdata[1],posdata[2])
 			akTarget.SetAngle(0.0,0.0, akCaster.GetAngleZ())
+			return
+		endif
+		
+		if (2.0 == aktarget.GetFactionRank(TweakPosedFaction))
+			Trace("  Aborting: Target is Posed:",akTarget)
 			return
 		endif
 		Trace("  Activating NoClip",akTarget)

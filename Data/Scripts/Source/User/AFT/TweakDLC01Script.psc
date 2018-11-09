@@ -11,6 +11,8 @@ String PluginName = "DLCRobot.esm" const
 Bool			Property	Installed		Auto Conditional
 float			Property	version			Auto
 Int				Property	resourceID		Auto
+Int				Property	prefabID		Auto
+
 
 ; --=== Items ===--
 Potion			Property	DLC01RepairKit	Auto
@@ -118,6 +120,7 @@ EndFunction
 Event OnInit()
 	trace("OnInit() Called")
 	resourceID          = -1
+	prefabID			= -0x01000000
 	version				= 1.0
 endEvent
 
@@ -650,7 +653,7 @@ Function ScanHelper()
 					lookupsuccess += 1
 					if snapshot				
 						params[0] = lookup.name
-						params[1] = ((-0x01000000) - rid)  ; ResourceID -0x01 tells AFT it is DLOC01 object.
+						params[1] = (prefabID - rid)  ; ResourceID -0x01 tells AFT it is DLOC01 object.
 						params[2] = result.GetPositionX()
 						params[3] = result.GetPositionY()
 						params[4] = result.GetPositionZ()
@@ -710,7 +713,7 @@ Function ScanHelper()
 						lookupsuccess += 1
 						if snapshot				
 							params[0] = lookup.name
-							params[1] = ((-0x01000000) - rid)  ; ResourceID -0x01 tells AFT it is DLOC01 object.
+							params[1] = (prefabID - rid)  ; ResourceID -0x01 tells AFT it is DLOC01 object.
 							params[2] = result.GetPositionX()
 							params[3] = result.GetPositionY()
 							params[4] = result.GetPositionZ()

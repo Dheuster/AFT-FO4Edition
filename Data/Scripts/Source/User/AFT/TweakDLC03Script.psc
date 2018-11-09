@@ -14,6 +14,8 @@ String PluginName = "DLCCoast.esm" const
 Bool			Property	Installed		Auto Conditional
 float			Property	version			Auto
 Int				Property	resourceID		Auto
+Int				Property	prefabID		Auto
+
 
 ; --=== Actors ===--
 Actor			Property	OldLongfellow		Auto
@@ -124,7 +126,8 @@ EndFunction
 
 Event OnInit()
 	trace("OnInit() Called")
-	resourceID          = -3
+	resourceID          = -1
+	prefabID			= -0x03000000
 	version				= 1.0
 endEvent
 
