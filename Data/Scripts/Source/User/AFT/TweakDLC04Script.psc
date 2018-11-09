@@ -8,6 +8,7 @@ String PluginName = "DLCNukaWorld.esm" const
 Bool			Property	Installed		Auto Conditional
 float			Property	version			Auto
 Int				Property	resourceID		Auto
+Int				Property	prefabID		Auto
 
 ; --=== Actors ===--
 Actor			Property	PorterGage			Auto
@@ -128,7 +129,8 @@ EndFunction
 
 Event OnInit()
 	trace("OnInit() Called")
-	resourceID          = -4
+	resourceID          = -1
+	prefabID            = -0x04000000
 	version				= 1.0
 endEvent
 
@@ -211,7 +213,21 @@ Function OnGameLoaded(bool firstcall)
 		DLC04MQ03 = Game.GetFormFromFile(0x01000803,PluginName) As Quest
 		DLC04MQ04 = Game.GetFormFromFile(0x01000804,PluginName) As Quest
 		DLC04MQ05 = Game.GetFormFromFile(0x01000805,PluginName) As Quest
-							
+
+		if DLC04MQ00
+			resourceID = GetPluginID(DLC04MQ00.GetFormID())
+		elseif DLC04MQ01
+			resourceID = GetPluginID(DLC04MQ01.GetFormID())
+		elseif DLC04MQ02
+			resourceID = GetPluginID(DLC04MQ02.GetFormID())
+		elseif DLC04MQ03
+			resourceID = GetPluginID(DLC04MQ03.GetFormID())
+		elseif DLC04MQ04
+			resourceID = GetPluginID(DLC04MQ04.GetFormID())
+		elseif DLC04MQ05
+			resourceID = GetPluginID(DLC04MQ05.GetFormID())
+		endif
+		
 		if (!DLC04MQ00 || !DLC04MQ01 || !DLC04MQ02 || !DLC04MQ03)
 			trace("Unable To Load DLC04MQ00 or DLC04MQ01 or DLC04MQ02 or DLC04MQ03")
 			issue = True
