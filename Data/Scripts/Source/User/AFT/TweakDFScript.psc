@@ -12,8 +12,11 @@ ReferenceAlias	Property pSleepCompanion		Auto Const
 ReferenceAlias	Property pSleepCompanion2		Auto Const
 ReferenceAlias	Property pSleepCompanionBed		Auto Const
 ReferenceAlias	Property pAffinityCompanion		Auto Const
+ReferenceAlias	Property CommandActor			Auto Const
+ReferenceAlias	Property CommandTarget			Auto Const
 RefCollectionAlias Property pActiveCompanions	Auto Const
 spell 			Property LoversEmbracePerkSpell Auto Const
+Package			Property pCommandMode_Travel	Auto Const
 
 Faction property pCurrentCompanionFaction    Auto Const
 Faction property pHasBeenCompanionFaction    Auto Const
@@ -47,6 +50,7 @@ FormList		property pTweakLikeMessages			Auto Const
 FormList		property pTweakLoveMessages			Auto Const
 FormList		property pTweakHateMessages			Auto Const
 FormList		property pTweakDislikeMessages		Auto Const
+ActorValue		property Paralysis					Auto Const
 
 Quest 			Property Tutorial 					Auto Const
 GlobalVariable	property pTweakCommentLimit 		Auto Const
@@ -159,6 +163,7 @@ ActorValue Property pTweakSkipDistance			Auto Const
 ActorValue Property pSkillMagAV08				Auto Const ; If 1.32 means AFT saved the NPC on uninstall...
 ActorValue Property pTweakNextHealAllowed		Auto Const
 ActorValue Property pTweakLockExperience		Auto Const
+ActorValue Property pFollowerState				Auto Const
 
 ; CommentSync Control:
 GlobalVariable	Property pTweakCommentSynch		Auto Const
@@ -177,6 +182,10 @@ ReferenceAlias[] companions
 TweakDLC01Script	Property pTweakDLC01Script	Auto Const
 TweakDLC03Script	Property pTweakDLC03Script	Auto Const
 TweakDLC04Script	Property pTweakDLC04Script	Auto Const
+
+; UnLockVisible Support
+Scene Property Command_LockPick_Scene			Auto Const
+Scene Property Command_HackTerminal_Scene		Auto Const
 
 ; LOCAL VARIABLES
 
@@ -785,6 +794,107 @@ Event Actor.OnLocationChange(Actor player, Location akOldLoc, Location akNewLoc)
 	endIf	
 	
 EndEvent
+
+Function CommandModePickLock(Actor SenderActor, ObjectReference akTarget)
+	SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
+	Command_LockPick_Scene.stop()
+	CommandActor.ForceRefTo(SenderActor)
+	CommandTarget.ForceRefTo(akTarget)
+	Command_LockPick_Scene.start()
+EndFunction
+
+Function CommandModeHackterminal(Actor SenderActor, ObjectReference akTarget)
+	SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
+	Command_HackTerminal_Scene.stop()
+	CommandActor.ForceRefTo(SenderActor)
+	CommandTarget.ForceRefTo(akTarget)
+	Command_HackTerminal_Scene.start()					
+EndFunction
+
+Function CommandModeFigureItOut(ObjectReference closestLocked, keyword requiredkeyword, bool usePickLock = true)
+	Topic t = Game.GetForm(0x0016CC60) as Topic
+	Actor c       = None
+	c = pCompanion1.GetActorReference()
+	if c && c.Is3DLoaded() && c.HasKeyWord(requiredkeyword) 
+		if !c.IsDead() && !c.IsBleedingOut() && !c.IsUnconscious()
+			if (c.GetValue(Paralysis) != 1) && !c.IsInFaction(pTweakPosedFaction) && !c.IsDoingFavor()
+				if (c.GetCurrentPackage() != pCommandMode_Travel) && (c.GetValue(pFollowerState) != 2.0)
+					c.Say(t,c,false,Game.GetPlayer())		
+					if usePickLock
+						CommandModePickLock(c, closestLocked)
+					else
+						CommandModeHackterminal(c, closestLocked)
+					endif
+					return
+				endif
+			endif
+		endif
+	endif
+	c = pCompanion2.GetActorReference()
+	if c && c.Is3DLoaded() && c.HasKeyWord(requiredkeyword) 
+		if !c.IsDead() && !c.IsBleedingOut() && !c.IsUnconscious()
+			if (c.GetValue(Paralysis) != 1) && !c.IsInFaction(pTweakPosedFaction) && !c.IsDoingFavor()
+				if (c.GetCurrentPackage() != pCommandMode_Travel) && (c.GetValue(pFollowerState) != 2.0)
+					c.Say(t,c,false,Game.GetPlayer())		
+					if usePickLock
+						CommandModePickLock(c, closestLocked)
+					else
+						CommandModeHackterminal(c, closestLocked)
+					endif
+					return
+				endif
+			endif
+		endif
+	endif
+	c = pCompanion3.GetActorReference()
+	if c && c.Is3DLoaded() && c.HasKeyWord(requiredkeyword) 
+		if !c.IsDead() && !c.IsBleedingOut() && !c.IsUnconscious()
+			if (c.GetValue(Paralysis) != 1) && !c.IsInFaction(pTweakPosedFaction) && !c.IsDoingFavor()
+				if (c.GetCurrentPackage() != pCommandMode_Travel) && (c.GetValue(pFollowerState) != 2.0)
+					c.Say(t,c,false,Game.GetPlayer())		
+					if usePickLock
+						CommandModePickLock(c, closestLocked)
+					else
+						CommandModeHackterminal(c, closestLocked)
+					endif
+					return
+				endif
+			endif
+		endif
+	endif
+	c = pCompanion4.GetActorReference()
+	if c && c.Is3DLoaded() && c.HasKeyWord(requiredkeyword) 
+		if !c.IsDead() && !c.IsBleedingOut() && !c.IsUnconscious()
+			if (c.GetValue(Paralysis) != 1) && !c.IsInFaction(pTweakPosedFaction) && !c.IsDoingFavor()
+				if (c.GetCurrentPackage() != pCommandMode_Travel) && (c.GetValue(pFollowerState) != 2.0)
+					c.Say(t,c,false,Game.GetPlayer())		
+					if usePickLock
+						CommandModePickLock(c, closestLocked)
+					else
+						CommandModeHackterminal(c, closestLocked)
+					endif
+					return
+				endif
+			endif
+		endif
+	endif
+	c = pCompanion5.GetActorReference()
+	if c && c.Is3DLoaded() && c.HasKeyWord(requiredkeyword) 
+		if !c.IsDead() && !c.IsBleedingOut() && !c.IsUnconscious()
+			if (c.GetValue(Paralysis) != 1) && !c.IsInFaction(pTweakPosedFaction) && !c.IsDoingFavor()
+				if (c.GetCurrentPackage() != pCommandMode_Travel) && (c.GetValue(pFollowerState) != 2.0)
+					c.Say(t,c,false,Game.GetPlayer())		
+					if usePickLock
+						CommandModePickLock(c, closestLocked)
+					else
+						CommandModeHackterminal(c, closestLocked)
+					endif
+					return
+				endif
+			endif
+		endif
+	endif
+EndFunction
 
 ; With AFT, followers get better with practice. After each successful lock pick attempt, the odds improve. 
 ; Once you are successful 6 times, they never fail. 

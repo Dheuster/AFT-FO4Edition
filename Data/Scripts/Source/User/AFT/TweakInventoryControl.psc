@@ -548,49 +548,51 @@ Function UnManageOutfits()
 EndFunction
 
 Function SetOutfitFix(Actor theActor, Outfit theOutfit)
+
+	; 1.22 : Seems recent patch (1.10.114?) caused the setOutfit bug to affect 
+	; unique and non-unique npcs. So we upgraded this fix to apply to both. 
+	
+	Actor pc = Game.GetPlayer()
+	ObjectReference theContainer = pc.placeAtMe(Game.GetForm(0x00020D57), 1, False, False, True)
+	
+	theContainer.SetPosition(pc.GetPositionX(), pc.GetPositionY(),pc.GetPositionZ() - 200)
+	if theContainer
+		theActor.RemoveAllItems(theContainer, True)
+		int maxwait = 10
+		while (theActor.GetItemCount(None) > 0 && maxwait > 0)
+			Utility.WaitMenuMode(0.2)
+			maxwait -= 1
+		endWhile
+		if (0 == maxwait)
+			Trace("Warning : Not all items removed from follower")
+			Utility.WaitMenuMode(0.2)
+		endIf
+	endif
 	if theActor.GetActorBase().IsUnique()		
 		theActor.GetActorBase().SetOutfit(theOutfit)
-		theActor.SetOutfit(theOutfit)
-	else
-		Actor pc = Game.GetPlayer()
-		ObjectReference theContainer = pc.placeAtMe(Game.GetForm(0x00020D57), 1, False, False, True)
-		
-		theContainer.SetPosition(pc.GetPositionX(), pc.GetPositionY(),pc.GetPositionZ() - 200)
-		if theContainer
-			theActor.RemoveAllItems(theContainer, True)
-			int maxwait = 10
-			while (theActor.GetItemCount(None) > 0 && maxwait > 0)
-				Utility.WaitMenuMode(0.2)
-				maxwait -= 1
-			endWhile
-			if (0 == maxwait)
-				Trace("Warning : Not all items removed from follower")
-				Utility.WaitMenuMode(0.2)
-			endIf
-		endif
-		theActor.SetOutfit(theOutfit)
-		if theContainer
-			; If theActor is not loaded in memory, the items will be deleted. So in that 
-			; case, move items to player.
-			if theActor.Is3DLoaded()
-				theContainer.RemoveAllItems(theActor, True)
-			else
-				theContainer.RemoveAllItems(pc, True)
-			endif			
-			int maxwait = 10
-			while (theContainer.GetItemCount(None) > 0 && maxwait > 0)
-				Utility.WaitMenuMode(0.2)
-				maxwait -= 1
-			endWhile
-			if (0 == maxwait)
-				Trace("Warning : Not all items removed from theContainer")
-				Utility.WaitMenuMode(0.2)
-				theContainer.Disable(False)
-			else
-				theContainer.Disable(False)
-				theContainer.Delete()
-			endIf
-		endif		
+	endif
+	theActor.SetOutfit(theOutfit)
+	if theContainer
+		; If theActor is not loaded in memory, the items will be deleted. So in that 
+		; case, move items to player.
+		if theActor.Is3DLoaded()
+			theContainer.RemoveAllItems(theActor, True)
+		else
+			theContainer.RemoveAllItems(pc, True)
+		endif			
+		int maxwait = 10
+		while (theContainer.GetItemCount(None) > 0 && maxwait > 0)
+			Utility.WaitMenuMode(0.2)
+			maxwait -= 1
+		endWhile
+		if (0 == maxwait)
+			Trace("Warning : Not all items removed from theContainer")
+			Utility.WaitMenuMode(0.2)
+			theContainer.Disable(False)
+		else
+			theContainer.Disable(False)
+			theContainer.Delete()
+		endIf
 	endif
 EndFunction
 

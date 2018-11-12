@@ -154,6 +154,11 @@ Quest    Property pFollowers                  Auto Const
 Quest    Property pTweakNames                 Auto Const
 Quest    Property pTweakVisualChoice          Auto Const
 Quest    Property pTweakGatherLooseItems      Auto Const
+Quest    Property pTweakUnlockVisible		  Auto Const
+Quest	 Property pTweakDLC01				  Auto Const
+Quest	 Property pTweakDLC03				  Auto Const
+Quest	 Property pTweakDLC04				  Auto Const
+Quest    Property pTweakCOMSpouse			  Auto Const
 
 
 Terminal Property pTweakRootTerminal          Auto Const
@@ -1778,7 +1783,7 @@ Function Test()
 		self.CallFunctionNoWait("Test", params)
 		return
 	endIf
-	
+		
 	Actor pc = Game.GetPlayer()
 	Utility.wait(0.1)
 		
@@ -1839,46 +1844,41 @@ Function Test()
 				CommonwealthGSRadstorm.ForceActive()
 			endIf
 			if (dchoice > 2 && dchoice < 7)
-				Quest TweakCOMSpouse = Game.GetFormFromFile(0x0104529E,"AmazingFollowerTweaks.esp") as Quest
-				if TweakCOMSpouse
-					ReferenceAlias Spouse = (TweakCOMSpouse.GetAlias(8) as ReferenceAlias)
-					if Spouse
-						Actor theSpouse = Spouse.GetActorReference()
-						if theSpouse && !theSpouse.IsDead() && theSpouse.IsInFaction(pCurrentCompanionFaction)
-							if 3 == dchoice
-								ActorValue CA_Affinity   = Game.GetForm(0x000A1B80) as ActorValue
-								theSpouse.SetValue(CA_Affinity, 239.0)
-								Utility.wait(1.0)
-								Keyword CA_CustomEvent_PrestonLoves = Game.GetForm(0x001716C2) as Keyword
-								FollowersScript.SendAffinityEvent(self, CA_CustomEvent_PrestonLoves, ShouldSuppressComment = false, IsDialogueBump = true)					
-							elseif 4 == dchoice
-								ActorValue CA_Affinity   = Game.GetForm(0x000A1B80) as ActorValue
-								theSpouse.SetValue(CA_Affinity, 499.0)
-								Utility.wait(1.0)
-								Keyword CA_CustomEvent_PrestonLoves = Game.GetForm(0x001716C2) as Keyword
-								FollowersScript.SendAffinityEvent(self, CA_CustomEvent_PrestonLoves, ShouldSuppressComment = false, IsDialogueBump = true)
-							elseif 5 == dchoice
-								ActorValue CA_Affinity   = Game.GetForm(0x000A1B80) as ActorValue
-								theSpouse.SetValue(CA_Affinity, 749.0)
-								Utility.wait(1.0)
-								Keyword CA_CustomEvent_PrestonLoves = Game.GetForm(0x001716C2) as Keyword
-								FollowersScript.SendAffinityEvent(self, CA_CustomEvent_PrestonLoves, ShouldSuppressComment = false, IsDialogueBump = true)
-							elseif 6 == dchoice
-								ActorValue CA_Affinity   = Game.GetForm(0x000A1B80) as ActorValue
-								theSpouse.SetValue(CA_Affinity, 999.0)
-								Utility.wait(1.0)
-								Keyword CA_CustomEvent_PrestonLoves = Game.GetForm(0x001716C2) as Keyword
-								FollowersScript.SendAffinityEvent(self, CA_CustomEvent_PrestonLoves, ShouldSuppressComment = false, IsDialogueBump = true)
-							endIf
-						else
-							trace("Spouse Reference Unfilled")
+				ReferenceAlias Spouse = (pTweakCOMSpouse.GetAlias(8) as ReferenceAlias)
+				if Spouse
+					Actor theSpouse = Spouse.GetActorReference()
+					if theSpouse && !theSpouse.IsDead() && theSpouse.IsInFaction(pCurrentCompanionFaction)
+						if 3 == dchoice
+							ActorValue CA_Affinity   = Game.GetForm(0x000A1B80) as ActorValue
+							theSpouse.SetValue(CA_Affinity, 239.0)
+							Utility.wait(1.0)
+							Keyword CA_CustomEvent_PrestonLoves = Game.GetForm(0x001716C2) as Keyword
+							FollowersScript.SendAffinityEvent(self, CA_CustomEvent_PrestonLoves, ShouldSuppressComment = false, IsDialogueBump = true)					
+						elseif 4 == dchoice
+							ActorValue CA_Affinity   = Game.GetForm(0x000A1B80) as ActorValue
+							theSpouse.SetValue(CA_Affinity, 499.0)
+							Utility.wait(1.0)
+							Keyword CA_CustomEvent_PrestonLoves = Game.GetForm(0x001716C2) as Keyword
+							FollowersScript.SendAffinityEvent(self, CA_CustomEvent_PrestonLoves, ShouldSuppressComment = false, IsDialogueBump = true)
+						elseif 5 == dchoice
+							ActorValue CA_Affinity   = Game.GetForm(0x000A1B80) as ActorValue
+							theSpouse.SetValue(CA_Affinity, 749.0)
+							Utility.wait(1.0)
+							Keyword CA_CustomEvent_PrestonLoves = Game.GetForm(0x001716C2) as Keyword
+							FollowersScript.SendAffinityEvent(self, CA_CustomEvent_PrestonLoves, ShouldSuppressComment = false, IsDialogueBump = true)
+						elseif 6 == dchoice
+							ActorValue CA_Affinity   = Game.GetForm(0x000A1B80) as ActorValue
+							theSpouse.SetValue(CA_Affinity, 999.0)
+							Utility.wait(1.0)
+							Keyword CA_CustomEvent_PrestonLoves = Game.GetForm(0x001716C2) as Keyword
+							FollowersScript.SendAffinityEvent(self, CA_CustomEvent_PrestonLoves, ShouldSuppressComment = false, IsDialogueBump = true)
 						endIf
 					else
-						trace("GetAlias(8) did not cast to ReferenceAlias (Is Quest Running?)")
+						trace("Spouse Reference Unfilled")
 					endIf
 				else
-					trace("Quest TweakCOMSpouse not found")
-				endIf						
+					trace("GetAlias(8) did not cast to ReferenceAlias (Is Quest Running?)")
+				endIf
 			endIf
 			if (7 == dchoice)
 				; EnergyShield : UFO Tech Upgrade?
@@ -2807,6 +2807,73 @@ Function ExeAFTMenuCommand(int command)
 	pTweakCommand.SetValue(command)
 	pTweakManageNPCRelay.Cast(Game.GetPlayer())
 EndFunction
+			
+Function ExeAFTMenuCommandOn(int command, int target)
+	pTweakCommand.SetValue(command)
+	TerminalTarget = None
+	if (target < 0)
+		if (-1 == target) ; Cait
+			TerminalTarget = (Game.GetForm(0x00079249) as ActorBase).GetUniqueActor()
+		elseif (-2 == target) ; Codsworth
+			TerminalTarget = (Game.GetForm(0x000179FF) as ActorBase).GetUniqueActor()
+		elseif (-3 == target) ; Curie
+			TerminalTarget = (Game.GetForm(0x00027686) as ActorBase).GetUniqueActor()
+		elseif (-4 == target) ; Danse
+			TerminalTarget = (Game.GetForm(0x00027683) as ActorBase).GetUniqueActor()
+		elseif (-5 == target) ; Deacon
+			TerminalTarget = (Game.GetForm(0x00045AC9) as ActorBase).GetUniqueActor()
+		elseif (-6 == target) ; Dogmeat
+			TerminalTarget = (Game.GetForm(0x0001D15C) as ActorBase).GetUniqueActor()
+		elseif (-7 == target) ; John Hancock
+			TerminalTarget = (Game.GetForm(0x00022613) as ActorBase).GetUniqueActor()
+		elseif (-8 == target) ; MacCready
+			TerminalTarget = (Game.GetForm(0x0002740E) as ActorBase).GetUniqueActor()
+		elseif (-9 == target) ; Nick Valentine
+			TerminalTarget = (Game.GetForm(0x00002F24) as ActorBase).GetUniqueActor()
+		elseif (-10 == target) ; Piper
+			TerminalTarget = (Game.GetForm(0x00002F1E) as ActorBase).GetUniqueActor()
+		elseif (-11 == target) ; Preston
+			TerminalTarget = (Game.GetForm(0x00019FD9) as ActorBase).GetUniqueActor()
+		elseif (-12 == target) ; Strong
+			TerminalTarget = (Game.GetForm(0x00027682) as ActorBase).GetUniqueActor()
+		elseif (-13 == target) ; X6-88
+			TerminalTarget = (Game.GetForm(0x000BBEE6) as ActorBase).GetUniqueActor()
+		elseif (-14 == target) ; Ada
+			TweakDLC01Script tweakDLC01 = (pTweakDLC01 as TweakDLC01Script)
+			if tweakDLC01 && tweakDLC01.Installed
+				TerminalTarget = tweakDLC01.Ada
+			endif
+		elseif (-15 == target) ; Longfellow
+			TweakDLC03Script tweakDLC03 = (pTweakDLC03 as TweakDLC03Script)
+			if tweakDLC03 && tweakDLC03.Installed
+				TerminalTarget = tweakDLC03.OldLongfellow
+			endif
+		elseif (-16 == target) ; Porter Gage
+			TweakDLC04Script tweakDLC04 = (pTweakDLC04 as TweakDLC04Script)
+			if tweakDLC04 && tweakDLC04.Installed
+				TerminalTarget = tweakDLC04.PorterGage
+			endif		
+		elseif (-17 == target) ; Spouse
+			ReferenceAlias Spouse = (pTweakCOMSpouse.GetAlias(8) as ReferenceAlias)
+			if Spouse
+				TerminalTarget = Spouse.GetActorReference()
+			endif
+		endif
+	elseif (target > 0)
+		AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+		if pTweakFollowerScript
+			TerminalTarget = pTweakFollowerScript.GetManagedBySlotId(target)
+		endif
+	endif
+	if TerminalTarget && !TerminalTarget.Is3DLoaded()
+		TerminalTarget = None
+	endif
+	
+	Var[] params = new Var[1]
+	params[0] = TerminalTarget
+	self.CallFunctionNoWait("ActivateAft", params)
+	
+EndFunction
 
 ; This method is typically called from Script AFT::TweakTargetRelayScript, which is attached to MagicAffect 
 ; TweakTargetRelay. Prior to calling this method it sets the local script ObjectReference TerminalTarget to 
@@ -3373,6 +3440,8 @@ Function handleCommand(float theCommand)
 				ToggleScoutAhead(false)
 			elseif theCommand > 132.0 && theCommand < 171.0
 				SetVoiceOption((theCommand - 133.0) as int)
+			elseif 171 == theCommand
+				UnlockVisible()
 			endIf
 			
 		endIf		
@@ -3751,6 +3820,24 @@ Function GatherLooseItems()
 		Trace("Aborting. pTweakGatherLoose Cast Failure")
 	endIf
 		
+EndFunction
+
+Function UnlockVisible()
+
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("UnlockVisible", params)
+		return
+	endIf
+
+	TweakUnlockVisibleScript uVisible = (pTweakUnlockVisible as TweakUnlockVisibleScript)
+	if uVisible
+		trace("Calling UnlockVisible()")
+		uVisible.UnlockVisible()
+	else
+		trace("Unable to cast pTweakUnlockVisible to TweakUnlockVisibleScript")
+	endif
+	
 EndFunction
 
 Function ScanActorsForItems(Actor target=None)

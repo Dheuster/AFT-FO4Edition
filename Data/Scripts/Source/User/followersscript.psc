@@ -349,17 +349,27 @@ Event ReferenceAlias.OnCommandModeGiveCommand(ReferenceAlias akSender, int aeCom
 		if 	(bFoundCommand)
 			if (akTarget)
 				if (akTarget.GetBaseObject() is Container || akTarget.GetBaseObject() is Door) && akTarget.IsLocked() && SenderActor.HasKeyword(Followers_Command_LockPick_Allowed)
-					SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
-					Command_LockPick_Scene.stop()
-					CommandActor.ForceRefTo(SenderActor)
-					CommandTarget.ForceRefTo(akTarget)
-					Command_LockPick_Scene.start()
+					AFT:TweakDFScript DFScript = ((self as Quest) as AFT:TweakDFScript)
+					if DFScript
+						DFScript.CommandModePickLock(SenderActor, akTarget )
+					else
+						SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
+						Command_LockPick_Scene.stop()
+						CommandActor.ForceRefTo(SenderActor)
+						CommandTarget.ForceRefTo(akTarget)
+						Command_LockPick_Scene.start()				
+					endif
 				elseif (akTarget.GetBaseObject() is Terminal && akTarget.IsLocked() && SenderActor.HasKeyword(Followers_Command_HackTerminal_Allowed))
-					SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
-					Command_HackTerminal_Scene.stop()
-					CommandActor.ForceRefTo(akSender.GetReference())
-					CommandTarget.ForceRefTo(akTarget)
-					Command_HackTerminal_Scene.start()
+					AFT:TweakDFScript DFScript = ((self as Quest) as AFT:TweakDFScript)
+					if DFScript
+						DFScript.CommandModeHackterminal(SenderActor, akTarget )
+					else
+						SenderActor.EvaluatePackage(abResetAI=true) ;cancels the stay command
+						Command_HackTerminal_Scene.stop()
+						CommandActor.ForceRefTo(SenderActor)
+						CommandTarget.ForceRefTo(akTarget)
+						Command_HackTerminal_Scene.start()					
+					endif
 				endif
 			endif
 		endif
