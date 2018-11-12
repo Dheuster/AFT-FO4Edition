@@ -355,6 +355,7 @@ Topic[] ComeAlongTopics
 Topic ComeAlongStrong
 Topic ComeAlongDog
 int TestTogggle
+bool isHotkeyCommand = false
 
 int REFRESH_CAMP  = 999 const
 int TEARDOWN_CAMP = 998 const
@@ -394,7 +395,7 @@ Function OnGameLoaded(bool firstTime = false)
 	pHasBody.Clear()
 	ResetVariables()
 	TestTogggle = 0
-	
+	isHotkeyCommand = false
 	Trace("OnGameLoad() Finished")
 EndFunction
 
@@ -2865,8 +2866,12 @@ Function ExeAFTMenuCommandOn(int command, int target)
 			TerminalTarget = pTweakFollowerScript.GetManagedBySlotId(target)
 		endif
 	endif
-	if TerminalTarget && !TerminalTarget.Is3DLoaded()
-		TerminalTarget = None
+	if TerminalTarget
+		if TerminalTarget.Is3DLoaded()
+			isHotkeyCommand = true
+		else
+			TerminalTarget = None
+		endif
 	endif
 	
 	Var[] params = new Var[1]
@@ -3030,6 +3035,7 @@ Function handleCommand(float theCommand)
 				endIf
 				
 				if theCommand < 9
+					isHotkeyCommand = false
 					return
 				endIf
 				
@@ -3046,7 +3052,7 @@ Function handleCommand(float theCommand)
 				elseif 13.0 == theCommand ; Give All Gear
 					TransferAllRelay()
 				endIf
-			
+				
 			else ; theCOmmand >= 14
 			
 				; Tools:
@@ -3082,6 +3088,7 @@ Function handleCommand(float theCommand)
 				endIf
 
 				if theCommand < 20
+					isHotkeyCommand = false
 					return
 				endIf
 				
@@ -3108,6 +3115,7 @@ Function handleCommand(float theCommand)
 				endIf
 				
 				if theCommand < 27
+					isHotkeyCommand = false
 					return
 				endIf
 				
@@ -3179,7 +3187,7 @@ Function handleCommand(float theCommand)
 					endIf
 				endIf
 			endIf
-
+			
 		else ; theCommand >= 39
 		
 			if theCommand < 59
@@ -3238,7 +3246,7 @@ Function handleCommand(float theCommand)
 				elseif 58.0 == theCommand ; Toggle Ignore Friendly Hits
 					ToggleIgnoreFriendlyHits(false)
 				endIf
-
+				
 			else ; theCommand >= 59
 			
 				; Info:
@@ -3265,7 +3273,9 @@ Function handleCommand(float theCommand)
 				elseif 68.0 == theCommand ; Info Keywords
 					Info(8)
 				endIf
-			endIf			
+				
+			endIf
+			
 		endIf
 		
 	else ; theCommand >= 69
@@ -3363,7 +3373,7 @@ Function handleCommand(float theCommand)
 			elseif 103.0 == theCommand ; Expression
 				ChangeExpressionRelay()
 			endIf
-
+			
 		else ; theCommand >= 104
 		
 			trace("theCommand >= 104")
@@ -3443,9 +3453,14 @@ Function handleCommand(float theCommand)
 			elseif 171 == theCommand
 				UnlockVisible()
 			endIf
-			
-		endIf		
-	endIf	
+						
+		endIf
+				
+	endIf
+
+	isHotkeyCommand = false
+	return
+	
 EndFunction
 
 Function EnsurePlayerHasAFT(bool MarkAsFavorite = false)
@@ -6028,6 +6043,9 @@ EndFunction
 
 Bool Function SpeakDialogue(Actor aSpeaker, ActorValue pTopicAV, ActorValue pModIDAV, string hint = "", int first_prob=100, int secondary_prob=100 )
 	Trace("SpeakDialogue() Called for [" + aSpeaker + "] (" + TerminalTargetId + ")")
+	if isHotkeyCommand
+		return false
+	endif
 	if aSpeaker.IsInFaction(pTweakNoCommentActivator)
 		Trace("Returning False. Actor member of NoCommentActivator")
 		return false
