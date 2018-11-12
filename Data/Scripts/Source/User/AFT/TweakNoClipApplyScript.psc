@@ -13,60 +13,83 @@ bool Function Trace(string asTextToPrint, Actor npc = None, int aiSeverity = 0) 
 	RETURN debug.TraceUser(logName, asTextToPrint, aiSeverity)
 EndFunction
 
-; When NoCLIP is enabled and the follower is in an elevator when it comes to a stop, something about being paralyzed during the cell transition 
-; causes the NPC to fall into ragdoll... which is bad. Recovery requires a load screen and then a Summon All Followers. 
-;
-; To avoid, we try our best to detect if we are near or in an elevator and ignore the Effect Start when that is the case.
 Event OnEffectStart(Actor akTarget, Actor akCaster)
 
 	Trace("OnEffectStart", akTarget)
 	Trace("  Target [" + akTarget + "] Caster [" + akCaster + "]", akTarget)
-		
-	if (0 == akTarget.GetValue(Paralysis) )
+
+	; 1.22 : Safer Implementation
 	
-		if (0 != (akCaster.FindAllReferencesOfType(TweakElevatorList,200)).Length)
-			Trace("  Aborting: Nearby Elevators Found:",akTarget)
-			return
-		endif
-		
-		int ActorBaseID = akTarget.GetActorBase().GetFormID()
-		if (ActorBaseID > 0x00ffffff)
-			if ActorBaseID > 0x80000000
-				ActorBaseID -= 0x80000000
-			endif
-			int ActorBaseMask = ActorBaseID % (0x01000000) 
-			if 0x0000FD5A == ActorBaseMask ; Ada
-				float[] posdata = TraceCircle(akCaster, 100.0, 180.0)
-				akTarget.SetPosition(posdata[0],posdata[1],posdata[2])
-				akTarget.SetAngle(0.0,0.0, akCaster.GetAngleZ())
-				return
-			endif
-		elseif (ActorBaseID == 0x0001D15C)
-			float[] posdata = TraceCircle(akCaster, 100.0, 180.0)
-			akTarget.SetPosition(posdata[0],posdata[1],posdata[2])
-			akTarget.SetAngle(0.0,0.0, akCaster.GetAngleZ())
-			return
-		endif
-		
-		if (2.0 == aktarget.GetFactionRank(TweakPosedFaction))
-			Trace("  Aborting: Target is Posed:",akTarget)
-			return
-		endif
-		Trace("  Activating NoClip",akTarget)
-		akTarget.SetValue(Paralysis,2)		
-	else
-		Trace("  Aborting: Paralysis value is not 0",akTarget)		
+	if (0 != akTarget.GetValue(Paralysis) )
+		Trace("  Aborting: Paralysis is not 0 (companion paralyzed/knocked out)",akTarget)
+		return
 	endif
+
+	if (aktarget.IsBleedingOut())
+		Trace("  Aborting: Target is Bleeding Out",akTarget)
+		return
+	endif
+	
+	if (2.0 == aktarget.GetFactionRank(TweakPosedFaction))
+		Trace("  Aborting: Target is Posed:",akTarget)
+		return
+	endif
+		
+	if (0 != (akCaster.FindAllReferencesOfType(TweakElevatorList,200)).Length)
+		Trace("  Aborting: Nearby Elevators Found:",akTarget)
+		return
+	endif
+
+			
+	; int ActorBaseID = akTarget.GetActorBase().GetFormID()
+	; if (ActorBaseID > 0x00ffffff)
+		; if ActorBaseID > 0x80000000
+			; ActorBaseID -= 0x80000000
+		; endif
+		; int ActorBaseMask = ActorBaseID % (0x01000000) 
+		; if 0x0000FD5A == ActorBaseMask ; Ada
+			; float[] posdata = TraceCircle(akCaster, 100.0, 180.0)
+			; akTarget.SetPosition(posdata[0],posdata[1],posdata[2])
+			; akTarget.SetAngle(0.0,0.0, akCaster.GetAngleZ())
+			; return
+		; endif
+	; elseif (ActorBaseID == 0x0001D15C)
+		; float[] posdata = TraceCircle(akCaster, 100.0, 180.0)
+		; akTarget.SetPosition(posdata[0],posdata[1],posdata[2])
+		; akTarget.SetAngle(0.0,0.0, akCaster.GetAngleZ())
+		; return
+	; endif
+	
+	Trace("  Activating NoClip v1.22",akTarget)	
+	
+	; This allows the player to walk through NPCs...but if an animation event
+	; fires while they are paralyzed (hit by something for example. Elevator 
+	; comes to a stop. Begin to use furniture. Etc.... ), they will go into ragdoll, 
+	; which requires console to fix. (recycleactor + moveto player). Not an option
+	; for xbox users. So we are going with the safer implementation, even if it 
+	; is less cool. 
+	;
+	; If I can figure out a way to recover the AI from ragdoll when the effect ends, 
+	; I may re-enable in the future. But for now, it is causing too many bug reports.
+	
+	; akTarget.SetValue(Paralysis, 2)
+
+	float[] posdata = TraceCircle(akCaster, 100.0, 180.0)
+	akTarget.SetPosition(posdata[0],posdata[1],posdata[2])
+	akTarget.SetAngle(0.0,0.0, akCaster.GetAngleZ())
+	
 EndEvent
 
 Event OnEffectFinish(Actor akTarget, Actor akCaster)
 
 	Trace("OnEffectFinish", akTarget)
+	
+	; 1.22 : We leave this check in place incase someone was
+	; in no-clip during the upgrade. 
+	
 	if (2.0 == akTarget.GetValue(Paralysis))
 		Trace("  DeActivating NoClip",akTarget)
 		akTarget.SetValue(Paralysis,0)
-	else
-		Trace("  Aborting: Paralysis value is not 2",akTarget)		
 	endif
 	
 endEvent
