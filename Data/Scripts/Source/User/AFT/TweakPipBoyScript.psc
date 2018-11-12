@@ -3848,7 +3848,7 @@ Function UnlockVisible()
 	TweakUnlockVisibleScript uVisible = (pTweakUnlockVisible as TweakUnlockVisibleScript)
 	if uVisible
 		trace("Calling UnlockVisible()")
-		uVisible.UnlockVisible()
+		uVisible.CallFunctionNoWait("UnlockVisible",new Var[0])
 	else
 		trace("Unable to cast pTweakUnlockVisible to TweakUnlockVisibleScript")
 	endif
