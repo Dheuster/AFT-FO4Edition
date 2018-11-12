@@ -7,12 +7,12 @@
                               [Fallout 4 Edition]
                   ___________________________________________
 
-                                  Nov 6, 2018
-                                 Version: 1.21
+                                  Nov 12, 2018
+                                 Version: 1.22
 
                         Written by:  Dheu
                              Email:  Dheuster@gmail.com
-                       Use subject:  AFT FO4 Version 1.21
+                       Use subject:  AFT FO4 Version 1.22
 
 
                                  QUICK SUMMARY
@@ -361,7 +361,7 @@ III. > > > >  Installation
      2) Once 7-zip is installed, open the .7z file downloaded from NexusMods 
         Typically you need only double click the file:
          
-          AmazingFollowerTweaksFO4_v1_21.7z
+          AmazingFollowerTweaksFO4_v1_22.7z
          
      3) Within the 7-zip window, select the menu options: 
          
@@ -373,7 +373,7 @@ III. > > > >  Installation
      4) The 7-zip window will show 2 files:
            
           /Data
-          readme_aft_1_21.txt
+          readme_aft_1_22.txt
           
         Make sure BOTH items are hi-lighted. To hi-light both entries quickly, 
         hit CTRL + A
@@ -2216,6 +2216,7 @@ IV. > > > >  Usage
               Actions                   
               --------------------------
               Gather Loose Items
+              Unlock Visible
               Summon All
               Command Mode
               All Retreat               
@@ -2263,7 +2264,21 @@ IV. > > > >  Usage
                   opposed to followers carrying more than their limit 
                   allows, then don't use this method. 
 
-        b) Summon All
+        b) Unlock Visible
+		
+		   AFT assesses what is in front of the player, searching for locked
+		   doors, containers or terminals. Then looks at your companions and
+		   selects the one best suited for the job. This helps avoid the 
+		   need for command mode or placing the crosshair over the item 
+		   that needs to be unlocked. An excellent command to link to a 
+		   favorite or hotkey if the player does not prefer to unlock things.
+		   
+           If you have 2 people in your party that can unlock something, then
+           the first recruited will be preferred over the other. To change 
+           AFT's preference, dismiss everyone and then ask the NPC you prefer,
+           to follow you first. Then ask the others. 
+		   
+        c) Summon All
              
            Teleports all active followers in front of you and causes
            them to begin following you again if they were told to 
@@ -2274,13 +2289,13 @@ IV. > > > >  Usage
            - There are some areas of the game where Summon All is disabled
              for immersion reasons.
                 
-        c) Command Mode
+        d) Command Mode
           
            Places the previously commanded actor back into command
            mode. Activating a second time toggles command mode off.
            Recommend using as a HOTKEY.
                       
-        d) All Retreat
+        e) All Retreat
            
            Causes all followers to stop fighting and retreat for 20 
            seconds.
@@ -2288,7 +2303,7 @@ IV. > > > >  Usage
            After 20 seconds, they will continue to fight and defend
            themselves unless you renew the command with another call.
 
-        e) All Attack
+        f) All Attack
           
            Typically used when sneaking to have your followers attack 
            nearby enemies that have not yet spotted you. (You want everyone
@@ -2299,27 +2314,27 @@ IV. > > > >  Usage
            This can include neutral NPCs such as merchants, so use with 
            caution.
              
-        f) All Wait
+        g) All Wait
           
            All followers enter WAIT Mode. (As if you walked up to them
            and told them to STAY)
            
-        g) All Hangout
+        h) All Hangout
 
            All followers begin to Wait and Sandbox. Command overrides
            followers individual Auto Relax settings.
 
-        h) All Follow
+        i) All Follow
 
            All followers begin to Follow the player. This command will
            cancel individual states like STAY HERE.
 
-        i) All Dismiss
+        j) All Dismiss
           
            Dismisses all followers after presenting you with a 
            confirmation prompt. 
 
-        j) All Enter Power Armor
+        k) All Enter Power Armor
 
            Any follower with an assigned Power Armor who is not already 
            wearing it will immediately enter their power armor. Followers
@@ -2343,17 +2358,17 @@ IV. > > > >  Usage
                The easiest way to un-assign PowerArmor is to have the player
                enter a followers PA.
 
-        k) All Exit Power Armor
+        l) All Exit Power Armor
 
            Any follower wearing Power Armor will immediately exit.
              
 
-        l) Fetch My PowerArmor
+        m) Fetch My PowerArmor
            
            Causes the players PowerArmor to teleport to the Player, as if a
            follower fetched it.
 
-        m) Setup\Teardown Camp
+        n) Setup\Teardown Camp
            
            "Setup": 
              
@@ -3950,9 +3965,10 @@ V. > > > > Hot Keys
 
      Actions:
      --------
-       1: SummonAllFollowers
+       1: Summon All Followers
      125: Gather Loose Items
-      131: Command Mode
+	 171: Unlock Visible
+     131: Command Mode
        2: All Wait
        3: All Hangout
        4: All Follow
@@ -3998,7 +4014,7 @@ V. > > > > Hot Keys
      -----
      27:  Trade
      28:  Set/Unset Standard Outfit
-     29:  Set/Unset Standard Outfit
+     29:  Set/Unset Combat Outfit
      30:  Set/Unset City Outfit
      31:  Set/Unset Camp Outfit
      32:  Set/Unset Home Outfit       
@@ -4174,6 +4190,63 @@ V. > > > > Hot Keys
      Global settings (AFT Settings Holotape) are not made available
      via hotkeys.
 
+  D. Targeting Hotkeys
+  
+     AFT also includes a way to target a specific NPC with each hotkey
+     command using the following syntax:
+
+         cqf TweakPipboy ExeAFTMenuCommandOn ##COMMAND##  ##FOLLOWERSLOT##
+
+     Where:
+
+       ##COMMAND## is a number identifying the command and
+       ##FOLLOWERSLOT## is a number identifying the SLOT of the follower
+
+     The MANAGED SLOT is assigned when you recruit a follower and it will
+     not change unless you unmanage them. They will keep their managed
+     slot number even when dismissed.
+     
+     To find a followers slot number, use the INFO command on them and
+     their managed slot will be displayed on the TRAITS tab. 
+	 
+     You can also use negative numbers to target the core companions that
+     come with the original game:
+	 
+       -1 : Cait
+       -2 : Codsworth
+       -3 : Curie
+       -4 : Danse
+       -5 : Deacon
+       -6 : Dogmeat
+       -7 : John Hancock
+       -8 : MacCready
+       -9 : Nick Valentine
+      -10 : Piper
+      -11 : Preston
+      -12 : Strong
+      -13 : X6-88
+      -14 : Ada
+      -15 : Longfellow
+      -16 : Porter Gage
+      -17 : AFT Spouse
+	 	 
+         [Macros]
+         afton=cqf TweakPipboy ExeAFTMenuCommandOn
+  
+         [Hotkeys]
+         Shift-1=afton 131 -6
+         Shift-2=afton 131 -1
+         Shift-3=afton 131 -9
+         Shift-4=afton 131 -17
+         Shift-5=afton 131 -10
+         Shift-6=afton 131 -3
+		 
+    NOTE: For safety reasons, Targeted NPCs must be close enough to the 
+          player that their model is loaded in memory. If this is not
+          the case, the targeted command will fail and act as if no one 
+          was selected. Non-Targetted commands such as Summon All 
+          Followers do not have this limitation.
+	 
 -------------------------------------------------------------------------------
 VI. > > > >  Advanced Trouble Shooting
 -------------------------------------------------------------------------------
@@ -5743,6 +5816,14 @@ X. > > > >  Version History
   - Updated In-Game Readme
   - Fixed Command Mode loss associated with Auto-Heal
   
+  1.22 : ( Compiled against FO4 version  1.10.114.0.0 )
+  - Added Action "Unlock Visible" See Readme for usage details. 
+  - Added Hotkey Support function "ExeAFTMenuCommandOn" for targeted hotkeys.
+  - Updated No Collision Support so it is no longer on by default
+  - Updated No Collsiion Implementation. Used safer implementation. 
+  - Fixed Sculpt bug that could cause ragdoll after sculpt. 
+  - Fixed AFT Camp so that it once again will work in Nuka World  
+  - Fixed Set Outfit to prevent item loss on first use
   
 -------------------------------------------------------------------------------
 XI. Credits
