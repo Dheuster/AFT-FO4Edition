@@ -339,6 +339,7 @@ Message Property pTweakDisallowedWarn Auto Const
 Message Property pTweakInvisibleFix Auto Const
 Message Property pTweakUniqueOnly Auto Const
 Message Property pTweakAssignStatsMsg Auto Const
+Message Property pTweakResetChoice Auto Const
 
 FormList Property pTweakNewBodyData Auto Const
 Topic Property WorkshopVendorSharedTopicB Auto Const
@@ -1810,7 +1811,9 @@ Function Test()
 			; 7  = Energy Shield
 			; 8  = Synth Eyes
 			; 9  = End Survival
-			; 10 = Cancel
+			; 10 = Reset WorkBenches
+			; 11 = Reset NPC
+			; 12 = Cancel
 			
 			Trace("Diagnostics Choice [" + dchoice + "]")
 			if 10 == dchoice
@@ -1826,19 +1829,61 @@ Function Test()
 				endIf
 			endIf
 			if (1 == dchoice)
-				; Money/Items Cheats for testing
-				pc.AddItem(Game.GetForm(0x0000000F), 50000)
+				; Money/Items Cheats for testing				
 				Container qaBookChest = Game.GetForm(0x001E7DA6) as Container
 				float[] p = TraceCircle(pc,120)
 				ObjectReference bChest = pc.PlaceAtMe(qaBookChest)
 				bChest.SetPosition(p[0],p[1],p[2])
 				bChest.SetAngle(0.0,0.0, pc.GetAnglex() - 180)
-				bChest.AddItem(Game.GetForm(0x00216215))
+				bChest.AddItem(Game.GetForm(0x00216215))				
+				
 				Container qaArmorChest = Game.GetForm(0x001E7DA2) as Container
 				p = TraceCircle(pc,-120)
 				ObjectReference aChest = pc.PlaceAtMe(qaArmorChest)
 				aChest.SetPosition(p[0],p[1],p[2])
 				aChest.SetAngle(0.0,0.0, pc.GetAnglex())
+				
+				Container qaComponentChest = Game.GetForm(0x00175500) as Container
+				p = TraceCircle(pc,120,90)
+				ObjectReference cChest = pc.PlaceAtMe(qaComponentChest)
+				cChest.SetPosition(p[0],p[1],p[2])
+				cChest.SetAngle(0.0,0.0, pc.GetAnglex() - 90)
+
+				cChest.RemoveAllItems()
+				utility.waitmenumode(0.2)
+				cChest.AddItem(Game.GetForm(0x0000000F), 50000)
+				cChest.AddItem(Game.GetForm(0x001BF72D), 10000) ; Acid
+				cChest.AddItem(Game.GetForm(0x001BF72E), 10000) ; Adhesive
+				cChest.AddItem(Game.GetForm(0x0006907A), 10000) ; Aluminum
+				cChest.AddItem(Game.GetForm(0x000AEC5B), 10000) ; AntiBallisticFiber
+				cChest.AddItem(Game.GetForm(0x001BF72F), 10000) ; AntiBseptic
+				cChest.AddItem(Game.GetForm(0x000AEC5C), 10000) ; Asbestos
+				cChest.AddItem(Game.GetForm(0x000AEC5D), 10000) ; Bone
+				cChest.AddItem(Game.GetForm(0x000AEC5E), 10000) ; Ceramic
+				cChest.AddItem(Game.GetForm(0x0006907B), 10000) ; Circuitry
+				cChest.AddItem(Game.GetForm(0x000AEC5F), 10000) ; Cloth
+				cChest.AddItem(Game.GetForm(0x00106D99), 10000) ; Concrete
+				cChest.AddItem(Game.GetForm(0x0006907C), 10000) ; Copper
+				cChest.AddItem(Game.GetForm(0x000AEC60), 10000) ; Cork
+				cChest.AddItem(Game.GetForm(0x0006907D), 10000) ; Crystal
+				cChest.AddItem(Game.GetForm(0x001BF730), 10000) ; Fertilizer
+				cChest.AddItem(Game.GetForm(0x000AEC61), 10000) ; Fiberglass
+				cChest.AddItem(Game.GetForm(0x00069087), 10000) ; FiberOptics
+				cChest.AddItem(Game.GetForm(0x0006907E), 10000) ; Gears
+				cChest.AddItem(Game.GetForm(0x00069085), 10000) ; Glass
+				cChest.AddItem(Game.GetForm(0x000AEC62), 10000) ; Gold
+				cChest.AddItem(Game.GetForm(0x000AEC63), 10000) ; Lead
+				cChest.AddItem(Game.GetForm(0x000AEC64), 10000) ; Leather
+				cChest.AddItem(Game.GetForm(0x00069086), 10000) ; NuclearMaterial
+				cChest.AddItem(Game.GetForm(0x001BF732), 10000) ; Oil
+				cChest.AddItem(Game.GetForm(0x0006907F), 10000) ; Plastic
+				cChest.AddItem(Game.GetForm(0x00106D98), 10000) ; Rubber
+				cChest.AddItem(Game.GetForm(0x00069081), 10000) ; Screws
+				cChest.AddItem(Game.GetForm(0x000AEC66), 10000) ; Silver
+				cChest.AddItem(Game.GetForm(0x00069082), 10000) ; Springs
+				cChest.AddItem(Game.GetForm(0x000731A4), 10000) ; Steel
+				cChest.AddItem(Game.GetForm(0x000731A3), 10000) ; Wood
+				
 			endIf
 			if (2 == dchoice)
 				Weather CommonwealthGSRadstorm = Game.GetForm(0x001C3D5E) as Weather
@@ -1910,7 +1955,21 @@ Function Test()
 				else
 					Trace("Cast of HC_Manager to HC_ManagerScript failed")				
 				endif
-			endIf			
+			endIf	
+			if (10 == dchoice)
+				AFT:TweakShelterScript pTweakShelterScript = (pTweakFollower as AFT:TweakShelterScript)
+				if (pTweakShelterScript)
+					pTweakShelterScript.ResetBenches()
+				else
+					Trace("Cast to pTweakShelterScript Failed")
+				endIf
+			endif
+			if (11 == dchoice)
+				AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
+				if (pTweakFollowerScript)
+					pTweakFollowerScript.RecycleActor(TerminalTarget)
+				endif
+			endif
 		endIf
 	else
 		TestTogggle = 0
@@ -3764,6 +3823,36 @@ Function ImportNPCRelay(int itype = 0)
 	endif
 		
 EndFunction
+
+Function ResetRelay()
+
+	Trace("ResetRelay() Called")
+	
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[0]
+		self.CallFunctionNoWait("ResetRelay", params)
+		return
+	endIf
+
+	if !TerminalTarget
+		Trace("No Target!")
+		return
+	endif
+	
+	int rChoice = pTweakResetChoice.Show()
+	if (0 == rChoice)
+		TerminalTarget.Disable()
+		Utility.wait(2.0)
+		TerminalTarget.Enable()
+	elseif (1 == rChoice)
+		AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)	
+		if (pTweakFollowerScript)
+			pTweakFollowerScript.RecycleActor(TerminalTarget)
+		endif
+	endif
+		
+EndFunction
+
 
 Function ChangeExpressionRelay()
 

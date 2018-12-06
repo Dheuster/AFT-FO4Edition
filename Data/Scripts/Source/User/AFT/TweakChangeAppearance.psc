@@ -1009,6 +1009,180 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 	EndIf	
 EndEvent
 
+Function RecycleActor(ReferenceAlias refAlias)
+
+	Trace("RecycleActor() Called")	
+	Actor npc = refAlias.GetActorRef()
+	if (!npc)
+		Trace("refAlias.GetActorRef() Failed. Aborting...")
+		return
+	endif
+
+	if npc.IsInCombat()
+		Trace("NPC is in combat. Aborting...")
+		return		
+	endif
+
+	if npc.IsInScene()
+		Trace("NPC is in scene. Aborting...")
+		return		
+	endif	
+	
+	if npc.IsInFaction(pTweakPosedFaction)
+		npc.RemoveFromFaction(pTweakPosedFaction)
+		npc.EvaluatePackage()
+		Utility.wait(1.0)		
+	endif
+	
+	AFT:TweakInventoryControl pTweakInventoryControl = (refAlias as AFT:TweakInventoryControl)
+	if npc.WornHasKeyword(pArmorTypePower)
+		if pTweakInventoryControl
+			pTweakInventoryControl.ExitPA()
+		else
+			npc.SwitchToPowerArmor(None)
+			Utility.wait(6.0)
+		endif
+	endif
+	
+	npc.SetAvoidPlayer(true)
+	
+	wasManaged = false
+	; Take SnapShot:
+	if (pTweakInventoryControl)
+		if npc.HasKeyword(pActorTypeGhoul) || npc.HasKeyword(pActorTypeHuman) || npc.HasKeyword(pActorTypeSynth) || npc.HasKeyword(pActorTypeSuperMutant)			
+			Trace("Taking Outfit Snapshot.")
+			pTweakInventoryControl.SetTweakOutfit(5, true) ;  5 == OUTFIT_SNAPSHOT
+			Utility.wait(0.3)
+			wasManaged = pTweakInventoryControl.IsManaged()
+			pTweakInventoryControl.UnEquipAllGear()
+			Utility.wait(0.1)			
+		else
+			Trace("Skipping Outfit Snapshot. Unsupported NPC (Not human, ghoul, synth or supermutant)")
+		endif		
+	endif	
+	
+	; If the player has a weapon out, make sure the NPC doesn't care:
+	wasReadyWeapon = npc.IsInFaction(pTweakReadyWeaponFaction)
+	if (wasReadyWeapon)
+		npc.RemoveFromFaction(pTweakReadyWeaponFaction)
+		npc.RemoveKeyword(pTeammateReadyWeapon_DO)
+	endif
+	
+	; Calling Actor.reset() also removes/resets all actor values. We have to
+	; store important ones  off here because once the NPC is DISABLED, calls to GetValue()
+	; will return 0.0, no matter what the real actor value is. (This is probably a 
+	; bug in Papyrus). Anyway, we avoid it by storing the values upfront.
+	
+	restore_actor_values.clear()
+	int ActorValueListSize = pTweakActorValuesToSave.GetSize()
+	Trace("ActorValueListSize = [" + ActorValueListSize + "]")
+	int i = 0
+	ActorValue av = pTweakScale
+	float avf = npc.GetValue(pTweakScale)
+	Trace("Noting av [" + av + "] [" + avf + "]")	
+	while (i < ActorValueListSize)
+		av = pTweakActorValuesToSave.GetAt(i) As ActorValue
+		if (av)
+			avf = npc.GetValue(av)
+			Trace("Storing av [" + av + "] [" + avf + "]")
+			restore_actor_values.Add(avf)
+		else
+			Trace("TweakActorValuesToSave[" + i + "] did not cast to ActorValue. Skipping")
+			restore_actor_values.Add(0.0)
+		endif
+		i += 1
+	endwhile
+	
+	; Needed for restoration:
+	original_vt = npc.GetVoiceType()	
+
+	Trace("Storing Items...")
+	Trace("NPC ITEMCOUNT [" + npc.GetItemCount() + "]")
+	Actor pc = Game.GetPlayer()
+		
+	Container qaGearChest = Game.GetForm(0x00175500) as Container
+	float[] p = TraceCircle(pc,-120)
+	ObjectReference gChest = pc.PlaceAtMe(qaGearChest)
+	gChest.SetPosition(p[0],p[1],p[2] - 200)
+	gChest.RemoveAllItems()
+	utility.wait(0.2)
+	
+	Trace("GEARCONTAINER ITEMCOUNT [" + gChest.GetItemCount() + "]")
+	
+	npc.RemoveAllItems(gChest,true)
+	utility.wait(0.2)
+	
+	npc.Reset()
+	Trace("Waiting For npc.Is3DLoaded()")							
+	int waitmax = 10
+	while (waitmax > 0 && !npc.Is3DLoaded())
+		Trace("Waiting For npc.Is3DLoaded()")
+		Utility.wait(1.0)
+		waitmax -= 1
+	endwhile
+
+	; Transfer Inventory from gearcontainer back to NPC		
+	Trace("Restoring Gear")
+	
+	Trace("NPC ITEMCOUNT [" + npc.GetItemCount() + "]")
+	Trace("GEARCONTAINER ITEMCOUNT [" + gChest.GetItemCount() + "]")
+	gChest.RemoveAllItems(npc,true)
+	Utility.wait(0.5)
+	Trace("(after) NPC ITEMCOUNT [" + npc.GetItemCount() + "]")
+	Trace("(after) GEARCONTAINER ITEMCOUNT [" + gChest.GetItemCount() + "]")
+	
+	
+	if (pTweakInventoryControl)
+		; Special Case : Revert will restore the original OUTFIT. Normally, we would just remove it, but now we only
+		; remove it if the NPC is managed. Fortunately, the FollowEvent checks this case and removes it for is if it
+		; is safe:
+		pTweakInventoryControl.EventFollowingPlayer()
+		if npc.HasKeyword(pActorTypeGhoul) || npc.HasKeyword(pActorTypeHuman) || npc.HasKeyword(pActorTypeSynth) || npc.HasKeyword(pActorTypeSuperMutant)
+			Trace("Attempting to Restoring/Clear Snapshot Outfit")
+			pTweakInventoryControl.ClearTweakOutfit(5)
+			Utility.wait(0.1)
+			checkWasManaged(npc)
+		endif
+	else
+		Trace("Cast of parts_storage to ReferenceAlias to TweakInventoryControl Failed.")			
+	endif
+
+	if (wasReadyWeapon)
+		Trace("Restoring keyword TeammateReadyWeapon_DO")
+		npc.AddKeyword(pTeammateReadyWeapon_DO)
+		npc.AddToFaction(pTweakReadyWeaponFaction)
+	endif
+	
+
+	; Restore Actor Values....
+	i = 0
+	while (i < ActorValueListSize)
+		av = pTweakActorValuesToSave.GetAt(i) As ActorValue
+		if (av)
+			avf = restore_actor_values[i]
+			npc.SetValue(av,avf)
+			Trace("Setting av [" + av + "] [" + avf + "]")
+		else
+			Trace("TweakActorValuesToSave[" + i + "] did not cast to ActorValue. Skipping")
+		endif
+		i += 1
+	endwhile
+	; Reset the Scale
+	npc.SetValue(pTweakScale, 1.0)
+	; Reset the VoiceType (Unless it is curie...)
+	if (npc.GetActorBase() != Game.GetForm(0x00027686) as ActorBase)
+		npc.SetOverrideVoiceType(original_vt)
+	endif
+	original_vt = None
+			
+	float[] posdata = TraceCircle(pc,120,0)
+	npc.SetPosition(posdata[0],posdata[1],posdata[2])
+	npc.SetAngle(0.0,0.0,  npc.GetAngleZ() + npc.GetHeadingAngle(pc))										
+	npc.RemoveFromFaction(pTweakPosedFaction)
+	npc.RemoveFromFaction(pTweakIgnoredFaction)
+	
+EndFunction
+
 Function NewBody(TweakAppearance pTweakAppearance)
 
 	Trace("NewBody() Called")

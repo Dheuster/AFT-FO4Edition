@@ -4152,6 +4152,18 @@ Function HandleDanseIsSynth()
 	if (pTweakFollowerScript)
 		pTweakFollowerScript.CallFunctionNoWait("HandleDanseIsSynth", new Var[0])
 	endif
+	
+	; If Haylen is a follower, quietly dismiss her so that she can arrive and deliver 
+	; her speech about danse. Q: Should we prompt the user and tell them what we are 
+	; doing?
+	
+	ActorBase BoSScribeHaylen = Game.GetForm(0x0005DE3F) as ActorBase
+	if BoSScribeHaylen
+		Actor Haylen = BoSScribeHaylen.GetUniqueActor()
+		if Haylen
+			DismissCompanion(Haylen, false, true)		
+		endif
+	endif	
 EndFunction
 
 bool Function IsCoreCompanion(Actor npc)

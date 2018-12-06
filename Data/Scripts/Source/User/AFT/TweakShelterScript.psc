@@ -2738,6 +2738,7 @@ ObjectReference Function CreateBench(ObjectReference parentObj, ReferenceAlias b
 	Trace("CreateBench [" + parentObj + "][" + base + "][" + pivotDist + "][" + pivotAngle + "][" + ZOffset + "][" + AZOffset + "][" + spawnMarker + "][" + fixTexture + "][" + fixNavmesh + "]")
 	
     if !parentObj
+		Trace("No Parent Object. Bailing.")
         return None
     endif
 
@@ -2752,10 +2753,13 @@ ObjectReference Function CreateBench(ObjectReference parentObj, ReferenceAlias b
 	
 	ObjectReference theBench=benchRef.GetReference()
 	if (theBench)
+		Trace("Bench Found")
 		if (theBench.GetBaseObject() != base)
+			Trace("Bench [" + benchRef + "] does not equal base [" + base + "]. Spawning New.")
 			ObjectReference newBench = spawnMarker.PlaceAtMe(base) ; Bench
 			Utility.wait(0.1)
 			if (newBench)
+				Trace("Disabling Previous Bench")
 				; theBench.RemoveAllItems(newBench,true)
 				; Utility.wait(0.2)
 				benchRef.Clear()
@@ -2763,35 +2767,56 @@ ObjectReference Function CreateBench(ObjectReference parentObj, ReferenceAlias b
 				theBench.Delete()
 				theBench = None
 			
+				Trace("Creating New Bench")
 				newBench.SetPosition(spawnMarker.GetPositionX(), spawnMarker.GetPositionY(), spawnMarker.GetPositionZ())
 				newBench.SetAngle(0.0,0.0, spawnMarker.GetAngleZ())
 				newBench.Disable()
 				if linkToStorage
+					Trace("Linking New Bench")
 					newBench.SetLinkedRef(pShelterStorage.GetReference(),WorkshopItemKeyword)
 					newBench.SetLinkedRef(pShelterStorage.GetReference(),WorkshopLinkContainer)	
 				endif				
 				newBench.Enable()
-				benchRef.ForceRefTo(newBench)
-				
+				benchRef.ForceRefTo(newBench)				
 				return newBench		
 			endif
-        endif			
+        endif
 		if (DistanceWithin(theBench,spawnMarker,30))
+			Trace("Bench Near Target Location. Checking if disabled and returning")
 			if (theBench.IsDisabled())
 				theBench.Enable(true)
 			endif
-			return theBench
+			if (benchRef == pShelterStorage) || theBench.WaitFor3DLoad()
+				return theBench			
+			endif
+			Trace("Bench Did Not Appear!")
 		endif
 		if (!theBench.Is3DLoaded())
+			Trace("3D is Not Loaded. Moving to SpawnMarker")
 			theBench.MoveTo(spawnMarker)
 		else
 			theBench.SetPosition(spawnMarker.GetPositionX(), spawnMarker.GetPositionY(), spawnMarker.GetPositionZ())
 			theBench.SetAngle(0.0,0.0, spawnMarker.GetAngleZ())
 		endif
+		Trace("Toggling disabled for [" + base + "]")
 		theBench.Disable()
 		theBench.Enable()
-		return theBench		
+		if (benchRef == pShelterStorage) || theBench.WaitFor3DLoad()
+			return theBench			
+		endif
+		Trace("Bench 3D did not load!!! [" + base + "]")
+		if base == pTweakCryoFridge
+			Trace("CryFridge (No backup). Attempting Recovery")
+			theBench.RemoveAllItems(pShelterStorage.GetReference(), true)
+			Utility.wait(0.2)
+		endif
+		benchRef.Clear()
+		theBench.Disable()
+		theBench.Delete()
+		theBench = None		
 	endif
+	
+	Trace("Bench Not Found or failed to load.")
 	
     theBench = spawnMarker.PlaceAtMe(base) ; Bench
     if (!theBench)
