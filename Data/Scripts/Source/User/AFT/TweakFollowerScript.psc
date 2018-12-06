@@ -57,6 +57,7 @@ Message Property pTweakKickOutBOSAlt2Msg	Auto Const
 Message Property pTweakKickOutInstMsg		Auto Const
 Message Property pTweakKickOutInstAlt1Msg	Auto Const
 Message Property pTweakKickOutRRMsg			Auto Const
+Message Property pTweakEndGameMsg			Auto Const
 EndGroup
 
 Group Conditionals_for_external_terminals
@@ -151,6 +152,7 @@ Quest	Property BoSKickOut				Auto Const
 Quest	Property BoSKickOutSoft			Auto Const
 Quest	Property InstKickOut			Auto Const
 Quest	Property RRKickOut				Auto Const
+Quest	Property MQ302					Auto Const
 Quest	Property pTweakDLC01			Auto Const
 Quest	Property pTweakDLC03			Auto Const
 Quest	Property pTweakDLC04			Auto Const
@@ -2997,7 +2999,14 @@ Event Quest.OnStageSet(Quest pQuest, int auiStageID, int auiItemID)
 			UnRegisterForRemoteEvent(RRKickOut,"OnStageSet")
 			HandleRRKickOut()
 		endif
+	elseif MQ302 == pQuest
+		if (1000 == auiStageID)
+			UnRegisterForRemoteEvent(MQ302,"OnStageSet")
+			pTweakEndGameMsg.show()
+		endif
 	endif
+	
+	
 EndEvent
 
 Event Quest.OnQuestInit(Quest auiQuest)
@@ -3013,6 +3022,8 @@ Event Quest.OnQuestInit(Quest auiQuest)
 		HandleInstKickOut()
 	elseif RRKickOut == auiQuest
 		RegisterForRemoteEvent(RRKickOut,"OnStageSet")
+	elseif MQ302 == auiQuest
+		RegisterForRemoteEvent(MQ302,"OnStageSet")	
 	else
 		RegisterForRemoteEvent(auiQuest, "OnQuestInit")
 	endif
@@ -5678,6 +5689,9 @@ Function RegisterForKickOut()
 	UnRegisterForRemoteEvent(InstKickOut,"OnQuestInit")
 	UnRegisterForRemoteEvent(RRKickOut,"OnQuestInit")
 	UnRegisterForRemoteEvent(RRKickOut,"OnStageSet")
+	UnRegisterForRemoteEvent(MQ302,"OnQuestInit")
+	UnRegisterForRemoteEvent(MQ302,"OnStageSet")
+	
 	
 	if !BoSKickOut.IsRunning()
 		if 0 == BoSKickOut.GetCurrentStageID()
@@ -5704,6 +5718,13 @@ Function RegisterForKickOut()
 		endif
 	elseif !RRKickOut.GetStageDone(100)
 		RegisterForRemoteEvent(RRKickOut,"OnStageSet")
+	endif
+	if !MQ302.IsRunning()
+		if 0 == MQ302.GetCurrentStageID()
+			RegisterForRemoteEvent(MQ302,"OnQuestInit")
+		endif
+	elseif !MQ302.GetStageDone(1000)
+		RegisterForRemoteEvent(MQ302,"OnStageSet")
 	endif
 	
 EndFunction
@@ -6461,6 +6482,22 @@ Function FixCarryWeightForTradeEnd(Actor npc)
 		endif
 	endif
 EndFunction
+
+Function RecycleActor(Actor npc)
+	if (npc)
+		int followerId = npc.GetFactionRank(pTweakFollowerFaction) As Int	
+		if (followerId > 0)
+			ReferenceAlias a = pManagedMap[followerId]
+			TweakChangeAppearance pTweakChangeAppearance = ((self as Quest) as TweakChangeAppearance)	
+			if !pTweakChangeAppearance
+				Trace("RecycleActor : Quest cast TweakChangeAppearance failed.")				
+				return
+			endif
+			pTweakChangeAppearance.RecycleActor(a)
+		endif
+	endif	
+EndFunction
+
 
 ; Deprecated 
 ; ========================================================================================

@@ -54,7 +54,7 @@ Function UnlockVisible()
 	while i < numresults
 		result = results[i]
 		if (result.IsLocked())
-			if pc.HasDetectionLOS(result)
+			if HasLineOfSight(pc,result)
 				diffX = result.GetPositionX() - pX
 				diffY = result.GetPositionY() - pY
 				diffZ = result.GetPositionZ() - pZ
@@ -121,7 +121,7 @@ Function UnlockVisible()
 				endIf
 			endIf
 			if candidate
-				if pc.HasDetectionLOS(result)
+				if HasLineOfSight(pc,result)
 					diffX = result.GetPositionX() - pX
 					diffY = result.GetPositionY() - pY
 					diffZ = result.GetPositionZ() - pZ
@@ -181,7 +181,7 @@ Function UnlockVisible()
 				endIf
 			endIf
 			if candidate
-				if pc.HasDetectionLOS(result)
+				if HasLineOfSight(pc,result)
 					diffX = result.GetPositionX() - pX
 					diffY = result.GetPositionY() - pY
 					diffZ = result.GetPositionZ() - pZ
@@ -241,7 +241,7 @@ Function UnlockVisible()
 				endIf
 			endIf
 			if candidate
-				if pc.HasDetectionLOS(result)
+				if HasLineOfSight(pc,result)
 					diffX = result.GetPositionX() - pX
 					diffY = result.GetPositionY() - pY
 					diffZ = result.GetPositionZ() - pZ
@@ -306,7 +306,7 @@ Function UnlockVisible()
 				endIf
 			endIf
 			if candidate
-				if pc.HasDetectionLOS(result)
+				if HasLineOfSight(pc,result)
 					diffX = result.GetPositionX() - pX
 					diffY = result.GetPositionY() - pY
 					diffZ = result.GetPositionZ() - pZ
@@ -332,6 +332,15 @@ Function UnlockVisible()
 		return
 	endif
 	
+EndFunction
+
+bool Function HasLineOfSight(Actor pc, ObjectReference target)
+	; HasDetectionLOS isn't reliable. Especially with terminals as many are set into walls. 
+	float zOffset = Game.GetPlayer().GetHeadingAngle(target)
+	if (zOffset < 45 && zoffset > -45)
+		return true
+	endif
+	return false
 EndFunction
 
 Function HandleResult(ObjectReference closestLocked, Keyword requiredkeyword)
