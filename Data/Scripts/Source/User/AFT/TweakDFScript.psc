@@ -2724,6 +2724,10 @@ Function TryToTeleportCompanion(ObjectReference TeleportDestinationRef, bool Sho
 	; 1.05 BUG FIX: 
 	; With AFT, it is possible that the Actor does not have TeleportActorScript attached. So it is best not to rely on it.
 	
+	; 1.23 : The institute ending relies on the BOSDestructionEvent and does things differently. So we handle BOSDestructionEvent
+	;        differently by simply registering for Quest Stages from TweakFollowerScript to give everyone the proper actor 
+	;        values when the BOS is destroyed to trigger their conversation. 
+	
 	if (MQ302MassFusionDogmeatMarker == TeleportDestinationRef)
 		Trace("Ignoring TryToTeleportCompanion as destination is DogMarker...()")
 		ReferenceAlias[] followers = GetAllFollowers()
@@ -2733,6 +2737,7 @@ Function TryToTeleportCompanion(ObjectReference TeleportDestinationRef, bool Sho
 			npc.SetValue(MQ302Companion, 1)
 			i += 1
 		endwhile
+				
 		; Intentional. All 302 Stage handlers call TryToTeleportCompanion twice. 
 		; Once with Dogmeat Marker and a second time with a Companion Marker.
 		return 

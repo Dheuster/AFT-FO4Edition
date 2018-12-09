@@ -662,7 +662,7 @@ EndFunction
 Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 	if (asMenuName == "ContainerMenu")	
 		Actor npc = self.GetActorRef()
-		bool allowCarryPerk = (1.0 == TweakAllowAutonomousPickup.getValue())
+		bool allowCarryPerk = true ; (1.0 == TweakAllowAutonomousPickup.getValue())
 		
 		if abOpening == true
 			Trace("EventTradeBegin()")

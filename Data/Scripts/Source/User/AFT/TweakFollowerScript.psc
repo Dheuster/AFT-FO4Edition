@@ -153,10 +153,11 @@ Quest	Property BoSKickOutSoft			Auto Const
 Quest	Property InstKickOut			Auto Const
 Quest	Property RRKickOut				Auto Const
 Quest	Property MQ302					Auto Const
+Quest	Property Inst307				Auto Const
+Quest	Property MinDestBoS				Auto Const
 Quest	Property pTweakDLC01			Auto Const
 Quest	Property pTweakDLC03			Auto Const
 Quest	Property pTweakDLC04			Auto Const
-
 endGroup
 
 Group Injected_Keywords
@@ -295,10 +296,11 @@ Message		Property TweakSummonAllWarning			Auto Const
 ; Locked. Will unlock in %f.0 days
 Message		Property TweakSummonAllLocked			Auto Const  
 
-ReferenceAlias	Property pLostNPC			Auto Const
-ReferenceAlias	Property pInfoNPC			Auto Const
-ReferenceAlias	Property pShelterMapMarker	Auto Const
-ObjectReference	Property BoS302DanseMarker	Auto Const
+ReferenceAlias	Property pLostNPC				Auto Const
+ReferenceAlias	Property pInfoNPC				Auto Const
+ReferenceAlias	Property pShelterMapMarker		Auto Const
+ObjectReference	Property BoS302DanseMarker		Auto Const
+ActorValue		Property DestroyBOSCompanion	Auto Const
 
 EndGroup
 
@@ -3002,12 +3004,61 @@ Event Quest.OnStageSet(Quest pQuest, int auiStageID, int auiItemID)
 	elseif MQ302 == pQuest
 		if (1000 == auiStageID)
 			UnRegisterForRemoteEvent(MQ302,"OnStageSet")
-			pTweakEndGameMsg.show()
+			HandleEndGame()			
+		endif
+	elseif Inst307 == pQuest
+		if (200 == auiStageID)
+			UnRegisterForRemoteEvent(Inst307,"OnStageSet")
+			HandleBosDestroyed()
+		endif
+	elseif MinDestBoS == pQuest
+		if (500 == auiStageID)
+			UnRegisterForRemoteEvent(MinDestBoS,"OnStageSet")
+			HandleBosDestroyed()
 		endif
 	endif
 	
 	
 EndEvent
+
+Function HandleEndGame()
+	SetFollowerFollowByNameId(0)
+EndFunction
+
+Function HandleBosDestroyed()
+
+	SetFollowerFollowByNameId(0)
+	EventPlayerWeaponDraw()
+	ReferenceAlias[] theList = GetAllTweakFollowers()
+	int i = 0
+	while (i < theList.length)
+		Actor c = theList[i].GetActorRef()
+		if (c)
+			c.SetValue(DestroyBOSCompanion, 1)
+		endif
+		i += 1
+	endwhile
+	
+	; If Spouse is a follower, activate her ForceGreet
+	ReferenceAlias SpouseRef = (pTweakCOMSpouse.GetAlias(8) as ReferenceAlias)
+	if SpouseRef
+		Actor theSpouse = SpouseRef.GetActorReference()
+		if theSpouse && !theSpouse.IsDead() && theSpouse.IsInFaction(pCurrentCompanionFaction)
+			ActorValue CA_WantsToTalk = Game.GetForm(0x000FA86B) as ActorValue
+			if CA_WantsToTalk
+				theSpouse.SetValue(CA_WantsToTalk, 1)
+			else 
+				trace("Lookup of CA_WantsToTalk failed")
+			endif
+		else 
+			trace("Unable to find Spouse (or they are dead)")
+		endif
+	else 
+		trace("Spouse quest alias empty")
+	endif
+	
+EndFunction
+
 
 Event Quest.OnQuestInit(Quest auiQuest)
 	Trace("Quest.OnQuestInit Called : auiQuest [" + auiQuest + "]")
@@ -3024,6 +3075,10 @@ Event Quest.OnQuestInit(Quest auiQuest)
 		RegisterForRemoteEvent(RRKickOut,"OnStageSet")
 	elseif MQ302 == auiQuest
 		RegisterForRemoteEvent(MQ302,"OnStageSet")	
+	elseif Inst307 == auiQuest
+		RegisterForRemoteEvent(Inst307,"OnStageSet")
+	elseif MinDestBoS == auiQuest
+		RegisterForRemoteEvent(MinDestBoS,"OnStageSet")		
 	else
 		RegisterForRemoteEvent(auiQuest, "OnQuestInit")
 	endif
@@ -5691,7 +5746,10 @@ Function RegisterForKickOut()
 	UnRegisterForRemoteEvent(RRKickOut,"OnStageSet")
 	UnRegisterForRemoteEvent(MQ302,"OnQuestInit")
 	UnRegisterForRemoteEvent(MQ302,"OnStageSet")
-	
+	UnRegisterForRemoteEvent(Inst307,"OnQuestInit")
+	UnRegisterForRemoteEvent(Inst307,"OnStageSet")
+	UnRegisterForRemoteEvent(MinDestBoS,"OnQuestInit")
+	UnRegisterForRemoteEvent(MinDestBoS,"OnStageSet")	
 	
 	if !BoSKickOut.IsRunning()
 		if 0 == BoSKickOut.GetCurrentStageID()
@@ -5726,6 +5784,20 @@ Function RegisterForKickOut()
 	elseif !MQ302.GetStageDone(1000)
 		RegisterForRemoteEvent(MQ302,"OnStageSet")
 	endif
+	if !Inst307.IsRunning()
+		if 0 == Inst307.GetCurrentStageID()
+			RegisterForRemoteEvent(Inst307,"OnQuestInit")
+		endif
+	elseif !Inst307.GetStageDone(200)
+		RegisterForRemoteEvent(Inst307,"OnStageSet")
+	endif
+	if !MinDestBoS.IsRunning()
+		if 0 == MinDestBoS.GetCurrentStageID()
+			RegisterForRemoteEvent(MinDestBoS,"OnQuestInit")
+		endif
+	elseif !MinDestBoS.GetStageDone(500)
+		RegisterForRemoteEvent(MinDestBoS,"OnStageSet")
+	endif	
 	
 EndFunction
 
