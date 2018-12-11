@@ -258,6 +258,7 @@ Perk	  Property Sneak03						Auto Const
 Perk	  Property Sneak04						Auto Const
 Perk	  Property CompanionInspirational		Auto Const
 Perk	  Property ImmuneToRadiation			Auto Const
+Perk      Property pTweakDamageMultPerk			Auto Const
 EndGroup
 
 Group Injected_Races
@@ -296,11 +297,14 @@ Message		Property TweakSummonAllWarning			Auto Const
 ; Locked. Will unlock in %f.0 days
 Message		Property TweakSummonAllLocked			Auto Const  
 
-ReferenceAlias	Property pLostNPC				Auto Const
-ReferenceAlias	Property pInfoNPC				Auto Const
-ReferenceAlias	Property pShelterMapMarker		Auto Const
-ObjectReference	Property BoS302DanseMarker		Auto Const
-ActorValue		Property DestroyBOSCompanion	Auto Const
+ReferenceAlias	Property pLostNPC					Auto Const
+ReferenceAlias	Property pInfoNPC					Auto Const
+ReferenceAlias	Property pShelterMapMarker			Auto Const
+ObjectReference	Property BoS302DanseMarker			Auto Const
+ActorValue		Property DestroyBOSCompanion		Auto Const
+ActorValue		Property pTweakOutgoingDamageMult	Auto Const
+ActorValue		Property pTweakIncomingDamageMult	Auto Const
+
 
 EndGroup
 
@@ -1101,6 +1105,93 @@ Function DisablePAHelmetCombatByNameID(int id)
 	
 	(npcref as TweakInventoryControl).DisablePAHelmetCombatToggle()
 	
+EndFunction
+
+Function CancelDamageMult()
+	Trace("CancelDamageMult")
+	ReferenceAlias r = None
+	Actor f = None	
+	int pManagedMapLength = pManagedMap.Length
+	int i            = 1
+	
+	while (i < pManagedMapLength)
+		r = pManagedMap[i]
+		f = r.GetActorRef()
+		if (f && f.hasPerk(pTweakDamageMultPerk))
+			f.RemovePerk(pTweakDamageMultPerk)
+			f.SetValue(pTweakOutgoingDamageMult,0.0)
+			f.SetValue(pTweakIncomingDamageMult,0.0)
+		EndIf
+		i += 1
+	EndWhile
+EndFunction
+
+Function SetOutgoingDamageMult(float afValue)
+	Trace("SetOutgoingDamageMult")
+	
+	ReferenceAlias r = None
+	Actor f = None	
+	int pManagedMapLength = pManagedMap.Length
+	int i            = 1
+	
+	while (i < pManagedMapLength)
+		r = pManagedMap[i]
+		f = r.GetActorRef()
+		if (f)
+			if (f.hasPerk(pTweakDamageMultPerk))
+				f.RemovePerk(pTweakDamageMultPerk)
+			endif
+			f.SetValue(pTweakOutgoingDamageMult,afValue)			
+		EndIf
+		i += 1
+	EndWhile
+
+	Utility.wait(0.1)
+	
+	i = 1
+	while (i < pManagedMapLength)
+		r = pManagedMap[i]
+		f = r.GetActorRef()
+		if (f)
+			f.AddPerk(pTweakDamageMultPerk)
+		EndIf
+		i += 1
+	EndWhile
+
+EndFunction
+
+Function SetIncomingDamageMult(float afValue)
+	Trace("SetIncomingDamageMult")
+	
+	ReferenceAlias r = None
+	Actor f = None	
+	int pManagedMapLength = pManagedMap.Length
+	int i            = 1
+	
+	while (i < pManagedMapLength)
+		r = pManagedMap[i]
+		f = r.GetActorRef()
+		if (f)
+			if (f.hasPerk(pTweakDamageMultPerk))
+				f.RemovePerk(pTweakDamageMultPerk)
+			endif
+			f.SetValue(pTweakIncomingDamageMult,afValue)			
+		EndIf
+		i += 1
+	EndWhile
+
+	Utility.wait(0.1)
+	
+	i = 1
+	while (i < pManagedMapLength)
+		r = pManagedMap[i]
+		f = r.GetActorRef()
+		if (f)
+			f.AddPerk(pTweakDamageMultPerk)
+		EndIf
+		i += 1
+	EndWhile
+
 EndFunction
 
 Event OnDistanceLessThan(ObjectReference player, ObjectReference aftcamp, float afDistance)
@@ -6345,18 +6436,18 @@ Function SummonAll()
 		Trace("Bailing : Command Locked [" + diff + "] more days until available")
 		return
 	endif	
-	int remaining = TweakSummonAllRemaining.GetValueInt()
-	if TweakSummonAllRemaining.GetValue() < 1
+	float remaining = TweakSummonAllRemaining.GetValue()
+	if remaining < 1.0
 		Trace("Bailing : No remaining attempts")
 		TweakSummonAllLocked.Show(-1)
 		return
 	endif
-	if (1 == TweakSummonAllWarning.show(remaining))
+	if (1.0 == TweakSummonAllWarning.Show(remaining))
 		Trace("Bailing : User Cancelled Command")
 		return
 	endif
 	fSummonAllUnlock = Utility.GetCurrentGameTime() + 7		
-	TweakSummonAllRemaining.SetValue(remaining-1)
+	TweakSummonAllRemaining.SetValue((remaining - 1.0))
 	
 	Actor pc = Game.GetPlayer()	
 	int[] offset = new int[8]
