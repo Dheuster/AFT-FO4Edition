@@ -1,5 +1,5 @@
 ;BEGIN FRAGMENT CODE - Do not edit anything between this and the end comment
-Scriptname AFT:Fragments:Terminals:TERM_TweakAFTSettingsCombat_0102C144 Extends Terminal Hidden Const
+Scriptname AFT:Fragments:Terminals:TERM__0103DBD4 Extends Terminal Hidden Const
 
 ;BEGIN FRAGMENT Fragment_Terminal_01
 Function Fragment_Terminal_01(ObjectReference akTerminalRef)
@@ -115,28 +115,6 @@ EndFunction
 Function Fragment_Terminal_15(ObjectReference akTerminalRef)
 ;BEGIN CODE
 pTweakCombatOutfitOnWeapDraw.SetValue(0)
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_Terminal_16
-Function Fragment_Terminal_16(ObjectReference akTerminalRef)
-;BEGIN CODE
-AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
-if (pTweakPipBoyScript)
-        pTweakPipBoyScript.ToggleAllowDamageMult()
-endif
-;END CODE
-EndFunction
-;END FRAGMENT
-
-;BEGIN FRAGMENT Fragment_Terminal_17
-Function Fragment_Terminal_17(ObjectReference akTerminalRef)
-;BEGIN CODE
-AFT:TweakPipBoyScript pTweakPipBoyScript = (pTweakPipBoy As AFT:TweakPipBoyScript)
-if (pTweakPipBoyScript)
-        pTweakPipBoyScript.ToggleAllowDamageMult()
-endif
 ;END CODE
 EndFunction
 ;END FRAGMENT

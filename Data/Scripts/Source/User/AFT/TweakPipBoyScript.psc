@@ -174,6 +174,7 @@ Terminal Property pTweakVisualFailPowerArmor  Auto Const ; 3
 Terminal Property pTweakVisualFailCombat      Auto Const ; 4
 Terminal Property pTweakVisualFailScene       Auto Const ; 5
 Terminal Property pTweakOutfitTerminal		  Auto Const
+Terminal Property pTweakAFTSettingsCombat	  Auto Const
 
 Terminal Property pTweakFailDisallowed       Auto Const ; 5
 Terminal Property pTweakFailPotential        Auto Const ; 5
@@ -323,6 +324,10 @@ GlobalVariable Property TweakAllowHealSelf	Auto Const
 GlobalVariable Property TweakAllowHealOther	Auto Const
 GlobalVariable Property pTweakAllowAutoStats Auto Const
 GlobalVariable Property pTweakAllowNoClip	Auto Const
+
+GlobalVariable Property pTweakOutgoingDamage Auto Const
+GlobalVariable Property pTweakIncomingDamage Auto Const
+GlobalVariable Property pTweakAllowDamageMult Auto Const
 
 Perk Property pTweakNoClipPerk	Auto Const
 
@@ -1462,6 +1467,78 @@ Function ToggleScoutAhead(bool backToPip=True)
 	
 EndFunction
 
+Function ToggleAllowDamageMult()
+
+	Utility.waitmenumode(0.1)
+	
+	Trace("ToggleAllowDamageMult()")
+	if (Utility.IsInMenuMode())
+		self.CallFunctionNoWait("ToggleAllowDamageMult", new Var[0])
+		return
+	endIf	
+
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)	
+		if (0.0 == pTweakAllowDamageMult.GetValue())
+			pTweakFollowerScript.EnableDamageMult()
+		else
+			pTweakFollowerScript.CancelDamageMult()
+		endif
+	endif
+	
+	pTweakAFTSettingsCombat.ShowOnPipBoy()
+		
+EndFunction
+
+Function SetOutgoingDamageRelay(float akValue, bool backToPip=True)
+	Utility.waitmenumode(0.1)
+	
+	Trace("SetOutgoingDamageRelay()")
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[2]
+		params[0] = akValue
+		params[1] = backToPip
+		self.CallFunctionNoWait("SetOutgoingDamageRelay", params)
+		return
+	endIf
+
+	pTweakOutgoingDamage.SetValue(akValue)
+	
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)		
+		pTweakFollowerScript.SetOutgoingDamageMult(akValue)
+	endIf
+
+	if backToPip
+		pTweakAFTSettingsCombat.ShowOnPipBoy()
+	endIf
+	
+EndFUnction
+
+Function SetIncomingDamageRelay(float akValue, bool backToPip=True)
+	Utility.waitmenumode(0.1)
+	
+	Trace("SetIncomingDamageRelay()")
+	if (Utility.IsInMenuMode())
+		Var[] params = new Var[2]
+		params[0] = akValue
+		params[1] = backToPip
+		self.CallFunctionNoWait("SetIncomingDamageRelay", params)
+		return
+	endIf
+
+	pTweakIncomingDamage.SetValue(akValue)
+	
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
+	if (pTweakFollowerScript)		
+		pTweakFollowerScript.SetIncomingDamageMult(akValue)
+	endIf
+
+	if backToPip
+		pTweakAFTSettingsCombat.ShowOnPipBoy()
+	endIf
+	
+EndFUnction
 
 Function SetConfidenceRelay(int value, bool backToPip=True)
 	Utility.waitmenumode(0.1)

@@ -399,6 +399,9 @@ Function OnGameLoaded()
 
 	UnRegisterForRemoteEvent(player,"OnEnterSneaking")
 	RegisterForRemoteEvent(player,"OnEnterSneaking") ; Hide all but 1 companion	
+
+	UnRegisterForRemoteEvent(player,"OnDifficultyChanged")
+	RegisterForRemoteEvent(player,"OnDifficultyChanged") ; Hide all but 1 companion	
 	
 	AFT:TweakDLC01Script pTweakDLC01Script = (pTweakDLC01 as AFT:TweakDLC01Script)
 	if (pTweakDLC01Script)
@@ -713,6 +716,19 @@ Event OnAnimationEvent(ObjectReference akSource, string asEventName)
 		endif
 	endif
 endEvent
+
+Event Actor.OnDifficultyChanged(Actor player, int aOldDifficulty, int aNewDifficulty)
+	Trace("OnDifficultyChanged")
+	if aOldDifficulty == aNewDifficulty
+		return
+	endif
+	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower as AFT:TweakFollowerScript)
+	if pTweakFollowerScript
+		Var[] params = new Var[1]
+		params[0] = aNewDifficulty
+		pTweakFollowerScript.CallFunctionNoWait("EventPlayerChangedDifficulty",params)
+	endif		
+EndEvent
 
 ; God help us if we need to do polling....
 Event Actor.OnEnterSneaking(Actor sneaker)

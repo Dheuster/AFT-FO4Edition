@@ -3,9 +3,9 @@ Scriptname AFT:Fragments:Quests:QF_TweakCOMSpouse_0104529E Extends Quest Hidden 
 
 ;BEGIN FRAGMENT Fragment_Stage_0030_Item_00
 Function Fragment_Stage_0030_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.EnableMS19()
@@ -16,9 +16,9 @@ EndFunction
 
 ;BEGIN FRAGMENT Fragment_Stage_0035_Item_00
 Function Fragment_Stage_0035_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.ExplainPast()
@@ -28,9 +28,9 @@ EndFunction
 
 ;BEGIN FRAGMENT Fragment_Stage_0036_Item_00
 Function Fragment_Stage_0036_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 ; This will kick off the Curie Comment Scene
@@ -41,9 +41,9 @@ EndFunction
 
 ;BEGIN FRAGMENT Fragment_Stage_0037_Item_00
 Function Fragment_Stage_0037_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.RescueSpouseCurieCommentFinished()
@@ -53,9 +53,9 @@ EndFunction
 
 ;BEGIN FRAGMENT Fragment_Stage_0038_Item_00
 Function Fragment_Stage_0038_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.ExitVaultReactionFinished()
@@ -65,9 +65,9 @@ EndFunction
 
 ;BEGIN FRAGMENT Fragment_Stage_0039_Item_00
 Function Fragment_Stage_0039_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.ExitVaultReactionFinished()
@@ -477,9 +477,9 @@ EndFunction
 
 ;BEGIN FRAGMENT Fragment_Stage_0640_Item_00
 Function Fragment_Stage_0640_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.FinishSpouseConvo()
@@ -490,9 +490,9 @@ EndFunction
 
 ;BEGIN FRAGMENT Fragment_Stage_0650_Item_00
 Function Fragment_Stage_0650_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.FinishSpouseConvo()
@@ -503,13 +503,35 @@ EndFunction
 
 ;BEGIN FRAGMENT Fragment_Stage_0660_Item_00
 Function Fragment_Stage_0660_Item_00()
-;BEGIN AUTOCAST TYPE AFT:TweakCOMSpouseScript
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
 Quest __temp = self as Quest
-AFT:TweakCOMSpouseScript kmyQuest = __temp as AFT:TweakCOMSpouseScript
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
 ;END AUTOCAST
 ;BEGIN CODE
 kmyQuest.FinishSpouseConvo()
 Alias_Spouse.GetActorReference().SetValue(CA_AffinitySceneToPlay,0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Stage_0670_Item_00
+Function Fragment_Stage_0670_Item_00()
+;BEGIN CODE
+Alias_Spouse.GetActorReference().SetValue(MQ302Companion,0)
+Alias_Spouse.TryToSetActorValue(CA_WantsToTalk, 0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Stage_0680_Item_00
+Function Fragment_Stage_0680_Item_00()
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
+Quest __temp = self as Quest
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
+;END AUTOCAST
+;BEGIN CODE
+Alias_Spouse.GetActorReference().SetValue(DestroyBOSCompanion,0)
+Alias_Spouse.TryToSetActorValue(CA_WantsToTalk, 0)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -541,3 +563,9 @@ Scene Property TweakCOMSpouseRescueHelperBootstrap Auto Const
 ReferenceAlias Property Alias_Spouse Auto Const
 
 ActorValue Property CA_AffinitySceneToPlay Auto Const
+
+ActorValue Property FollowerEndgameForceGreetOn Auto Const
+
+ActorValue Property MQ302Companion Auto Const
+
+ActorValue Property DestroyBOSCompanion Auto Const

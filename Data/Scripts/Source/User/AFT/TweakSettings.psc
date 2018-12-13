@@ -139,6 +139,7 @@ Group Injected
 	Perk  Property pTweakHealthBoost			Auto Const 
 	Perk  Property pTweakDmgResistBoost			Auto Const 
 	Perk  Property pTweakRangedDmgBoost			Auto Const 
+	Perk  Property pTweakDamageMultPerk			Auto Const
 	Perk  Property pCompanionInspirational		Auto Const
 	Spell Property pAbMagLiveLoveCompanionPerks	Auto Const
 	Perk  Property Sneak01						Auto Const
@@ -155,6 +156,7 @@ Group Injected
 	Quest Property TweakDLC04 Auto Const
 	
 	GlobalVariable Property TweakAllowAutonomousPickup	Auto Const 	; "[ ] Allow autonomous weapon pickup"
+	GlobalVariable Property pTweakAllowDamageMult		Auto Const 	; "[ ] Allow autonomous weapon pickup"
 	GlobalVariable Property HC_Rule_DamageWhenEncumbered Auto Const
 	
 EndGroup
@@ -662,7 +664,7 @@ EndFunction
 Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 	if (asMenuName == "ContainerMenu")	
 		Actor npc = self.GetActorRef()
-		bool allowCarryPerk = (1.0 == TweakAllowAutonomousPickup.getValue())
+		bool allowCarryPerk = true ; (1.0 == TweakAllowAutonomousPickup.getValue())
 		
 		if abOpening == true
 			Trace("EventTradeBegin()")
@@ -677,6 +679,7 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 			TradeMenuOpen = false
 			float currentHealth = npc.GetValue(pHealth)
 			bool endDeferred = true
+			bool allowDmgMult = (1.0 == pTweakAllowDamageMult.GetValue())
 
 			if (TradeHealth != currentHealth)
 				if (currentHealth < 0.0)
@@ -704,6 +707,9 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 				npc.RemovePerk(Sneak03)
 				npc.RemovePerk(Sneak04)
 				npc.RemovePerk(ImmuneToRadiation)
+				if (allowDmgMult)
+					npc.RemovePerk(pTweakDamageMultPerk)
+				endif
 				
 				Utility.wait(1.0)
 				Trace("Adding Perks Back")
@@ -720,6 +726,9 @@ Event OnMenuOpenCloseEvent(string asMenuName, bool abOpening)
 				npc.AddPerk(Sneak02)
 				npc.AddPerk(Sneak03)
 				npc.AddPerk(Sneak04)
+				if (allowDmgMult)
+					npc.AddPerk(pTweakDamageMultPerk)
+				endif				
 				Trace("Perks restored")
 			endif
 			if !allowCarryPerk
