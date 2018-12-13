@@ -1469,23 +1469,25 @@ EndFunction
 
 Function ToggleAllowDamageMult()
 
-	if (0.0 == pTweakAllowDamageMult.GetValue())
-		pTweakAllowDamageMult.SetValue(1.0)
-		return
-	endIf
-
 	Utility.waitmenumode(0.1)
+	
+	Trace("ToggleAllowDamageMult()")
 	if (Utility.IsInMenuMode())
-		self.CallFunctionNoWait("ToggleAllowDamageMult",new Var[0])
+		self.CallFunctionNoWait("ToggleAllowDamageMult", new Var[0])
 		return
-	endIf
-	
-	pTweakAllowDamageMult.SetValue(0.0)
+	endIf	
+
 	AFT:TweakFollowerScript pTweakFollowerScript = (pTweakFollower AS AFT:TweakFollowerScript)
-	if (pTweakFollowerScript)
-		pTweakFollowerScript.CancelDamageMult()
-	endIf
+	if (pTweakFollowerScript)	
+		if (0.0 == pTweakAllowDamageMult.GetValue())
+			pTweakFollowerScript.EnableDamageMult()
+		else
+			pTweakFollowerScript.CancelDamageMult()
+		endif
+	endif
 	
+	pTweakAFTSettingsCombat.ShowOnPipBoy()
+		
 EndFunction
 
 Function SetOutgoingDamageRelay(float akValue, bool backToPip=True)

@@ -7,12 +7,12 @@
                               [Fallout 4 Edition]
                   ___________________________________________
 
-                                  Nov 12, 2018
-                                 Version: 1.22
+                                  Dec 12, 2018
+                                 Version: 1.23
 
                         Written by:  Dheu
                              Email:  Dheuster@gmail.com
-                       Use subject:  AFT FO4 Version 1.22
+                       Use subject:  AFT FO4 Version 1.23
 
 
                                  QUICK SUMMARY
@@ -361,7 +361,7 @@ III. > > > >  Installation
      2) Once 7-zip is installed, open the .7z file downloaded from NexusMods 
         Typically you need only double click the file:
          
-          AmazingFollowerTweaksFO4_v1_22.7z
+          AmazingFollowerTweaksFO4_v1_23.7z
          
      3) Within the 7-zip window, select the menu options: 
          
@@ -370,12 +370,13 @@ III. > > > >  Installation
         Ensure you have version 9.20 or greater/newer. If you do not, return to
         step 1 and get the latest version. 
           
-     4) The 7-zip window will show 2 files:
+     4) The 7-zip window will show 3 files:
            
           /Data
-          readme_aft_1_22.txt
+          readme_aft_1_23.txt
+          unlockcurie.txt
           
-        Make sure BOTH items are hi-lighted. To hi-light both entries quickly, 
+        Make sure ALL items are hi-lighted. To hi-light all entries quickly, 
         hit CTRL + A
          
      5) Hit Extract and then [...] to browse to the location of your fallout4
@@ -393,10 +394,12 @@ III. > > > >  Installation
         once more
             
      6) If you previously had AFT installed, you will be prompted to confirm 
-        file overwrite for the two files: 
+        file overwrite for four files: 
             
-        AmazingFollowerTweaks - Main.bsa
-        AmazingFollowerTweaks.esp
+        /Data/AmazingFollowerTweaks - Main.bsa
+        /Data/AmazingFollowerTweaks.esp
+        /Data/unlockcurie.txt
+		/unlockcurie.txt
             
         Click [Yes] to each file as it comes up
         
@@ -416,7 +419,8 @@ III. > > > >  Installation
 
      Simply type "Amazing Follower Tweaks" in the mod search box and 
      install from there. Make sure you place it at the bottom of your load
-     order.
+     order. Bethesda.net does not come with the unlockcurie support 
+     support script. 
                   
   D. Upgrading
              
@@ -683,6 +687,7 @@ IV. > > > >  Usage
         > Make Follower (Leave AI intact)
         > Make Follower (Follow only. DO NOT MANAGE)
         > Make Settler
+        > Ignored NPC
         > Cancel
         ----------------------
                   
@@ -1515,7 +1520,8 @@ IV. > > > >  Usage
            Managed Slot
 
             The "Slot" or ID within AFT that the NPC is using. A number between
-            1 and 32.
+            1 and 32. This can be useful if you wish to setup targetted hotkeys.
+			See the HotKeys section below for more details.
              
         g) Effects
              
@@ -1604,6 +1610,7 @@ IV. > > > >  Usage
               Posture
               Expression
               New Body
+			  Reset
               ----------------------
                    
         a) Pose  
@@ -1758,7 +1765,7 @@ IV. > > > >  Usage
            those deemed "safe". So for example, Piper has very few options 
            because testing revealed she wasn't compatible with most races.  
              
-          e) Voice
+        e) Voice
            
                  ----------------------
                  Voice
@@ -1770,7 +1777,7 @@ IV. > > > >  Usage
                  ----------------------
            
            When you use AFT to force recruit other non-player characters, sometimes
-             those characters are silent and have nothing to say. The Voice option
+           those characters are silent and have nothing to say. The Voice option
            allows you to assign a Voice to a companion that falls into that category. 
            
            This option only appears on force recruited NPCs.              
@@ -1864,7 +1871,31 @@ IV. > > > >  Usage
            her quest to become a synth. It allows you to assign Curie to one of
            several pre-fabricated bodies/face combos. This may become available
            on other robotic companions in a future version.
-                  
+            
+        j) Reset
+      
+           From time to time, NPC's animations can become broken. For example, 
+           if you leave Piper's apartment while she is smoking a cigarette, 
+           a cell detach bug in the game can cause Piper to forever attempt
+           smoking cigarettes when at idle. 
+      
+           This command can be used to correct broken animation issues. It can
+           also correct behavior issues if they are related to a stuck animation.
+           
+           Reset brings up a menu with two options. 
+     
+           Light Reset: This is always recommended as a first step. It simply 
+           disables and reenables the NPC, forcing the game to reload their model
+           and animation data.
+       
+		   Full Reset: When a Light Reset doesn't fix your issue, you can try
+           a full reset. This command resets the NPC back to their begin-game
+           state. It immitates the console command recycleactor, but unlike the 
+           console command, it takes a snapshot of the NPC and attempts
+           to restore them after recycling the actor. Gear, outfits and keywords
+           (relationship progress) are saved off and then restored after the NPC
+           is reset.
+
      6) Settings   
                   
               ----------------------
@@ -2068,6 +2099,7 @@ IV. > > > >  Usage
                  [ ] Disable Like/Love Comments
                  [ ] Disable Dislike/Hate Comments
                  [ ] Disable Activator Comments
+                 [ ] Mute follower (No Comments)
                  > Global Chat Settings...
                  ----------------------             
                  
@@ -2094,7 +2126,7 @@ IV. > > > >  Usage
                  
              The follower will no longer say things when you activate them 
              using the AFT activator. 
-                 
+			 
            GLOBAL CHAT SETTINGS...
                  
              A convenience link to the Global Chat settings, which is where you 
@@ -2905,10 +2937,10 @@ IV. > > > >  Usage
            [ ] Ignore Murder
            [ ] Allow Followers to Heal Self
            [X] Allow Followers to Heal Others
-           [X] Allow Autonomous Item Pickup
            [X] Followers Catch up on Weapon Draw
            [ ] Followers Stealth when Sneaking
            [ ] Use Combat Outfit on Weapon Draw
+           [ ] Scale Follower Damage
            ----------------------
              
         a) [ ] Ignore Murder
@@ -2949,19 +2981,8 @@ IV. > > > >  Usage
              run to each others aid when another follower falls into bleedout.  Note 
              that when you enable this option, the player may lose the oppoortunity of 
              getting an affinity boost from healing companions themself. 
-             
-        d) [X] Allow Autonomous Item Pickup           
-          
-             When this option is enabled, Aft allows followers to pick up items outside
-             combat that look valuable and are not owned by others. When you disable
-             this option, it prevents autonomous pickup by making the carryweight of 
-             all followers zero (unless the player is trading with them). 
-             
-             This setting does not affect combat. Followers will still seek "better" 
-             weapons during combat if they spot one that can do more damage than the
-             one they have. 
-             
-        e) [X] Followers Catch up on Weapon Draw
+                          
+        d) [X] Followers Catch up on Weapon Draw
            
            When this box is checked, any Active followers who are not waiting
            and are further than 32 feet away from you will teleport behind you
@@ -2973,7 +2994,7 @@ IV. > > > >  Usage
              in combat. This allows the player to switch weapons during combat 
              without constantly interrupting follower combat. 
            
-        f) [X] Followers Stealth when Sneaking
+        e) [X] Followers Stealth when Sneaking
            
            When this box is checked, your followers will receive a stealth boy
            effect anytime you are sneaking to minimize their impact on your 
@@ -2997,13 +3018,25 @@ IV. > > > >  Usage
              summon them to your side once you are clear using the Summon All 
              Action. 
                 
-        g) Use Combat Outfit on Weapon Draw
+        f) [ ] Use Combat Outfit on Weapon Draw
            
-           This option causes followers to equip their Combat Outfit 
-           when you have your weapon drawn instead of waiting for 
-           combat to begin. The Combat Outfit will remain on as
-           long as your weapon is drawn. 
-                
+             This option causes followers to equip their Combat Outfit 
+             when you have your weapon drawn instead of waiting for 
+             combat to begin. The Combat Outfit will remain on as
+             long as your weapon is drawn. 
+
+        g) [ ] Scale Follower Damage  
+          
+             When this option is enabled, Aft scales all followers incoming and 
+             outgoing damage by specified multipliers. This was added to help
+             with game balance, especially on harder difficulties where vanilla
+             bugs normally result in overpowered followers. 
+
+             When enabled, recommended values will be set and used based on
+             current difficulty level. However, users are free to modify these
+             multipliers independently to make the game easier, harder or more
+             balanced. 
+		   
       4) Global Misc Settings
            
         An assortment of unrelated global settings that don't fall into a 
@@ -3926,6 +3959,11 @@ V. > > > > Hot Keys
 
          ../Fallout 4/Data/Hotkeys.ini
 
+     NOTE: The default Hotkeys.ini binds the key "B" to Slot 3. However
+     this conflicts with AFT's sculpt system and prevents users from editing
+     body proportions. I suggestion editing the Hotkeys.ini file and removing
+     the config for "B". 
+     
      To make things easier, it supports MACROS. A macro is a small sequence
      of characters that gets expanded into a larger set of characters at runtime.
 
@@ -5824,6 +5862,17 @@ X. > > > >  Version History
   - Fixed Sculpt bug that could cause ragdoll after sculpt. 
   - Fixed AFT Camp so that it once again will work in Nuka World  
   - Fixed Set Outfit to prevent item loss on first use
+
+  1.23 : ( Compiled against FO4 version  1.10.114.0.0 )  
+  - Fixed Bug where Clear Settlement could break Camp Workbenches
+  - Fixed Bugged Haylen if she is follower during final BOS Quest
+  - Updated Affinity Trait management to better emphasis spouse AI evolution.
+  - Updated Line-Of-Sight code for Unlock Visible Action: Better lock detection
+  - Removed [X] Allow Autonomous Item Pickup as it didnt function as intended.
+  - Added Global Combat Setting "Scale Follower Damage" to address balance issues.  
+  - Added Appearance Setting "Reset" for fixing follower animation issues.
+  - Added EndGame Spouse comments
+  
   
 -------------------------------------------------------------------------------
 XI. Credits

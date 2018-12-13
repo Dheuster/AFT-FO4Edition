@@ -523,6 +523,19 @@ Alias_Spouse.TryToSetActorValue(CA_WantsToTalk, 0)
 EndFunction
 ;END FRAGMENT
 
+;BEGIN FRAGMENT Fragment_Stage_0680_Item_00
+Function Fragment_Stage_0680_Item_00()
+;BEGIN AUTOCAST TYPE aft:tweakcomspousescript
+Quest __temp = self as Quest
+aft:tweakcomspousescript kmyQuest = __temp as aft:tweakcomspousescript
+;END AUTOCAST
+;BEGIN CODE
+Alias_Spouse.GetActorReference().SetValue(DestroyBOSCompanion,0)
+Alias_Spouse.TryToSetActorValue(CA_WantsToTalk, 0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;BEGIN FRAGMENT Fragment_Stage_0700_Item_00
 Function Fragment_Stage_0700_Item_00()
 ;BEGIN CODE
@@ -554,3 +567,5 @@ ActorValue Property CA_AffinitySceneToPlay Auto Const
 ActorValue Property FollowerEndgameForceGreetOn Auto Const
 
 ActorValue Property MQ302Companion Auto Const
+
+ActorValue Property DestroyBOSCompanion Auto Const
