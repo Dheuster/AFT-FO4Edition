@@ -4447,21 +4447,10 @@ function HandleDialogueBump_RETravelKMK_BoSM02(Quest eventQuest, int eventID)
 		if eventID == 1
 			 ; 00162AB2 on quest RETravelKMK_BoSM02 (0014DC84)
 			 ; DESCRIPTION: Player repeats the Brotherhood line against Ghouls; they all need to die.
-			 ; Kind of cruel; the NPC vehemently disagrees and has lost everything because he's held to his
-			 ; beliefs.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Dislikes()
-			Hancock_Hates()
-			MacCready_Dislikes()
-			Piper_Neutral()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Neutral()
-
+			 ; Kind of cruel; the NPC vehemently disagrees and has lost everything because 
+			 ; he's held to his beliefs.
+			 Tweak_Mean()
+			 Tweak_Violent(0.50)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RETravelKMK_BoSM02 got event from wrong quest " + eventQuest)
@@ -4474,48 +4463,14 @@ function HandleDialogueBump_RETravelSC01_DN123SkylanesPointer(Quest eventQuest, 
 		if eventID == 1 || eventID == 3 || eventID == 4
 			 ; 000CAB3C on quest RETravelSC01_DN123SkylanesPointer (000684D1)
 			 ; DESCRIPTION: Player has out-scammed someone who would have scammed him.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Loves()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
 		elseif eventID == 2
 			 ; 000CAB42 on quest RETravelSC01_DN123SkylanesPointer (000684D1)
 			 ; DESCRIPTION: Player accepts a lowball offer for a job without even trying to haggle.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Neutral()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Dislikes()
+			 Tweak_Generous()
 		elseif eventID == 5
 			 ; 000CAB7F on quest RETravelSC01_DN123SkylanesPointer (000684D1)
 			 ; DESCRIPTION: Player challenges for a better reward. The first offer was insulting.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Neutral()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Likes()
+			 Tweak_Selfish()
 
 		endif
 	else
@@ -4523,104 +4478,45 @@ function HandleDialogueBump_RETravelSC01_DN123SkylanesPointer(Quest eventQuest, 
 	endif
 endFunction
 
+; I had trouble with these because they really do depend on if you see synths as
+; human or machine. My take: If there are organic, biological elements to the brain... cells 
+; based on stem cells, etc... then I would see them as living organic creatures. But 
+; if the brain was inorganic or made of an inorganic material, then I would say they
+; are really good immitations of humans, but not technically human. Since those details 
+; aren't revealed to us, either viewpoint is valid so I don't fault people for their
+; "take". Instead I focus on the violence/non-violence non-synth related aspects of the
+; answer.  
 function HandleDialogueBump_RR101(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
 	if eventQuest == RR101
 		if eventID == 2 || eventID == 1
 			 ; 0006E3A7 on quest RR101 (000459D2)
-			 ; DESCRIPTION: Desdemona asks if Player would risk his life to save a synth. Player says yes.
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Loves()
-			Danse_Hates()
-			Deacon_Loves()
-			Hancock_Likes()
-			MacCready_Dislikes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Loves()
-			X688_Neutral()
+			 ; DESCRIPTION: Desdemona asks if Player would risk his life 
+			 ; to save a synth. Player says yes.
 		elseif eventID == 3
 			 ; 0006E406 on quest RR101 (000459D2)
-			 ; DESCRIPTION: Player agrees that Instutute needs to go. Player says his motivation is revenge
-			 ; for what they did to his family.
-			Cait_Likes()
-			Codsworth_Likes()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
+			 ; DESCRIPTION: Player agrees that Instutute needs to go. 
+			 ; Player says his motivation is revenge for what they did
+			 ; to his family.
+			 Tweak_Violent(0.25)
 		elseif eventID == 4
 			 ; 0006E417 on quest RR101 (000459D2)
-			 ; DESCRIPTION: Desdemona is talking to Player about Institute treating synths like slaves.
-			 ; Player disagrees… synths are machines.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 ; DESCRIPTION: Desdemona is talking to Player about 
+			 ; Institute treating synths like slaves. Player disagrees… 
+			 ; synths are machines.
 		elseif eventID == 5
 			 ; 0006E432 on quest RR101 (000459D2)
-			 ; DESCRIPTION: Player agrees that Instutute needs to go. Player says his motivation is so they
-			 ; can't hurt anyone else.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Loves()
-			Danse_Likes()
-			Deacon_Loves()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
+			 ; DESCRIPTION: Player agrees that Instutute needs to go. 
+			 ; Player says his motivation is so they can't hurt anyone else.
+			 Tweak_Nice(0.25)
+			 Tweak_Peaceful(0.25)
 		elseif eventID == 6
 			 ; 0006E43F on quest RR101 (000459D2)
 			 ; DESCRIPTION: Desdemona asks if Player would risk his life to save a synth. Player says no.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Likes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Neutral()
 		elseif eventID == 7
 			 ; 0006E447 on quest RR101 (000459D2)
-			 ; DESCRIPTION: Desdemona is talking to Player about Institute treating synths like slaves.
-			 ; Player agrees.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Loves()
-			Danse_Neutral()
-			Deacon_Neutral()
-			Hancock_Loves()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
-
+			 ; DESCRIPTION: Desdemona is talking to Player about Institute treating synths 
+			 ; like slaves. Player agrees.
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RR101 got event from wrong quest " + eventQuest)
@@ -4632,148 +4528,45 @@ function HandleDialogueBump_RR102(Quest eventQuest, int eventID)
 	if eventQuest == RR102
 		if eventID == 1
 			 ; 000729BD on quest RR102 (0006FA37)
-			 ; DESCRIPTION: Player is meeting Ricky Dalton for a mission. Player says he appreciates all
-			 ; that Ricky's done.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Dislikes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
+			 ; DESCRIPTION: Player is meeting Ricky Dalton for a mission. Player 
+			 ; says he appreciates all that Ricky's done.
+			 Tweak_Nice()
 		elseif eventID == 2
 			 ; 00072A03 on quest RR102 (0006FA37)
-			 ; DESCRIPTION: Player is meeting Ricky Dalton for a mission. Ricky is aggitated it took so long
-			 ; for help to arrive. Player threatens him in response.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Hates()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 ; DESCRIPTION: Player is meeting Ricky Dalton for a mission. Ricky is aggitated
+			 ; it took so long for help to arrive. Player threatens him in response.
+			 Tweak_Violent()
 		elseif eventID == 3
 			 ; 00072FFD on quest RR102 (0006FA37)
-			 ; DESCRIPTION: Ricky has offered to be a distraction so Player can get into Switchboard
-			 ; undetected, which is suicidal. Player says not to do it.
-			Cait_Dislikes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Dislikes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
+			 ; DESCRIPTION: Ricky has offered to be a distraction so Player can get into 
+			 ; Switchboard undetected, which is suicidal. Player says not to do it.
+			 Tweak_Nice()
 		elseif eventID == 4
 			 ; 00073003 on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Ricky has offered to be a distraction so Player can get into Switchboard
 			 ; undetected, which is suicidal. Player says to do it.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Tweak_Mean()
 		elseif eventID == 5
 			 ; 0007303B on quest RR102 (0006FA37)
-			 ; DESCRIPTION: Desdemona is debreifing Player regarding Switchboard. Deacon ends up making Player
-			 ; look better by lying. Player agrees to Deacon's lie.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Loves()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Neutral()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 ; DESCRIPTION: Desdemona is debreifing Player regarding Switchboard. Deacon 
+			 ; ends up making Player look better by lying. Player agrees to Deacon's lie.
 		elseif eventID == 6
 			 ; 00073047 on quest RR102 (0006FA37)
-			 ; DESCRIPTION: Desdemona is debreifing Player regarding Switchboard. Deacon ends up making
-			 ; Player look better by lying. Player admits Deacon is lying.
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Dislikes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
+			 ; DESCRIPTION: Desdemona is debreifing Player regarding Switchboard. Deacon 
+			 ; ends up making Player look better by lying. Player admits Deacon is lying.
 		elseif eventID == 8 || eventID == 7
 			 ; 0007B30E on quest RR102 (0006FA37)
-			 ; DESCRIPTION: Deacon asks player if he supports Synth freedom. Player says he is against
-			 ; slavery in all forms.
-			Cait_Loves()
-			Codsworth_Likes()
-			Curie_Loves()
-			Danse_Hates()
-			Deacon_Loves()
-			Hancock_Loves()
-			MacCready_Likes()
-			Piper_Loves()
-			Preston_Likes()
-			Strong_Dislikes()
-			Valentine_Loves()
-			X688_Neutral()
+			 ; DESCRIPTION: Deacon asks player if he supports Synth freedom. Player says he 
+			 ; is against slavery in all forms.
+			 Tweak_Nice(0.50)
 		elseif eventID == 10 || eventID == 9
 			 ; 0007B316 on quest RR102 (0006FA37)
-			 ; DESCRIPTION: Deacon asks player if he supports Synth freedom. Player says you can't enslave
-			 ; a machine.
-			Cait_Neutral()
-			Codsworth_Dislikes()
-			Curie_Hates()
-			Danse_Likes()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Neutral()
+			 ; DESCRIPTION: Deacon asks player if he supports Synth freedom. Player says 
+			 ; you can't enslave a machine.
 		elseif eventID == 11
 			 ; 000E2E24 on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Deacon offers Tommy's weapon to Player. Player refuses it.
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Loves()
-			Hancock_Neutral()
-			MacCready_Dislikes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Neutral()
-			X688_Neutral()
-
+			 Tweak_Peaceful(0.50)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RR102 got event from wrong quest " + eventQuest)
@@ -4785,37 +4578,13 @@ function HandleDialogueBump_RR302(Quest eventQuest, int eventID)
 	if eventQuest == RR302
 		if eventID == 1
 			 ; 0002D10B on quest RR302 (0002C8CB)
-			 ; DESCRIPTION: Player and Tom are preparing to assault the Brotherhood, Tom is worried they are
-			 ; being watched as they speak. Player tells him to relax.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
+			 ; DESCRIPTION: Player and Tom are preparing to assault the Brotherhood, Tom is 
+			 ; worried they are being watched as they speak. Player tells him to relax.
+			 Tweak_Peaceful()
 		elseif eventID == 2
 			 ; 0002D14E on quest RR302 (0002C8CB)
-			 ; DESCRIPTION: Player and Tom are preparing to assault the Brotherhood, Tom is worried they are
-			 ; being watched as they speak. Player tells him he's paranoid.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Dislikes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Neutral()
-			Valentine_Dislikes()
-			X688_Neutral()
-
+			 ; DESCRIPTION: Player and Tom are preparing to assault the Brotherhood, Tom is 
+			 ; worried they are being watched as they speak. Player tells him he's paranoid.
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RR302 got event from wrong quest " + eventQuest)
