@@ -13,6 +13,7 @@ FormList Property TweakDedupe4Items Auto Const
 FormList Property TweakGatherLoose Auto Const
 FormList Property TweakDedupeStackable Auto Const
 GlobalVariable Property TweakGatherLooseRadius Auto Const
+GlobalVariable Property TweakGatherLooseClean Auto Const
 Container Property Arena_Wager_Container Auto Const
 Keyword Property ActorTypeTurret Auto Const
 Quest Property pFollowers Auto Const
@@ -263,6 +264,7 @@ endFunction
 
 Function ScanDeadActorsForItems(ObjectReference target)
 	Trace("ScanActorsForItems [" + target as string + "]...")
+	bool gatherLooseCleanup = (1.0 == TweakGatherLooseClean.GetValue())
 	
 	FormList TweakActorTypes = Game.GetFormFromFile(0x01025B3B, "AmazingFollowerTweaks.esp") as FormList
 	Actor pc = Game.GetPlayer()
@@ -290,9 +292,16 @@ Function ScanDeadActorsForItems(ObjectReference target)
 			j = 0
 			while (j < nsize)
 				npc = nearby[j] as Actor
-				if (npc as bool && npc.IsDead() && 0 != npc.GetItemCount(None))
-					Trace("Dead actor [" + npc + "] within " + maxRadius + " of player with items. Looting")
-					npc.RemoveAllItems(target, False)
+				if (npc as bool && npc.IsDead())
+					if (0 != npc.GetItemCount(None))
+						Trace("Dead actor [" + npc + "] within " + maxRadius + " of player with items. Looting")
+						npc.RemoveAllItems(target, False)
+					endif
+					if gatherLooseCleanup
+						npc.SetPosition(0,0,10)
+						npc.Disable()
+						npc.Delete()
+					endif
 					; Utility.wait(0.01)
 					; yield += 1.0
 				else

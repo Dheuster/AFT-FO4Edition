@@ -165,23 +165,6 @@ ActorValue Property pTweakNextHealAllowed		Auto Const
 ActorValue Property pTweakLockExperience		Auto Const
 ActorValue Property pFollowerState				Auto Const
 
-; 1.23 : Trait distribution Fix:
-
-; Original game did well at tracking selfish (steal/lockpick)
-; and Mean (Murder Events), but had almost no plugs for the 
-; other event types. So we key off common targeted keywords
-; to populate traits.... (This mostly affects the AFT spouse)
- 
-Keyword		Property CA_CustomEvent_CodsworthLikes  Auto Const
-ActorValue	Property CA_Trait_Nice					Auto Const
-
-Keyword		Property CA_CustomEvent_PiperLikes      Auto Const
-ActorValue	Property CA_Trait_Peaceful				Auto Const
-
-Keyword		Property CA_CustomEvent_StrongLikes 	Auto Const
-ActorValue	Property CA_Trait_Violent				Auto Const
-
-
 ; CommentSync Control:
 GlobalVariable	Property pTweakCommentSynch		Auto Const
 Bool CommentSynchronous_var = true
@@ -1168,7 +1151,7 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 		Trace("NOT sending affinity event. IgnoreAffinity is true") 
 		return false
 	endif
-	
+
 	if ResponseDelay < 0
 		ResponseDelay = 0
 	elseif ResponseDelay > 30
@@ -1184,19 +1167,6 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 	if (0 == maxwait)
 		Trace("LocalSendAffinityEvent lock timed out (safety)")
 	endIf
-
-	; // 1.23 : Fix Trait Tracking: Generous is rare in this game. So we assume NPCs
-	; // that like 2 things, with one of them being generous, that like means the
-	; // other trait is happening instead....
-	
-	if EventKeyword == CA_CustomEvent_CodsworthLikes
-		BumpTraits(CA_Trait_Nice)
-	elseif EventKeyword == CA_CustomEvent_PiperLikes
-		BumpTraits(CA_Trait_Peaceful)
-	elseif EventKeyword == CA_CustomEvent_StrongLikes
-		BumpTraits(CA_Trait_Violent)
-	endif
-	
 	FollowersScript:AffinityEventData CurrentAffinityEventData
 	CurrentAffinityEventData = FollowersScript.GetAffinityEventData(EventKeyword)
 	if !CurrentAffinityEventData
@@ -1268,7 +1238,16 @@ Function AffinityTalkManager(keyword EventKeyword, GlobalVariable  EventSize, bo
                                actorvalue acupdate, keyword customTopic, Bool IsDialogueBump, \
                                float ResponseDelay, objectReference Target)
 	
-	Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [" + (Target as Actor).GetActorBase().GetFormID() + "]")		
+	; Bug 1.23 : If Target is a non-actor, the trace output could cause a bug in the DEBUG version of the mod (that includes logging support). 
+	if Target
+		if (Target as Actor)
+			Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [" + (Target as Actor).GetActorBase().GetFormID() + "]")
+		else
+			Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [None]")
+		endif
+	else
+		Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [None]")
+	endif
 	Trace("Synchronous   : [" + CommentSynchronous_var + "]")
 	
 	; Bug 1.17 : If Target is CAS, then it is likely a heal event (you are targetting a companion to heal them). But if target is not CAS, then
@@ -4199,20 +4178,6 @@ Function HandleDanseIsSynth()
 			DismissCompanion(Haylen, false, true)		
 		endif
 	endif	
-EndFunction
-
-Function BumpTraits(ActorValue witnessedTrait)
-	Trace("BumpTraits Called [" + witnessedTrait + "]")
-	int c = 0
-	int clen = companions.Length
-	while (c < clen)
-		Actor npc = companions[c].GetActorReference()
-		if npc && npc.Is3DLoaded()
-			float cvalue = npc.GetValue(witnessedTrait) + 1.0 
-			npc.SetValue(witnessedTrait, cvalue)
-		endIf
-		c += 1
-	endwhile
 EndFunction
 
 bool Function IsCoreCompanion(Actor npc)

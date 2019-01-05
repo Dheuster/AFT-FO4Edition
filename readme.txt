@@ -7,7 +7,7 @@
                               [Fallout 4 Edition]
                   ___________________________________________
 
-                                  Dec 12, 2018
+                                  Jan 05, 2019
                                  Version: 1.23
 
                         Written by:  Dheu
@@ -338,8 +338,8 @@ III. > > > >  Installation
         
   A. Requirements
         
-     This mod was compiled against Fallout 4 patch 1.10.114.  To minimize the
-     possibility of bugs, it is advised that users have the same patch or
+     This mod was compiled against Fallout 4 patch 1.10.120.0.1  To minimize 
+     the possibility of bugs, it is advised that users have the same patch or
      newer. The mod may work with older versions of the game, but may be 
      be less stable. To see what version you have, hit ESC within the game 
      and look in the bottom left corner of the System:Save/Load screen.
@@ -543,7 +543,8 @@ III. > > > >  Installation
           AFT Version 1.06-1.14 : FO4 Patch 1.10.40
           AFT Version 1.15-1.16 : FO4 Patch 1.10.64
           AFT Version 1.17-1.19 : FO4 Patch 1.10.89
-          AFT Version 1.20+     : FO4 Patch 1.10.114
+          AFT Version 1.20-1.22 : FO4 Patch 1.10.114
+          AFT Version 1.23+     : FO4 Patch 1.10.120.0.1
             
      2) Did you clean your Cache?
            
@@ -2915,19 +2916,16 @@ IV. > > > >  Usage
            Some users will combine toggling this setting with decreasing the
            Medium cooldown to 20 or 10 minutes to try and strike a balance.
 
-        e) [ ] Lock Comment Rotation to ...
-
-           Fallout 4 hard codes the use of "Companion 1" into most of the
-           games cut-scenes and commentary. For this reason, AFT rotates 
-           "Companion 1" every 15 seconds so that the commentary is distributed 
-           among all followers. This also causes cut-scenes to effectively select
-           a follower at random as the primary camera target.
-        
-           This method allows users to turn that rotation off and force a 
-           specific NPC into the Companion 1 slot. Selecting the option will 
-           bring up a list of Active Followers and the selected follower will
-           remain locked in the "Companion 1" slot until dismissed or until the 
-           option is disabled.
+        e) [ ] Set Main Follower to ...
+		   
+           When disabled (default), AFT rotates the primary companion every 
+           15 seconds so that the commentary is distributed among all followers.
+           Who says what and shows up in cutscenes is effectively randomized.
+    
+           When enabled, sets the primary Follower to use for all cut-scenes
+           and commentary. Enabling the option will bring up a list of Active
+           Followers and the selected follower will remain the primary follower
+           until dismissed or until the option is disabled.
         
      3) Global Combat Settings
 
@@ -3025,8 +3023,10 @@ IV. > > > >  Usage
              combat to begin. The Combat Outfit will remain on as
              long as your weapon is drawn. 
 
-        g) [ ] Scale Follower Damage  
-          
+        g) [X] Scale Follower Damage  
+               Incoming Damage [2.0]
+               Outgoing Damage [0.5]
+			   
              When this option is enabled, Aft scales all followers incoming and 
              outgoing damage by specified multipliers. This was added to help
              with game balance, especially on harder difficulties where vanilla
@@ -3055,6 +3055,7 @@ IV. > > > >  Usage
            [X] Restore AFT Items on Game Load
            [ ] Allow Core Companion Import
            [ ] Auto Assign Stats for Combat Styles
+           [ ] Gather Loose Items: Remove Bodies
            ----------------------
            
         DETAILS:
@@ -3153,6 +3154,10 @@ IV. > > > >  Usage
            assign a combat style. When disabled, you will not be prompted and
            stats will not be automatically adjusted.
 
+        k) Gather Loose Items: Remove Bodies
+           
+           Remove dead bodies after looting when using Gather Loose Items. 
+		   
      5) Global Cooldown Settings
 
            ----------------------
@@ -5863,13 +5868,14 @@ X. > > > >  Version History
   - Fixed AFT Camp so that it once again will work in Nuka World  
   - Fixed Set Outfit to prevent item loss on first use
 
-  1.23 : ( Compiled against FO4 version  1.10.114.0.0 )  
-  - Fixed Bug where Clear Settlement could break Camp Workbenches
+  1.23 : ( Compiled against FO4 version  1.10.120.0.1 )  
+  - Fixed Bug where Clear Settlement could break AFT Camp Workbenches
   - Fixed Bugged Haylen if she is follower during final BOS Quest
   - Updated Affinity Trait management to better emphasis spouse AI evolution.
   - Updated Line-Of-Sight code for Unlock Visible Action: Better lock detection
   - Removed [X] Allow Autonomous Item Pickup as it didnt function as intended.
-  - Added Global Combat Setting "Scale Follower Damage" to address balance issues.  
+  - Added Global Combat Setting "Scale Follower Damage" to address balance issues. 
+  - Added Global Option: Gather Loose Items - Remove Bodies  
   - Added Appearance Setting "Reset" for fixing follower animation issues.
   - Added EndGame Spouse comments
   
