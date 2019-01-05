@@ -47,6 +47,22 @@ pTweakAllowLoiter.SetValue(1.0)
 EndFunction
 ;END FRAGMENT
 
+;BEGIN FRAGMENT Fragment_Terminal_06
+Function Fragment_Terminal_06(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakGatherLooseClean.SetValue(0.0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_Terminal_07
+Function Fragment_Terminal_07(ObjectReference akTerminalRef)
+;BEGIN CODE
+pTweakGatherLooseClean.SetValue(1.0)
+;END CODE
+EndFunction
+;END FRAGMENT
+
 ;BEGIN FRAGMENT Fragment_Terminal_08
 Function Fragment_Terminal_08(ObjectReference akTerminalRef)
 ;BEGIN CODE
@@ -208,3 +224,5 @@ GlobalVariable Property pTweakAllowHealOther Auto Const
 GlobalVariable Property pTweakAllowAutoStats Auto Const
 
 Quest Property pTweakPipBoy Auto Const
+
+GlobalVariable Property pTweakGatherLooseClean Auto Const

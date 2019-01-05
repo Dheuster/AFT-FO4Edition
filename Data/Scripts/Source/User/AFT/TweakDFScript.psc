@@ -165,26 +165,6 @@ ActorValue Property pTweakNextHealAllowed		Auto Const
 ActorValue Property pTweakLockExperience		Auto Const
 ActorValue Property pFollowerState				Auto Const
 
-; 1.23 : Trait distribution Fix:
-
-; Original game did well at tracking selfish (steal/lockpick)
-; and Mean (Murder Events), but had almost no plugs for the 
-; other event types. So we key off common targeted keywords
-; to populate traits.... (This mostly affects the AFT spouse)
- 
-Keyword		Property CA_CustomEvent_CodsworthLikes  Auto Const
-Keyword		Property CA_CustomEvent_PiperLikes      Auto Const
-Keyword		Property CA_CustomEvent_StrongLikes 	Auto Const
-Keyword		Property CA_CustomEvent_StrongLoves		Auto Const
-
-ActorValue	Property CA_Trait_Nice					Auto Const
-ActorValue	Property CA_Trait_Peaceful				Auto Const
-ActorValue	Property CA_Trait_Generous				Auto Const
-ActorValue	Property CA_Trait_Mean				    Auto Const
-ActorValue	Property CA_Trait_Selfish				Auto Const
-ActorValue	Property CA_Trait_Violent				Auto Const
-
-
 ; CommentSync Control:
 GlobalVariable	Property pTweakCommentSynch		Auto Const
 Bool CommentSynchronous_var = true
@@ -1171,7 +1151,7 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 		Trace("NOT sending affinity event. IgnoreAffinity is true") 
 		return false
 	endif
-	
+
 	if ResponseDelay < 0
 		ResponseDelay = 0
 	elseif ResponseDelay > 30
@@ -1187,7 +1167,6 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 	if (0 == maxwait)
 		Trace("LocalSendAffinityEvent lock timed out (safety)")
 	endIf
-	
 	FollowersScript:AffinityEventData CurrentAffinityEventData
 	CurrentAffinityEventData = FollowersScript.GetAffinityEventData(EventKeyword)
 	if !CurrentAffinityEventData
@@ -1201,7 +1180,6 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 			LockSendAffinityEvent = false
 			RETURN false
 		endIf
-				
 	elseif (Target && Target.GetDistance(Game.GetPlayer()) < 180)
 		float nextAllowed = Target.GetValue(pTweakNextHealAllowed)
 		if nextAllowed < Utility.GetCurrentGameTime()		
@@ -1235,53 +1213,16 @@ bool Function LocalSendAffinityEvent(scriptobject Sender, keyword EventKeyword, 
 		endIf
 	endIf
 	
-	float NextDayAllowed = Utility.GetCurrentGameTime() + CoolDown.GetValue()
+	float NextDayAllowed = CoolDown.GetValue() + Utility.GetCurrentGameTime()
 	Trace("NextDayAllowed for event = " + NextDayAllowed)
 	CurrentAffinityEventData.NextDayAllowed = NextDayAllowed
-	
-	; // 1.23 : Fix Trait Tracking: Generous is rare in this game. So we assume NPCs
-	; // that like 2 things, with one of them being generous, that like means the
-	; // other trait is happening instead....
-	
-	ActorValue acupdate = CurrentAffinityEventData.AssociatedActorValue
-	if acupdate
-		if CA_Trait_Nice == acupdate
-			BumpTraits(CA_Trait_Nice)
-		elseif CA_Trait_Peaceful == acupdate
-			BumpTraits(CA_Trait_Peaceful)
-		elseif CA_Trait_Generous == acupdate
-			BumpTraits(CA_Trait_Generous)
-		elseif CA_Trait_Mean == acupdate
-			BumpTraits(CA_Trait_Mean)
-		elseif CA_Trait_Selfish == acupdate
-			BumpTraits(CA_Trait_Selfish)
-		elseif CA_Trait_Violent == acupdate
-			BumpTraits(CA_Trait_Violent)
-		endif	
-	else
-		; While NPCs all have personalities that lean towards certain 
-		; things, LOVE and HATE events are more rare and choosy, which
-		; is why they make good candidates for estimating what type 
-		; of choices the Player is making:
-		
-		; STRONGLOVE : Violence, FFDiamonCity10, Inst301, Inst306, BoSMo2, MS04, BoSM02, DN053, MS07a, RESceneLC01, BoS203, BoS302, BoSM01, 
-		; Inst307, 
-		; RR303
-		if EventKeyword == CA_CustomEvent_CodsworthLikes
-			BumpTraits(CA_Trait_Nice)
-		elseif EventKeyword == CA_CustomEvent_PiperLikes
-			BumpTraits(CA_Trait_Peaceful)
-		elseif EventKeyword == CA_CustomEvent_StrongLoves
-			BumpTraits(CA_Trait_Violent)
-		endif	
-	endif	
-	
 	globalvariable EventSize
 	if EventSizeOverride
 		EventSize = EventSizeOverride
 	else
 		EventSize = CurrentAffinityEventData.EventSize
 	endIf
+	ActorValue acupdate = CurrentAffinityEventData.AssociatedActorValue
 	keyword    customTopic = None
 	if ShouldSuppressComment == false
 		customTopic = CurrentAffinityEventData.TopicSubType
@@ -1297,7 +1238,16 @@ Function AffinityTalkManager(keyword EventKeyword, GlobalVariable  EventSize, bo
                                actorvalue acupdate, keyword customTopic, Bool IsDialogueBump, \
                                float ResponseDelay, objectReference Target)
 	
-	Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [" + (Target as Actor).GetActorBase().GetFormID() + "]")		
+	; Bug 1.23 : If Target is a non-actor, the trace output could cause a bug in the DEBUG version of the mod (that includes logging support). 
+	if Target
+		if (Target as Actor)
+			Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [" + (Target as Actor).GetActorBase().GetFormID() + "]")
+		else
+			Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [None]")
+		endif
+	else
+		Trace("AffinityTalkManager(): EventKeyword [" + EventKeyword + "] acupdate [" + acupdate + "] Target [" + Target + "] Target.GetFormID [None]")
+	endif
 	Trace("Synchronous   : [" + CommentSynchronous_var + "]")
 	
 	; Bug 1.17 : If Target is CAS, then it is likely a heal event (you are targetting a companion to heal them). But if target is not CAS, then
@@ -4228,20 +4178,6 @@ Function HandleDanseIsSynth()
 			DismissCompanion(Haylen, false, true)		
 		endif
 	endif	
-EndFunction
-
-Function BumpTraits(ActorValue witnessedTrait)
-	Trace("BumpTraits Called [" + witnessedTrait + "]")
-	int c = 0
-	int clen = companions.Length
-	while (c < clen)
-		Actor npc = companions[c].GetActorReference()
-		if npc && npc.Is3DLoaded()
-			float cvalue = npc.GetValue(witnessedTrait) + 1.0 
-			npc.SetValue(witnessedTrait, cvalue)
-		endIf
-		c += 1
-	endwhile
 EndFunction
 
 bool Function IsCoreCompanion(Actor npc)

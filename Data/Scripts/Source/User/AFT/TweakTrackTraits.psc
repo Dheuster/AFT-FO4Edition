@@ -1,17 +1,55 @@
-Scriptname AFT:TweakTrackTraits extends Quest
+Scriptname AFT:TweakTrackTraits extends Quest const
 
-group quests
-	ReferenceAlias pCompanion1	auto const
-	ReferenceAlias pCompanion2	auto const
-	ReferenceAlias pCompanion3	auto const
-	ReferenceAlias pCompanion4	auto const
-	ReferenceAlias pCompanion5	auto const
-	ReferenceAlias[] Companions	auto
+; This Quest/Script implements the original Fallout 4 trait tracking system, which apparently was abandoned. 
+; The original planned implementation defined a number of traits that tracked what individual NPCs had
+; witnessed the player doing:
+; 
+;     CA_Trait_Mean/CA_Trait_Nice, CA_Trait_Selfish/CA_Trait_Generous, CA_Trait_Violent/CA_Trait_Peaceful. 
+;
+; Having these statistics stored on NPCs basically meant that commentary could be more customized to 
+; reflect what the NPC had witnessed and possibly allow someone to acklowledge what they likled and 
+; disliked about the player. 
+;
+; Each Companion likes two traits. So for example, Strong likes Violence and Generosity. He could have a 
+; high affinity with the player, but with those stats, lines could indicate what specifically about the 
+; player Strong likes (or dislikes). Things like "Player is generous, but needs to work on violence". 
+
+; This system was abandoned in favor of a different system. The issue with the original system is that 
+; it didn't scale well to all the traits that could make up NPCs. And as you can imagine, they probably
+; didn't even know just how many NPCs they would create or the complexities of their personalities. 
+; 
+; Do you track if the player likes Synths, Supermutants? How about loyalty to the various factions. The 
+; original system didn't address these more complicated aspects of NPC personalities. So for example, X6-88 
+; likes violence, but he sees Synths as being valuable Institute property. So he doesn't like the destruction 
+; of synths. How does one ensure a specific companion only likes it when you kill non-synths? 
+;
+; So instead of tracking traits on NPCs, the new system had a quest that was informed of all the games major
+; dialogue and quest outcome decision points. The idea is that NPCs have opinions so their reactions are unique 
+; to each event. See CompanionAffinityEventQuest and its attached script for the relays). So NPCs would still 
+; like or dislike your actions, but 20 hours into the game, you wouldn't know specifically why. 
+;
+; The new system was a better system for the type of companions that came with Fallout 4. IE: Hard coded 
+; people with opinions that were unlikely to change of the coarse of the game. However, AFT created a spouse
+; that has amnesia. And the spouse is supposed to evolve with the player. If the player is violent, the spouse
+; commentary should reflect that. I created a lot of audio with a lot of conditions based on the 6 traits 
+; above so that the spouse would evolve with the player. But then realized that the trait actor values were
+; not being updated by the game. 
+;
+; I had ran across of a lot of code that I thought was being used, but apparently it was abandoned. In one 
+; playthrough that took about 2 days (48+ hours) of real time to complete, not one of my companions had a
+; trait value greater than zero for any of the traits listed above. 
+;
+; This quest/scrip remedies that by replicating large portions of the CompanionAffinityEventQuestScript, but
+; instead of updating affinity values, it updates the 6 traits above on whoever is travelling with the player.
+; This should allow the spouse to operate as originally intended. 
+
+group Followers
+	ReferenceAlias[] property Companions auto const
 endgroup
 
 group quests
 	Quest property BoS100 auto const
-	Quest property BoS101 auto const
+;	Quest property BoS101 auto const
 	Quest property BoS201 auto const
 	Quest property BoS202 auto const
 	Quest property BoS203 auto const
@@ -86,7 +124,7 @@ group quests
 	Quest property RETravelSC01_DN123SkylanesPointer auto const
 	Quest property RR101 auto const
 	Quest property RR102 auto const
-	Quest property RR201 auto const
+;	Quest property RR201 auto const
 	Quest property RR302 auto const
 	Quest property RR303 auto const
 	Quest property RRM01 auto const
@@ -99,111 +137,111 @@ group quests
 	Quest property V81_03 auto const
 
 	;NEW QUESTS ADDED WHEN ADDING QUEST STAGE BUMPS
-	Quest Property BoS200 const auto
-	Quest Property BoS204 const auto
+;	Quest Property BoS200 const auto
+;	Quest Property BoS204 const auto
 	Quest Property DialogueDrinkingBuddy const auto
 	Quest Property DialogueGoodneighborRufus const auto
-	Quest Property DN015 const auto
+;	Quest Property DN015 const auto
 	Quest Property DN036 const auto
-	Quest Property DN036_Post const auto
+;	Quest Property DN036_Post const auto
 	Quest Property DN079 const auto
 	Quest Property DN083_Barney const auto
-	Quest Property DN101 const auto
+;	Quest Property DN101 const auto
 	Quest Property DN109 const auto
 	Quest Property DN119Fight const auto
 	Quest Property DN121 const auto
 	Quest Property FFBunkerHill03 const auto
 	Quest Property Inst307 const auto
-	Quest Property InstR03NEW const auto
+;	Quest Property InstR03NEW const auto
 	Quest Property InstR04 const auto
-	Quest Property InstR05 const auto
+;	Quest Property InstR05 const auto
 	Quest Property Min02 const auto
-	Quest Property Min207 const auto
-	Quest Property Min301 const auto
+;	Quest Property Min207 const auto
+;	Quest Property Min301 const auto
 	Quest Property MinDefendCastle const auto
-	Quest Property MinDestBOS const auto
-	Quest Property MQ203 const auto
-	Quest Property MQ302 const auto
+;	Quest Property MinDestBOS const auto
+;	Quest Property MQ203 const auto
+;	Quest Property MQ302 const auto
 	Quest Property MS05BPostQuest const auto
 	Quest Property MS07b const auto
 	Quest Property MS07c const auto
-	Quest Property RRAct3PickUp const auto
+;	Quest Property RRAct3PickUp const auto
 	Quest Property RRR04 const auto
 
 endGroup
 
 group TraitActorValues
-	; keyword Property CA_CustomEvent_CaitLoves auto const
-	; keyword Property CA_CustomEvent_CaitLikes auto const
-	; keyword Property CA_CustomEvent_CaitDislikes auto const
-	; keyword Property CA_CustomEvent_CaitHates auto const
-	; keyword Property CA_CustomEvent_Cait__UNSET auto const
+;	keyword Property CA_CustomEvent_CaitLoves auto const
+;	keyword Property CA_CustomEvent_CaitLikes auto const
+;	keyword Property CA_CustomEvent_CaitDislikes auto const
+;	keyword Property CA_CustomEvent_CaitHates auto const
+;	keyword Property CA_CustomEvent_Cait__UNSET auto const
 
-	; keyword Property CA_CustomEvent_CodsworthLoves auto const
-	; keyword Property CA_CustomEvent_CodsworthLikes auto const
-	; keyword Property CA_CustomEvent_CodsworthDislikes auto const
-	; keyword Property CA_CustomEvent_CodsworthHates auto const
-	; keyword Property CA_CustomEvent_Codsworth__UNSET auto const
+;	keyword Property CA_CustomEvent_CodsworthLoves auto const
+;	keyword Property CA_CustomEvent_CodsworthLikes auto const
+;	keyword Property CA_CustomEvent_CodsworthDislikes auto const
+;	keyword Property CA_CustomEvent_CodsworthHates auto const
+;	keyword Property CA_CustomEvent_Codsworth__UNSET auto const
 
-	; keyword Property CA_CustomEvent_CurieLoves auto const
-	; keyword Property CA_CustomEvent_CurieLikes auto const
-	; keyword Property CA_CustomEvent_CurieDislikes auto const
-	; keyword Property CA_CustomEvent_CurieHates auto const
-	; keyword Property CA_CustomEvent_Curie__UNSET auto const
+;	keyword Property CA_CustomEvent_CurieLoves auto const
+;	keyword Property CA_CustomEvent_CurieLikes auto const
+;	keyword Property CA_CustomEvent_CurieDislikes auto const
+;	keyword Property CA_CustomEvent_CurieHates auto const
+;	keyword Property CA_CustomEvent_Curie__UNSET auto const
 
-	; keyword Property CA_CustomEvent_DanseLoves auto const
-	; keyword Property CA_CustomEvent_DanseLikes auto const
-	; keyword Property CA_CustomEvent_DanseDislikes auto const
-	; keyword Property CA_CustomEvent_DanseHates auto const
-	; keyword Property CA_CustomEvent_Danse__UNSET auto const
+;	keyword Property CA_CustomEvent_DanseLoves auto const
+;	keyword Property CA_CustomEvent_DanseLikes auto const
+;	keyword Property CA_CustomEvent_DanseDislikes auto const
+;	keyword Property CA_CustomEvent_DanseHates auto const
+;	keyword Property CA_CustomEvent_Danse__UNSET auto const
 
-	; keyword Property CA_CustomEvent_DeaconLoves auto const
-	; keyword Property CA_CustomEvent_DeaconLikes auto const
-	; keyword Property CA_CustomEvent_DeaconDislikes auto const
-	; keyword Property CA_CustomEvent_DeaconHates auto const
-	; keyword Property CA_CustomEvent_Deacon__UNSET auto const
+;	keyword Property CA_CustomEvent_DeaconLoves auto const
+;	keyword Property CA_CustomEvent_DeaconLikes auto const
+;	keyword Property CA_CustomEvent_DeaconDislikes auto const
+;	keyword Property CA_CustomEvent_DeaconHates auto const
+;	keyword Property CA_CustomEvent_Deacon__UNSET auto const
 
-	; keyword Property CA_CustomEvent_HancockLoves auto const
-	; keyword Property CA_CustomEvent_HancockLikes auto const
-	; keyword Property CA_CustomEvent_HancockDislikes auto const
-	; keyword Property CA_CustomEvent_HancockHates auto const
-	; keyword Property CA_CustomEvent_Hancock__UNSET auto const
+;	keyword Property CA_CustomEvent_HancockLoves auto const
+;	keyword Property CA_CustomEvent_HancockLikes auto const
+;	keyword Property CA_CustomEvent_HancockDislikes auto const
+;	keyword Property CA_CustomEvent_HancockHates auto const
+;	keyword Property CA_CustomEvent_Hancock__UNSET auto const
 
-	; keyword Property CA_CustomEvent_MacCreadyLoves auto const
-	; keyword Property CA_CustomEvent_MacCreadyLikes auto const
-	; keyword Property CA_CustomEvent_MacCreadyDislikes auto const
-	; keyword Property CA_CustomEvent_MacCreadyHates auto const
-	; keyword Property CA_CustomEvent_MacCready__UNSET auto const
+;	keyword Property CA_CustomEvent_MacCreadyLoves auto const
+;	keyword Property CA_CustomEvent_MacCreadyLikes auto const
+;	keyword Property CA_CustomEvent_MacCreadyDislikes auto const
+;	keyword Property CA_CustomEvent_MacCreadyHates auto const
+;	keyword Property CA_CustomEvent_MacCready__UNSET auto const
 
-	; keyword Property CA_CustomEvent_PiperLoves auto const
-	; keyword Property CA_CustomEvent_PiperLikes auto const
-	; keyword Property CA_CustomEvent_PiperDislikes auto const
-	; keyword Property CA_CustomEvent_PiperHates auto const
-	; keyword Property CA_CustomEvent_Piper__UNSET auto const
+;	keyword Property CA_CustomEvent_PiperLoves auto const
+;	keyword Property CA_CustomEvent_PiperLikes auto const
+;	keyword Property CA_CustomEvent_PiperDislikes auto const
+;	keyword Property CA_CustomEvent_PiperHates auto const
+;	keyword Property CA_CustomEvent_Piper__UNSET auto const
 
-	; keyword Property CA_CustomEvent_PrestonLoves auto const
-	; keyword Property CA_CustomEvent_PrestonLikes auto const
-	; keyword Property CA_CustomEvent_PrestonDislikes auto const
-	; keyword Property CA_CustomEvent_PrestonHates auto const
-	; keyword Property CA_CustomEvent_Preston__UNSET auto const
+;	keyword Property CA_CustomEvent_PrestonLoves auto const
+;	keyword Property CA_CustomEvent_PrestonLikes auto const
+;	keyword Property CA_CustomEvent_PrestonDislikes auto const
+;	keyword Property CA_CustomEvent_PrestonHates auto const
+;	keyword Property CA_CustomEvent_Preston__UNSET auto const
 
-	; keyword Property CA_CustomEvent_StrongLoves auto const
-	; keyword Property CA_CustomEvent_StrongLikes auto const
-	; keyword Property CA_CustomEvent_StrongDislikes auto const
-	; keyword Property CA_CustomEvent_StrongHates auto const
-	; keyword Property CA_CustomEvent_Strong__UNSET auto const
+;	keyword Property CA_CustomEvent_StrongLoves auto const
+;	keyword Property CA_CustomEvent_StrongLikes auto const
+;	keyword Property CA_CustomEvent_StrongDislikes auto const
+;	keyword Property CA_CustomEvent_StrongHates auto const
+;	keyword Property CA_CustomEvent_Strong__UNSET auto const
 
-	; keyword Property CA_CustomEvent_ValentineLoves auto const
-	; keyword Property CA_CustomEvent_ValentineLikes auto const
-	; keyword Property CA_CustomEvent_ValentineDislikes auto const
-	; keyword Property CA_CustomEvent_ValentineHates auto const
-	; keyword Property CA_CustomEvent_Valentine__UNSET auto const
+;	keyword Property CA_CustomEvent_ValentineLoves auto const
+;	keyword Property CA_CustomEvent_ValentineLikes auto const
+;	keyword Property CA_CustomEvent_ValentineDislikes auto const
+;	keyword Property CA_CustomEvent_ValentineHates auto const
+;	keyword Property CA_CustomEvent_Valentine__UNSET auto const
 
-	; keyword Property CA_CustomEvent_X688Loves auto const
-	; keyword Property CA_CustomEvent_X688Likes auto const
-	; keyword Property CA_CustomEvent_X688Dislikes auto const
-	; keyword Property CA_CustomEvent_X688Hates auto const
-	; keyword Property CA_CustomEvent_X688__UNSET auto const
+;	keyword Property CA_CustomEvent_X688Loves auto const
+;	keyword Property CA_CustomEvent_X688Likes auto const
+;	keyword Property CA_CustomEvent_X688Dislikes auto const
+;	keyword Property CA_CustomEvent_X688Hates auto const
+;	keyword Property CA_CustomEvent_X688__UNSET auto const
 
 	ActorValue Property CA_Trait_Mean auto const
 	ActorValue Property CA_Trait_Selfish auto const
@@ -241,6 +279,7 @@ endGroup
 GlobalVariable Property Cait_EventCondition_DislikesPlayerTakingChems Auto Const
 GlobalVariable Property MinCastleAttacker Auto Const
 GlobalVariable Property MQ302Faction Auto Const
+CompanionAffinityEventQuestScript Property CAESource Auto Const
 
 AFT:TweakTrackTraits Function GetScript() global ;used for making functions global
 	return (Game.GetFormFromFile(0x01000F99, "AmazingFollowerTweaks.esp") as Quest) as AFT:TweakTrackTraits ;this script attached to CompanionAffinity quest
@@ -260,21 +299,20 @@ bool Function Trace_(string asTextToPrint, int aiSeverity = 0) global debugOnly
 	
 EndFunction
 
-event onInit()
+Event OnInit()
 	Trace("OnInit")
-	Companions = new ReferenceAlias[5]
-	OnGameLoaded()
-	RegisterForCustomEvent(CompanionAffinityEventQuestScript, "CompanionAffinityEvent")
+EndEvent
+
+Event OnQuestInit()
+	Trace("OnQuestInit")
+	RegisterForCustomEvent(CAESource, "CompanionAffinityEvent")
 endEvent
 
 ; Each Time a Save Game is Loaded 
 Function OnGameLoaded(bool firstTime=false)
-	trace("OnGameLoaded()
-	companions[0] = pCompanion1
-	companions[1] = pCompanion2
-	companions[2] = pCompanion3
-	companions[3] = pCompanion4
-	companions[4] = pCompanion5	
+	trace("OnGameLoaded()")
+	UnRegisterForCustomEvent(CAESource, "CompanionAffinityEvent")
+	RegisterForCustomEvent(CAESource, "CompanionAffinityEvent")
 EndFunction
 
 
@@ -287,7 +325,7 @@ EndFunction
 ; These opposing values are combined and reflect how often the users uses one over the other. For example, 
 ; if you say 1 peaceful thing and one violent thing, then your score would be 5 for both. If you then
 ; say something violent, then out of 3 opportunities, you selected violence. So your violence score would
-; be 2/3 or 6.66 while your Peaceful score would be 33. 
+; be 2/3 or 6.66 while your Peaceful score would be 3.33. 
 ;
 ; Now lets talk about accuracy. If you have 1 or 2 or even 3 sample points, what does that really mean? 
 ; The more samples we have, the more accurate our assessement. But we may not want violent reactions because
@@ -311,9 +349,10 @@ function Trait_Generous(float weight=1.0)
 	int i = 0
 	float tg = 0
 	float ts = 0
-	Actor npc = null
+	float total = 0
+	Actor npc = None
 	while (i < 5)
-		npc = companions[i].GetActorRef()
+		npc = Companions[i].GetActorRef()
 		if npc
 			tg = npc.GetValue(Tweak_Trait_Generous) + weight
 			ts = npc.GetValue(Tweak_Trait_Selfish)
@@ -346,9 +385,10 @@ function Trait_Selfish(float weight=1.0)
 	int i = 0
 	float tg = 0
 	float ts = 0
-	Actor npc = null
+	float total = 0
+	Actor npc = None
 	while (i < 5)
-		npc = companions[i].GetActorRef()
+		npc = Companions[i].GetActorRef()
 		if npc
 			ts = npc.GetValue(Tweak_Trait_Selfish) + weight
 			tg = npc.GetValue(Tweak_Trait_Generous) 
@@ -381,9 +421,10 @@ function Trait_Nice(float weight=1.0)
 	int i = 0
 	float tn = 0
 	float tm = 0
-	Actor npc = null
+	float total = 0
+	Actor npc = None
 	while (i < 5)
-		npc = companions[i].GetActorRef()
+		npc = Companions[i].GetActorRef()
 		if npc
 			tn = npc.GetValue(Tweak_Trait_Nice) + weight
 			tm = npc.GetValue(Tweak_Trait_Mean) 
@@ -416,9 +457,10 @@ function Trait_Mean(float weight=1.0)
 	int i = 0
 	float tm = 0
 	float tn = 0
-	Actor npc = null
+	float total = 0
+	Actor npc = None
 	while (i < 5)
-		npc = companions[i].GetActorRef()
+		npc = Companions[i].GetActorRef()
 		if npc
 			tm = npc.GetValue(Tweak_Trait_Mean) + weight
 			tn = npc.GetValue(Tweak_Trait_Nice) 
@@ -451,9 +493,10 @@ function Trait_Peaceful(float weight=1.0)
 	int i = 0
 	float tp = 0
 	float tv = 0
-	Actor npc = null
+	float total = 0
+	Actor npc = None
 	while (i < 5)
-		npc = companions[i].GetActorRef()
+		npc = Companions[i].GetActorRef()
 		if npc
 			tp = npc.GetValue(Tweak_Trait_Peaceful) + weight
 			tv = npc.GetValue(Tweak_Trait_Violent) 
@@ -486,9 +529,10 @@ function Trait_Violent(float weight=1.0)
 	int i = 0
 	float tv = 0
 	float tp = 0
-	Actor npc = null
+	float total = 0
+	Actor npc = None
 	while (i < 5)
-		npc = companions[i].GetActorRef()
+		npc = Companions[i].GetActorRef()
 		if npc
 			tv = npc.GetValue(Tweak_Trait_Violent) + weight
 			tp = npc.GetValue(Tweak_Trait_Peaceful)
@@ -539,8 +583,8 @@ Event CompanionAffinityEventQuestScript.CompanionAffinityEvent(CompanionAffinity
 
 		if eventQuest == BoS100
 			HandleDialogueBump_BoS100(eventQuest, eventID)
-		elseif eventQuest == BoS101
-			HandleDialogueBump_BoS101(eventQuest, eventID)
+;		elseif eventQuest == BoS101
+;			HandleDialogueBump_BoS101(eventQuest, eventID)
 		elseif eventQuest == BoS201
 			HandleDialogueBump_BoS201(eventQuest, eventID)
 		elseif eventQuest == BoS202
@@ -695,8 +739,8 @@ Event CompanionAffinityEventQuestScript.CompanionAffinityEvent(CompanionAffinity
 			HandleDialogueBump_RR303(eventQuest, eventID)
 		elseif eventQuest == RRM01
 			HandleDialogueBump_RRM01(eventQuest, eventID)
-		elseif eventQuest == RRM02
-			HandleDialogueBump_RRM02(eventQuest, eventID)
+;		elseif eventQuest == RRM02
+;			HandleDialogueBump_RRM02(eventQuest, eventID)
 		elseif eventQuest == RRR02aQuest
 			HandleDialogueBump_RRR02a(eventQuest, eventID)
 		elseif eventQuest == RRR05
@@ -714,16 +758,16 @@ Event CompanionAffinityEventQuestScript.CompanionAffinityEvent(CompanionAffinity
 		endif
 
 	elseif sender is Quest
-		if eventQuest == BoS101
-			HandleDialogueBump_BoS101(eventQuest, eventID)
-		elseif eventQuest == BoS200
-			HandleQuestStageBump_BoS200(eventQuest, eventID)
-		elseif eventQuest == BoS202
-			HandleQuestStageBump_BoS202(eventQuest, eventID)
-		elseif eventQuest == BoS203
+		if eventQuest == BoS203
 			HandleQuestStageBump_BoS203(eventQuest, eventID)
-		elseif eventQuest == BoS204
-			HandleQuestStageBump_BoS204(eventQuest, eventID)
+;		elsif eventQuest == BoS101
+;			HandleDialogueBump_BoS101(eventQuest, eventID)
+;		elseif eventQuest == BoS200
+;			HandleQuestStageBump_BoS200(eventQuest, eventID)
+;		elseif eventQuest == BoS202
+;			HandleQuestStageBump_BoS202(eventQuest, eventID)
+;		elseif eventQuest == BoS204
+;			HandleQuestStageBump_BoS204(eventQuest, eventID)
 		elseif eventQuest == BoS301
 			HandleQuestStageBump_BoS301(eventQuest, eventID)
 		elseif eventQuest == BoS302
@@ -738,20 +782,20 @@ Event CompanionAffinityEventQuestScript.CompanionAffinityEvent(CompanionAffinity
 			HandleQuestStageBump_DialogueDrinkingBuddy(eventQuest, eventID)
 		elseif eventQuest == DialogueGoodneighborRufus
 			HandleQuestStageBump_DialogueGoodneighborRufus(eventQuest, eventID)
-		elseif eventQuest == DN015
-			HandleQuestStageBump_DN015(eventQuest, eventID)
+;		elseif eventQuest == DN015
+;			HandleQuestStageBump_DN015(eventQuest, eventID)
 		elseif eventQuest == DN036
 			HandleQuestStageBump_DN036(eventQuest, eventID)
-		elseif eventQuest == DN036_Post
-			HandleQuestStageBump_DN036_Post(eventQuest, eventID)
+;		elseif eventQuest == DN036_Post
+;			HandleQuestStageBump_DN036_Post(eventQuest, eventID)
 		elseif eventQuest == DN053
 			HandleQuestStageBump_DN053(eventQuest, eventID)
 		elseif eventQuest == DN079
 			HandleQuestStageBump_DN079(eventQuest, eventID)
 		elseif eventQuest == DN083_Barney
 			HandleQuestStageBump_DN083_Barney(eventQuest, eventID)
-		elseif eventQuest == DN101
-			HandleQuestStageBump_DN101(eventQuest, eventID)
+;		elseif eventQuest == DN101
+;			HandleQuestStageBump_DN101(eventQuest, eventID)
 		elseif eventQuest == DN109
 			HandleQuestStageBump_DN109(eventQuest, eventID)
 		elseif eventQuest == DN119Fight
@@ -762,34 +806,34 @@ Event CompanionAffinityEventQuestScript.CompanionAffinityEvent(CompanionAffinity
 			HandleQuestStageBump_FFBunkerHill03(eventQuest, eventID)
 		elseif eventQuest == FFGoodneighbor07
 			HandleQuestStageBump_FFGoodneighbor07(eventQuest, eventID)
-		elseif eventQuest == Inst301
-			HandleQuestStageBump_Inst301(eventQuest, eventID)
+;		elseif eventQuest == Inst301
+;			HandleQuestStageBump_Inst301(eventQuest, eventID)
 		elseif eventQuest == InstM01
 			HandleQuestStageBump_InstM01(eventQuest, eventID)
-		elseif eventQuest == InstR03NEW
-			HandleQuestStageBump_InstR03NEW(eventQuest, eventID)
+;		elseif eventQuest == InstR03NEW
+;			HandleQuestStageBump_InstR03NEW(eventQuest, eventID)
 		elseif eventQuest == InstR04
 			HandleQuestStageBump_InstR04(eventQuest, eventID)
-		elseif eventQuest == InstR05
-			HandleQuestStageBump_InstR05(eventQuest, eventID)
+;		elseif eventQuest == InstR05
+;			HandleQuestStageBump_InstR05(eventQuest, eventID)
 		elseif eventQuest == Min01
 			HandleQuestStageBump_Min01(eventQuest, eventID)
 		elseif eventQuest == Min02
 			HandleQuestStageBump_Min02(eventQuest, eventID)
-		elseif eventQuest == Min03
-			HandleQuestStageBump_Min03(eventQuest, eventID)
-		elseif eventQuest == Min207
-			HandleQuestStageBump_Min207(eventQuest, eventID)
-		elseif eventQuest == Min301
-			HandleQuestStageBump_Min301(eventQuest, eventID)
+;		elseif eventQuest == Min03
+;			HandleQuestStageBump_Min03(eventQuest, eventID)
+;		elseif eventQuest == Min207
+;			HandleQuestStageBump_Min207(eventQuest, eventID)
+;		elseif eventQuest == Min301
+;			HandleQuestStageBump_Min301(eventQuest, eventID)
 		elseif eventQuest == MinDefendCastle
 			HandleQuestStageBump_MinDefendCastle(eventQuest, eventID)
-		elseif eventQuest == MinDestBOS
-			HandleQuestStageBump_MinDestBOS(eventQuest, eventID)
-		elseif eventQuest == MQ203
-			HandleQuestStageBump_MQ203(eventQuest, eventID)
-		elseif eventQuest == MQ302
-			HandleQuestStageBump_MQ302(eventQuest, eventID)
+;		elseif eventQuest == MinDestBOS
+;			HandleQuestStageBump_MinDestBOS(eventQuest, eventID)
+;		elseif eventQuest == MQ203
+;			HandleQuestStageBump_MQ203(eventQuest, eventID)
+;		elseif eventQuest == MQ302
+;			HandleQuestStageBump_MQ302(eventQuest, eventID)
 		elseif eventQuest == MS01
 			HandleQuestStageBump_MS01(eventQuest, eventID)
 		elseif eventQuest == MS04
@@ -804,8 +848,8 @@ Event CompanionAffinityEventQuestScript.CompanionAffinityEvent(CompanionAffinity
 			HandleQuestStageBump_MS07b(eventQuest, eventID)
 		elseif eventQuest == MS07c
 			HandleQuestStageBump_MS07c(eventQuest, eventID)
-		elseif eventQuest == MS09
-			HandleQuestStageBump_MS09(eventQuest, eventID)
+;		elseif eventQuest == MS09
+;			HandleQuestStageBump_MS09(eventQuest, eventID)
 		elseif eventQuest == MS11
 			HandleQuestStageBump_MS11(eventQuest, eventID)
 		elseif eventQuest == MS16
@@ -818,14 +862,14 @@ Event CompanionAffinityEventQuestScript.CompanionAffinityEvent(CompanionAffinity
 			HandleQuestStageBump_RESceneLC01(eventQuest, eventID)
 		elseif eventQuest == RR101
 			HandleQuestStageBump_RR101(eventQuest, eventID)
-		elseif eventQuest == RR102
-			HandleQuestStageBump_RR102(eventQuest, eventID)
-		elseif eventQuest == RR201
-			HandleQuestStageBump_RR201(eventQuest, eventID)			
+;		elseif eventQuest == RR102
+;			HandleQuestStageBump_RR102(eventQuest, eventID)
+;		elseif eventQuest == RR201
+;			HandleQuestStageBump_RR201(eventQuest, eventID)			
 		elseif eventQuest == RR303
 			HandleQuestStageBump_RR303(eventQuest, eventID)
-		elseif eventQuest == RRAct3PickUp
-			HandleQuestStageBump_RRAct3PickUp(eventQuest, eventID)
+;		elseif eventQuest == RRAct3PickUp
+;			HandleQuestStageBump_RRAct3PickUp(eventQuest, eventID)
 		elseif eventQuest == RRM01
 			HandleQuestStageBump_RRM01(eventQuest, eventID)
 		elseif eventQuest == RRM02
@@ -873,21 +917,21 @@ function HandleDialogueBump_BoS100(Quest eventQuest, int eventID)
 endFunction
 
 ; function HandleDialogueBump_BoS101(Quest eventQuest, int eventID)
-	 ;; double-check that this is the right quest
-	  ; if eventQuest == BoS101
-		; if eventID == 1
-			 ;; 000867D2 on quest BoS101 (0006F5C1)
-			 ;; DESCRIPTION: Player refused to formally join the Brotherhood after Paladin Danse offered
-		; elseif eventID == 2
-			 ;; 000867F0 on quest BoS101 (0006F5C1)
-			 ;; DESCRIPTION: Player agreed to formally join the Brotherhood after Paladin Danse offered
-		; elseif eventID == 3
-			 ;; 0008684B on quest BoS101 (0006F5C1)
-			 ;; DESCRIPTION: Player uncertain about joining the Brotherhood or not.
-		; endif
-	; else
-		 ; Trace(" WARNING - HandleDialogueBump_BoS101 got event from wrong quest " + eventQuest)
-	; endif
+;	 ; double-check that this is the right quest
+;	   if eventQuest == BoS101
+;		 if eventID == 1
+;			 ; 000867D2 on quest BoS101 (0006F5C1)
+;			 ; DESCRIPTION: Player refused to formally join the Brotherhood after Paladin Danse offered
+;		elseif eventID == 2
+;			 ; 000867F0 on quest BoS101 (0006F5C1)
+;			 ; DESCRIPTION: Player agreed to formally join the Brotherhood after Paladin Danse offered
+;		elseif eventID == 3
+;			 ; 0008684B on quest BoS101 (0006F5C1)
+;			 ; DESCRIPTION: Player uncertain about joining the Brotherhood or not.
+;		endif
+;	else
+;		 Trace(" WARNING - HandleDialogueBump_BoS101 got event from wrong quest " + eventQuest)
+;	endif
 ; endFunction
 
 function HandleDialogueBump_BoS201(Quest eventQuest, int eventID)
@@ -1515,7 +1559,7 @@ function HandleDialogueBump_DialogueConcordArea(Quest eventQuest, int eventID)
 			 ; DESCRIPTION: Player is talking to Mama Murphy at the Museum. She says the Player is a
 			 ; hero/rescuer. Player says heroism is for kids and suckers.
 			 Trait_Mean(0.25)
-			 Trait_Vioent(0.75)
+			 Trait_Violent(0.75)
 		elseif eventID == 21
 			 ; 00075F53 on quest DialogueConcordArea (000179F3)
 			 ; DESCRIPTION: Player is talking to Mama Murphy at the Museum. She says the Player is a
@@ -2317,7 +2361,7 @@ function HandleDialogueBump_DN019JoinCult(Quest eventQuest, int eventID)
 			 ; DESCRIPTION: Player is speaking to a cult leader, trying to rescue Emogene from a cult.
 			 ; Cult leader is refusing to let Player speak to her saying that she can't have an visitors
 			 ; or needs to cool off. Player threatens cult leader with violence.
-			 Trait_Violence(0.25)
+			 Trait_Violent(0.25)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_DN019JoinCult got event from wrong quest " + eventQuest)
@@ -2795,16 +2839,16 @@ function HandleDialogueBump_InstM02(Quest eventQuest, int eventID)
 		if eventID == 1
 			 ; 000A829C on quest InstM02 (000A8257)
 			 ; DESCRIPTION: Defending the Institute, threatening its enemies
-			 Trait_Violence(0.25)
+			 Trait_Violent(0.25)
 		elseif eventID == 2
 			 ; 000A82CB on quest InstM02 (000A8257)
 			 ; DESCRIPTION: Strong accusation
-			 Trait_Violence(0.25)
+			 Trait_Violent(0.25)
 		elseif eventID == 3
 			 ; 000A82CC on quest InstM02 (000A8257)
 			 ; DESCRIPTION: Annoyed, sarcastic, not taking this seriously
 			 Trait_Mean(0.25)
-			 Trait_Violence(0.25)
+			 Trait_Violent(0.25)
 		elseif eventID == 4
 			 ; 000B17A7 on quest InstM02 (000A8257)
 			 ; DESCRIPTION: Refuse to betray Institute
@@ -2821,7 +2865,7 @@ function HandleDialogueBump_InstM02(Quest eventQuest, int eventID)
 		elseif eventID == 8
 			 ; 000B17CF on quest InstM02 (000A8257)
 			 ; DESCRIPTION: Forceful, demanding answers
-			 Trait_Violence()
+			 Trait_Violent()
 		elseif eventID == 9
 			 ; 000B17DF on quest InstM02 (000A8257)
 			 ; DESCRIPTION: Synths are better off in the Institute
@@ -2846,7 +2890,7 @@ function HandleDialogueBump_InstM02(Quest eventQuest, int eventID)
 		elseif eventID == 14
 			 ; 000B1FA7 on quest InstM02 (000A8257)
 			 ; DESCRIPTION: Improve security, make Instutute safer, no more synth escape
-			 Trait_Violence()
+			 Trait_Violent()
 		elseif eventID == 15
 			 ; 001134D3 on quest InstM02 (000A8257)
 			 ; DESCRIPTION: Seeking a peaceful solution
@@ -2887,7 +2931,7 @@ function HandleDialogueBump_InstM03(Quest eventQuest, int eventID)
 			 ; 000BA869 on quest InstM03 (000B2D47)
 			 ; DESCRIPTION: Violence against Institute scientists
 			 Trait_Mean()
-			 Trait_Violence()
+			 Trait_Violent()
 		elseif eventID == 3
 			 ; 000BA87E on quest InstM03 (000B2D47)
 			 ; DESCRIPTION: Seeking non-violent solution against Institute scientists
@@ -2899,7 +2943,7 @@ function HandleDialogueBump_InstM03(Quest eventQuest, int eventID)
 		elseif eventID == 5
 			 ; 000BE7D3 on quest InstM03 (000B2D47)
 			 ; DESCRIPTION: Player starts a fight with Institute scientists
-			 Trait_Violence()
+			 Trait_Violent()
 		elseif eventID == 6
 			 ; 000BE7D5 on quest InstM03 (000B2D47)
 			 ; DESCRIPTION: Lenient punishment
@@ -3541,13 +3585,13 @@ function HandleDialogueBump_MS04(Quest eventQuest, int eventID)
 			 ; DESCRIPTION: Sinjin (who kidnapped Kent) just threatened to kill Kent, then the Player.
 			 ; Player threatens him in return in the Shroud's voice.
 			 Trait_Nice()
-			 Trait_Violence(0.5)
+			 Trait_Violent(0.5)
 		elseif eventID == 21
 			 ; 00128CC5 on quest MS04 (00027556)
 			 ; DESCRIPTION: Sinjin (who kidnapped Kent) just threatened to kill Kent, then the Player.
 			 ; Player threatens him in return in his own voice.
 			 Trait_Nice()
-			 Trait_Violence(0.5)
+			 Trait_Violent(0.5)
 		elseif eventID == 22
 			 ; 00128CC8 on quest MS04 (00027556)
 			 ; DESCRIPTION: Sinjin (who kidnapped Kent) just threatened to kill Kent, then the Player.
@@ -4449,8 +4493,8 @@ function HandleDialogueBump_RETravelKMK_BoSM02(Quest eventQuest, int eventID)
 			 ; DESCRIPTION: Player repeats the Brotherhood line against Ghouls; they all need to die.
 			 ; Kind of cruel; the NPC vehemently disagrees and has lost everything because 
 			 ; he's held to his beliefs.
-			 Tweak_Mean()
-			 Tweak_Violent(0.50)
+			 Trait_Mean()
+			 Trait_Violent(0.50)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RETravelKMK_BoSM02 got event from wrong quest " + eventQuest)
@@ -4466,11 +4510,11 @@ function HandleDialogueBump_RETravelSC01_DN123SkylanesPointer(Quest eventQuest, 
 		elseif eventID == 2
 			 ; 000CAB42 on quest RETravelSC01_DN123SkylanesPointer (000684D1)
 			 ; DESCRIPTION: Player accepts a lowball offer for a job without even trying to haggle.
-			 Tweak_Generous()
+			 Trait_Generous()
 		elseif eventID == 5
 			 ; 000CAB7F on quest RETravelSC01_DN123SkylanesPointer (000684D1)
 			 ; DESCRIPTION: Player challenges for a better reward. The first offer was insulting.
-			 Tweak_Selfish()
+			 Trait_Selfish()
 
 		endif
 	else
@@ -4498,7 +4542,7 @@ function HandleDialogueBump_RR101(Quest eventQuest, int eventID)
 			 ; DESCRIPTION: Player agrees that Instutute needs to go. 
 			 ; Player says his motivation is revenge for what they did
 			 ; to his family.
-			 Tweak_Violent(0.25)
+			 Trait_Violent(0.25)
 		elseif eventID == 4
 			 ; 0006E417 on quest RR101 (000459D2)
 			 ; DESCRIPTION: Desdemona is talking to Player about 
@@ -4508,8 +4552,8 @@ function HandleDialogueBump_RR101(Quest eventQuest, int eventID)
 			 ; 0006E432 on quest RR101 (000459D2)
 			 ; DESCRIPTION: Player agrees that Instutute needs to go. 
 			 ; Player says his motivation is so they can't hurt anyone else.
-			 Tweak_Nice(0.25)
-			 Tweak_Peaceful(0.25)
+			 Trait_Nice(0.25)
+			 Trait_Peaceful(0.25)
 		elseif eventID == 6
 			 ; 0006E43F on quest RR101 (000459D2)
 			 ; DESCRIPTION: Desdemona asks if Player would risk his life to save a synth. Player says no.
@@ -4530,22 +4574,22 @@ function HandleDialogueBump_RR102(Quest eventQuest, int eventID)
 			 ; 000729BD on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Player is meeting Ricky Dalton for a mission. Player 
 			 ; says he appreciates all that Ricky's done.
-			 Tweak_Nice()
+			 Trait_Nice()
 		elseif eventID == 2
 			 ; 00072A03 on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Player is meeting Ricky Dalton for a mission. Ricky is aggitated
 			 ; it took so long for help to arrive. Player threatens him in response.
-			 Tweak_Violent()
+			 Trait_Violent()
 		elseif eventID == 3
 			 ; 00072FFD on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Ricky has offered to be a distraction so Player can get into 
 			 ; Switchboard undetected, which is suicidal. Player says not to do it.
-			 Tweak_Nice()
+			 Trait_Nice()
 		elseif eventID == 4
 			 ; 00073003 on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Ricky has offered to be a distraction so Player can get into Switchboard
 			 ; undetected, which is suicidal. Player says to do it.
-			 Tweak_Mean()
+			 Trait_Mean()
 		elseif eventID == 5
 			 ; 0007303B on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Desdemona is debreifing Player regarding Switchboard. Deacon 
@@ -4558,7 +4602,7 @@ function HandleDialogueBump_RR102(Quest eventQuest, int eventID)
 			 ; 0007B30E on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Deacon asks player if he supports Synth freedom. Player says he 
 			 ; is against slavery in all forms.
-			 Tweak_Nice(0.50)
+			 Trait_Nice(0.50)
 		elseif eventID == 10 || eventID == 9
 			 ; 0007B316 on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Deacon asks player if he supports Synth freedom. Player says 
@@ -4566,7 +4610,7 @@ function HandleDialogueBump_RR102(Quest eventQuest, int eventID)
 		elseif eventID == 11
 			 ; 000E2E24 on quest RR102 (0006FA37)
 			 ; DESCRIPTION: Deacon offers Tommy's weapon to Player. Player refuses it.
-			 Tweak_Peaceful(0.50)
+			 Trait_Peaceful(0.50)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RR102 got event from wrong quest " + eventQuest)
@@ -4580,7 +4624,7 @@ function HandleDialogueBump_RR302(Quest eventQuest, int eventID)
 			 ; 0002D10B on quest RR302 (0002C8CB)
 			 ; DESCRIPTION: Player and Tom are preparing to assault the Brotherhood, Tom is 
 			 ; worried they are being watched as they speak. Player tells him to relax.
-			 Tweak_Peaceful()
+			 Trait_Peaceful()
 		elseif eventID == 2
 			 ; 0002D14E on quest RR302 (0002C8CB)
 			 ; DESCRIPTION: Player and Tom are preparing to assault the Brotherhood, Tom is 
@@ -4598,51 +4642,17 @@ function HandleDialogueBump_RR303(Quest eventQuest, int eventID)
 			 ; 0013FE8A on quest RR303 (00043275)
 			 ; DESCRIPTION: Glory is dying. She asks Player to promise he'll free all the synths
 			 ; in the Institute. Player leaves her, ignoring her request.
-			Cait_Dislikes()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Neutral()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Dislikes()
-			Piper_Hates()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Neutral()
+			 Trait_Mean(3)
 		elseif eventID == 2
 			 ; 0013FE91 on quest RR303 (00043275)
 			 ; DESCRIPTION: Glory is dying. She asks Player to promise he'll free all the synths
 			 ; in the Institute. Player says "I promise."
-			Cait_Likes()
-			Codsworth_Likes()
-			Curie_Loves()
-			Danse_Neutral()
-			Deacon_Loves()
-			Hancock_Loves()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Loves()
-			Strong_Likes()
-			Valentine_Loves()
-			X688_Neutral()
+			 Trait_Nice(3)
 		elseif eventID == 3
 			 ; 0013FEA3 on quest RR303 (00043275)
 			 ; DESCRIPTION: Glory is dying. She asks Player to promise he'll free all the synths
 			 ; in the Institute. Player says "Hold on, you'll live."
-			Cait_Likes()
-			Codsworth_Likes()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
-
+			 Trait_Nice()
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RR303 got event from wrong quest " + eventQuest)
@@ -4656,178 +4666,63 @@ function HandleDialogueBump_RRM01(Quest eventQuest, int eventID)
 			 ; 0005FE6A on quest RRM01 (0005FD90)
 			 ; DESCRIPTION: Player meets Stockton. Stockton points out that this is first stop for
 			 ; "packages." and delays are bad. Player keeps to the spy lingo.
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Dislikes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Neutral()
-			X688_Neutral()
 		elseif eventID == 2
 			 ; 0005FE76 on quest RRM01 (0005FD90)
 			 ; DESCRIPTION: Player makes a rude comment to HighRise at Ticonderoga.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Hates()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Dislikes()
-			X688_Likes()
+			 Trait_Mean(0.50)
 		elseif eventID == 3
 			 ; 0005FE8A on quest RRM01 (0005FD90)
-			 ; DESCRIPTION: Player meets Stockton. Stockton points out that this is first stop for
-			 ; "packages." and delays are bad. Player doesn't like the subtle tone.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Neutral()
+			 ; DESCRIPTION: Player meets Stockton. Stockton points out that this is first stop 
+			 ; for "packages." and delays are bad. Player doesn't like the subtle tone.
+			 Trait_Mean(0.25)
 		elseif eventID == 4
 			 ; 0005FE8C on quest RRM01 (0005FD90)
 			 ; DESCRIPTION: Player gets to Ticonderoga and gives proper password to HighRise.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
+			 Trait_Nice(0.25)
 		elseif eventID == 5
 			 ; 0005FEA9 on quest RRM01 (0005FD90)
-			 ; DESCRIPTION: Player meets Stockton. Stockton points out that this is first stop for
-			 ; "packages." and delays are bad. Player agrees.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Likes()
+			 ; DESCRIPTION: Player meets Stockton. Stockton points out that this is first stop 
+			 ; for "packages." and delays are bad. Player agrees.
 		elseif eventID == 6
 			 ; 00112EAC on quest RRM01 (0005FD90)
-			 ; DESCRIPTION: Player is getting mission from Carrington. Carrington says Stockton needs
-			 ; help with a runaway synth, but demeans Stockton's paranoia in the process. Player tries
-			 ; to defend Stockton.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
+			 ; DESCRIPTION: Player is getting mission from Carrington. Carrington says Stockton 
+			 ; needs help with a runaway synth, but demeans Stockton's paranoia in the process. 
+			 ; Player tries to defend Stockton.
+			 Trait_Nice(0.25)
 		elseif eventID == 7
 			 ; 00112EC7 on quest RRM01 (0005FD90)
-			 ; DESCRIPTION: Player is getting mission from Carrington. Carrington says Stockton needs help
-			 ; with a runaway synth, but demeans Stockton's paranoia in the process. Player says it sounds
-			 ; like an important mission.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Dislikes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Neutral()
+			 ; DESCRIPTION: Player is getting mission from Carrington. Carrington says Stockton 
+			 ; needs help with a runaway synth, but demeans Stockton's paranoia in the process. 
+			 ; Player says it sounds like an important mission.
+			 Trait_Nice(0.50)
 		elseif eventID == 8
 			 ; 00112EE6 on quest RRM01 (0005FD90)
-			 ; DESCRIPTION: Player is getting mission from Carrington. Carrington says Stockton needs help
-			 ; with a runaway synth, but demeans Stockton's paranoia in the process. Player asks why Stockton
-			 ; hates everyone.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Dislikes()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
-
+			 ; DESCRIPTION: Player is getting mission from Carrington. Carrington says Stockton 
+			 ; needs help with a runaway synth, but demeans Stockton's paranoia in the process. 
+			 ; Player asks why Stockton hates everyone.
+			 Trait_Nice(0.50)
 		elseif eventID == 9
 			 ; 00112EBF on quest RRM01 (0005FD90)
-			 ; DESCRIPTION: Player mentioned that Deacon taught him the callsign. Basically, Player is standing
-			 ; up for Deacon
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
+			 ; DESCRIPTION: Player mentioned that Deacon taught him the callsign. Basically, 
+			 ; Player is standing up for Deacon
+			 Trait_Nice(0.50)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RRM01 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleDialogueBump_RRM02(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == RRM02
-		if eventID == 1
-			 ; 000A8BFA on quest RRM02 (000A8BAF)
-			 ; DESCRIPTION: Player is upset they didn't get to say goodbye to H2-22 before Amari wiped his memory.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Hates()
-			Deacon_Loves()
-			Hancock_Neutral()
-			MacCready_Dislikes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Neutral()
-
-		endif
-	else
-		 debug.trace(self + " WARNING - HandleDialogueBump_RRM02 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleDialogueBump_RRM02(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == RRM02
+;		if eventID == 1
+;			 ; 000A8BFA on quest RRM02 (000A8BAF)
+;			 ; DESCRIPTION: Player is upset they didn't get to say goodbye to H2-22 before Amari wiped his memory.
+;		endif
+;	else
+;		 debug.trace(self + " WARNING - HandleDialogueBump_RRM02 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleDialogueBump_RRR02a(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -4835,19 +4730,7 @@ function HandleDialogueBump_RRR02a(Quest eventQuest, int eventID)
 		if eventID == 1
 			 ; 000B3EAD on quest RRR02a (000B3E82)
 			 ; DESCRIPTION: Player scolds a fellow Railroad agent for being a coward.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Hates()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Likes()
-
+			 Trait_Mean(0.50)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RRR02a got event from wrong quest " + eventQuest)
@@ -4861,34 +4744,11 @@ function HandleDialogueBump_RRR05(Quest eventQuest, int eventID)
 			 ; 000B92C7 on quest RRR05 (000B926A)
 			 ; DESCRIPTION: Player demeans Desdemona's "hare-brained scheme" of letting Tinker Tom
 			 ; set up atmospheric sensors to look for Institute spy devices.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Trait_Mean(0.25)
 		elseif eventID == 2
 			 ; 000B92D3 on quest RRR05 (000B926A)
 			 ; DESCRIPTION: Humoring the crazy guy
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Dislikes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
-
+			 Trait_Nice(0.25)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RRR05 got event from wrong quest " + eventQuest)
@@ -4901,19 +4761,7 @@ function HandleDialogueBump_RRR08(Quest eventQuest, int eventID)
 		if eventID == 1
 			 ; 0013A44F on quest RRR08 (0013A33D)
 			 ; DESCRIPTION: Desdemona is sad about Glory's death. Player says he misses her too.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Dislikes()
-			Deacon_Loves()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Dislikes()
-
+			 Trait_Nice(1.0)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_RRR08 got event from wrong quest " + eventQuest)
@@ -4927,34 +4775,13 @@ function HandleDialogueBump_V81_00_Intro(Quest eventQuest, int eventID)
 			 ; 000B8504 on quest V81_00_Intro (000B8464)
 			 ; DESCRIPTION: Player is rude and threatens to get into Vault 81. This choice also turns
 			 ; on turrets to fire at the player if they approach the entrance.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Likes()
+			 Trait_Mean(0.75)
+			 Trait_Violent(0.75)
 		elseif eventID == 2
 			 ; 000B8580 on quest V81_00_Intro (000B8464)
 			 ; DESCRIPTION: Player says they are from Vault 111 to get into Vault 81.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
-
+			 Trait_Peaceful(0.50)
+			 Trait_Nice(0.25)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_V81_00_Intro got event from wrong quest " + eventQuest)
@@ -4968,19 +4795,8 @@ function HandleDialogueBump_V81_01(Quest eventQuest, int eventID)
 			 ; 0010C3FE on quest V81_01 (00033520)
 			 ; DESCRIPTION: Player wants a child to pay more "money" to find her cat. She's
 			 ; technically offering her personal possessions, teddy bear.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Neutral()
-			Valentine_Dislikes()
-			X688_Likes()
-
+			 Trait_Mean(0.25)
+			 Trait_Selfish(1.5)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_V81_01 got event from wrong quest " + eventQuest)
@@ -4995,133 +4811,39 @@ function HandleDialogueBump_V81_03(Quest eventQuest, int eventID)
 			 ; DESCRIPTION: You confront Bobby about his Jet addiction and tell him he's just a waste of
 			 ; space, knowing he's in a fragile state of mind. You're being an instigator.
 
-			if Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 0
-				Cait_Likes()
-			elseif Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 1
-				Cait_Dislikes()
-			endif
-			
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Likes()
+			 Trait_Mean(0.25)
+			 Trait_Violent(0.25)
 		elseif eventID == 2
 			 ; 001AC3E6 on quest V81_03 (00033527)
 			 ; DESCRIPTION: You confront Bobby about his Jet addiction and tell him he needs to get help.
 
-			if Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 0
-				Cait_Dislikes()
-			elseif Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 1
-				Cait_Likes()
-			endif
-			
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Dislikes()
+			 Trait_Nice(0.25)
+			 Trait_Generous(0.25)
 		elseif eventID == 3
 			 ; 001AC3FA on quest V81_03 (00033527)
 			 ; DESCRIPTION: You confront Bobby about his Jet addiction and rather than try to help,
 			 ; you give him Jet to encourage his addiction.
 
-			if Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 0
-				Cait_Likes()
-			elseif Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 1
-				Cait_Dislikes()
-			endif
-			
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Dislikes()
+			 Trait_Mean(1.0)
+			 Trait_Generous(0.25)
 		elseif eventID == 4
 			 ; 001AC48B on quest V81_03 (00033527)
 			 ; DESCRIPTION: Tina wants you to help her brother Bobby get help for his Jet addiction.
 			 ; You tell her to just let him die. "One less junkie in the Commonwealth."
+			 Trait_Mean(1.0)
 
-			if Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 0
-				Cait_Likes()
-			elseif Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 1
-				Cait_Hates()
-			endif
-			
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Likes()
 		elseif eventID == 5
 			 ; 001AC49A on quest V81_03 (00033527)
 			 ; DESCRIPTION: Tina wants you to help her brother Bobby get help for his Jet addiction.
 			 ; You agree he needs help.
 
-			if Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 0
-				Cait_Dislikes()
-			elseif Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 1
-				Cait_Likes()
-			endif
-			
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Dislikes()
+			 Trait_Nice(1.0)
 		elseif eventID == 6
 			 ; 001AC4BD on quest V81_03 (00033527)
 			 ; DESCRIPTION: Tina wants you to help her brother Bobby get help for his Jet addiction.
 			 ; You say he's a lost cause.
 
-			if Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 0
-				Cait_Likes()
-			elseif Cait_EventCondition_DislikesPlayerTakingChems.GetValue() == 1
-				Cait_Dislikes()
-			endif
-			
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Likes()
-
+			 Trait_Mean(0.25)
 		endif
 	else
 		 debug.trace(self + " WARNING - HandleDialogueBump_V81_03 got event from wrong quest " + eventQuest)
@@ -5131,74 +4853,38 @@ endFunction
 
 
 ;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
 ;************************************ QUEST STAGE BUMPS *************************************************
 ;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
-;********************************************************************************************************
 
 
-function HandleQuestStageBump_BoS200(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == BoS200
-		if eventID == 1
-		; STAGE 100 on Quest BoS200
-		; DESCRIPTION: Officially joined the Brotherhood of Steel.  Some Companions may object to 
-		; the Player joining due to the intrinsic nature of the Brotherhood of Steel's view of how
-		; life in the Commonwealth should be.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Dislikes()
-			Strong_Hates()
-			Valentine_Dislikes()
-			X688_Hates()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_BoS200 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_BoS200(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == BoS200
+;		if eventID == 1
+;		; STAGE 100 on Quest BoS200
+;		; DESCRIPTION: Officially joined the Brotherhood of Steel.  Some Companions may object to 
+;		; the Player joining due to the intrinsic nature of the Brotherhood of Steel's view of how
+;		; life in the Commonwealth should be.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_BoS200 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 
-function HandleQuestStageBump_BoS202(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == BoS202
-		if eventID == 1
-		; STAGE 255 on Quest BoS202
-		; Player killed all Super Mutants at Fort Strong, which took a large cache of Fat Man shells out of
-		; their hands. Companions may object to extermination of all Super Mutants, or appreciate the fact
-		; that the Player helped make the Commonwealth a safer place.
-			Cait_Likes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Loves()
-			Deacon_Neutral()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Loves()
-			Strong_Hates()
-			Valentine_Likes()
-			X688_Likes()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_BoS202 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_BoS202(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == BoS202
+;		if eventID == 1
+;		; STAGE 255 on Quest BoS202
+;		; Player killed all Super Mutants at Fort Strong, which took a large cache of Fat Man shells out of
+;		; their hands. Companions may object to extermination of all Super Mutants, or appreciate the fact
+;		; that the Player helped make the Commonwealth a safer place.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_BoS202 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 
 function HandleQuestStageBump_BoS203(Quest eventQuest, int eventID)
@@ -5210,48 +4896,26 @@ function HandleQuestStageBump_BoS203(Quest eventQuest, int eventID)
 		; Brotherhood. They are specifically told not to harm her in any way. If this stage has been set,
 		; the Player has ignored the Brotherhood and murdered Doctor Li (which will also kick them out of
 		; the Instutute Faction... could have a large rippling affinity effect).
-			Cait_Neutral()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Hates()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Loves()
-			Valentine_Hates()
-			X688_Hates()
+			 Trait_Mean(1.0)
+			 Trait_Violent(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_BoS203 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_BoS204(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == BoS204
-		if eventID == 1 || eventID == 2
-		; STAGE 200 or 255 on Quest BoS204
-		; DESCRIPTION: Player gave Proctor Ingram (BoS) the holotape containing the stolen Institute data
-		; (which will eventually be used to figure out how to attack the Institute).
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Dislikes()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Hates()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_BoS203 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_BoS204(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == BoS204
+;		if eventID == 1 || eventID == 2
+;		; STAGE 200 or 255 on Quest BoS204
+;		; DESCRIPTION: Player gave Proctor Ingram (BoS) the holotape containing the stolen Institute data
+;		; (which will eventually be used to figure out how to attack the Institute).
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_BoS203 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_BoS301(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -5261,89 +4925,31 @@ function HandleQuestStageBump_BoS301(Quest eventQuest, int eventID)
 		; DESCRIPTION: The Player is told to convince Doctor Li to help build Liberty Prime. At this
 		; stage, the Player took the opportunity to talk her into it peacefully and without any physical
 		; threats of violence.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Loves()
-			Deacon_Neutral()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Dislikes()
-
+			 Trait_Nice(1.0)
+			 Trait_Peaceful(1.0)
 		elseif eventID == 2
 		; STAGE 76 on Quest BoS301
 		; DESCRIPTION: The Player is told to convince Doctor Li to help build Liberty Prime. At this stage,
 		; the Player threatened Doctor Li with physical harm if she refused to help. This has a negative
 		; effect on Doctor Li's demeanor for the remainder of the game.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
+			 Trait_Mean(0.75)
+			 Trait_Violent(0.75)
 		elseif eventID == 3
 		; STAGE 176 on Quest BoS301
 		; DESCRIPTION: The Player needed to bypass a Child of Atom in order to complete a portion of his
 		; mission. At this stage, the Player was able to talk his way through without any violence, leaving
 		; the Child of Atom (who is not hostile) alive.
-			Cait_Dislikes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Neutral()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Neutral()
-
+			 Trait_Nice(0.75)
+			 Trait_Peaceful(0.75)
 		elseif eventID == 4
 		; STAGE 178 on Quest BoS301
 		; DESCRIPTION: The Player needed to bypass a Child of Atom in order to complete a portion of his
 		; mission. At this stage, the Player killed the Child of Atom instead of resolving the situation
 		; diplomatically.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
 		elseif eventID == 5
 		; STAGE 255 on Quest BoS301
 		; DESCRIPTION: The Player helped complete the construction of Liberty Prime. Companions may either
 		; support or object to the Player putting a huge war machine in the hands of the Brotherhood of Steel.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Neutral()
-			X688_Hates()	
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_BoS301 got event from wrong quest " + eventQuest)
@@ -5361,18 +4967,8 @@ function HandleQuestStageBump_BoS302(Quest eventQuest, int eventID)
 		; identity). The Player makes an appeal to Danse that his death would serve no useful purpose, and
 		; he has a right to live. This results in Danse agreeing with the Player and they try to leave the
 		; bunker together.
-			Cait_Dislikes()
-			Codsworth_Loves()
-			Curie_Likes()
-			Danse_Loves()
-			Deacon_Loves()
-			Hancock_Likes()
-			MacCready_Dislikes()
-			Piper_Loves()
-			Preston_Likes()
-			Strong_Hates()
-			Valentine_Loves()
-			X688_Loves()
+			 Trait_Nice(1.0)
+			 Trait_Peaceful(1.0)
 
 		elseif eventID == 2
 		; STAGE 160 on Quest BoS302
@@ -5381,19 +4977,8 @@ function HandleQuestStageBump_BoS302(Quest eventQuest, int eventID)
 		; Player instead of killing himself (see 120 above). However, outside the bunker, they are confronted
 		; by Elder Maxson. The Player is able to convince Maxson not to kill Danse, and to look the other way
 		; allowing Danse to be peacefully exiled instead. 
-			Cait_Dislikes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Loves()
-			Deacon_Loves()
-			Hancock_Loves()
-			MacCready_Dislikes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Hates()
-			Valentine_Likes()
-			X688_Loves()
-
+			 Trait_Nice(0.25)
+			 Trait_Peaceful(0.25)
 		elseif eventID == 3 || eventID == 4
 		; STAGE 90 or 170 on Quest BoS302
 		; DESCRIPTION: The Player is sent to execute Paladin Danse, because it's been revealed that Paladin
@@ -5401,18 +4986,7 @@ function HandleQuestStageBump_BoS302(Quest eventQuest, int eventID)
 		; suicide (by walking away), or allowing Maxson to execute him. There is a peaceful solution to this
 		; quest, where the Player can make a plea on Danse's behalf and convince Elder Maxson to exile him
 		; from the Brotherhood rather than killing him.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Loves()
-			Valentine_Dislikes()
-			X688_Dislikes()
+			 Trait_Mean(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_BoS302 got event from wrong quest " + eventQuest)
@@ -5428,36 +5002,16 @@ function HandleQuestStageBump_BoSM01(Quest eventQuest, int eventID)
 		; found the last survivor of the mission living alone in a remote bunker. Distraught and paranoid, he
 		; holds the player at gunpoint. The player carefully talked him down, then went a step further and
 		; convinced him to rejoin the Brotherhood, which requires multiple successful speech challenges.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Loves()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Dislikes()
+			 Trait_Nice(1.0)
+			 Trait_Peaceful(1.0)
 
 		elseif eventID == 2
 		; STAGE 145 on Quest BoSM01
 		; DESCRIPTION: After following the trail of a long-missing Brotherhood of Steel recon team, the player
 		; found the last survivor of the mission living alone in a remote bunker. Distraught and paranoid, he
 		; holds the player at gunpoint. Then the player provoked and killed him.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Hates()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Loves()
-			Valentine_Hates()
-			X688_Likes()
+			 Trait_Mean(1.0)
+			 Trait_Violent(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_BoSM01 got event from wrong quest " + eventQuest)
@@ -5475,18 +5029,8 @@ function HandleQuestStageBump_BoSM02(Quest eventQuest, int eventID)
 		; value, and he's trying to keep the Brotherhood from killing them (and vice versa). The player then
 		; chose to provoke or 'execute' Clarke themselves, instead of letting him go or turning him in 
 		; (he'd get a fair trial).
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Hates()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Likes()
+			 Trait_Mean(1.0)
+			 Trait_Violent(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_BoSM02 got event from wrong quest " + eventQuest)
@@ -5508,18 +5052,8 @@ function HandleQuestStageBump_BoSR05(Quest eventQuest, int eventID)
 		; a medium/easy speech challenge depending if the player owns the farm or not), or option to even pay
 		; the farmer to get the crops. Or it may be seen as either necessary or forgivable by others depending
 		; on their stance on the Brotherhood or basically killing to get your way.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Dislikes()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Likes()
+			 Trait_Mean(1.0)
+			 Trait_Violent(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_BoSR05 got event from wrong quest " + eventQuest)
@@ -5535,35 +5069,12 @@ function HandleQuestStageBump_DialogueDrinkingBuddy(Quest eventQuest, int eventI
 		; is a modified protectron who brews Ice Cold Beer (of various types) and tells jokes. The player
 		; can keep him or sell him to Rufus, and NPC in goodneighbor. Assigning the Drinking Buddy to a
 		; workshop location raises their happiness
-			Cait_Loves()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Neutral()
-
+			 Trait_Selfish(0.50)
 		elseif eventID == 2
 		; STAGE 501 on Quest DialogueDrinkingBuddy
 		; DESCRIPTION: The player destroyed the Drinking Buddy. There is no good reason to do this, just
 		; decide if your companion cares.
-			Cait_Hates()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Neutral()
+			 Trait_Violent(0.25)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DialogueDrinkingBuddy got event from wrong quest " + eventQuest)
@@ -5578,65 +5089,29 @@ function HandleQuestStageBump_DialogueGoodneighborRufus(Quest eventQuest, int ev
 		; DESCRIPTION: Player has sold the Drinking Buddy to Rufus in Goodneighbor. Rufus is a misc junk
 		; vendor who hangs out in Hotel Rexford or the 3rd Rail. The player can still get free beer, but
 		; doesn't have the Drinking Buddy at their workshop
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Neutral()
-			Danse_Neutral()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
+			 Trait_Generous(0.50)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DialogueGoodneighborRufus got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_DN015(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == DN015
-		if eventID == 1
-		; STAGE 100 on Quest DN015
-		; DESCRIPTION: After being locked in a secure lab by a robot, the player has completed the power
-		; armor research that the prewar team could not.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Loves()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Neutral()
-			X688_Likes()
-
-		elseif eventID == 2
-		; STAGE 110 on Quest DN015
-		; DESCRIPTION: After being locked in the lab, the player has found a terminal and triggered a
-		; security override that unlocks the doors and turns all the robots hostile (alternate exit)
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Neutral()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_DN015 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_DN015(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == DN015
+;		if eventID == 1
+;		; STAGE 100 on Quest DN015
+;		; DESCRIPTION: After being locked in a secure lab by a robot, the player has completed the power
+;		; armor research that the prewar team could not.
+;		elseif eventID == 2
+;		; STAGE 110 on Quest DN015
+;		; DESCRIPTION: After being locked in the lab, the player has found a terminal and triggered a
+;		; security override that unlocks the doors and turns all the robots hostile (alternate exit)
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_DN015 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_DN036(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -5648,264 +5123,94 @@ function HandleQuestStageBump_DN036(Quest eventQuest, int eventID)
 		; starts out trying to warn the player to leave. (She is not a synth, she fell asleep on watch and
 		; the gun she was holding misfired and killed her grandson)
 		; DESCRIPTION: Player has convinced her to lower the gun through a speech challenge
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Peaceful(1.0)
+			 Trait_Nice(0.50)
 
 		elseif eventID == 2
 		; STAGE 20 on Quest DN036
 		; DESCRIPTION: Player has stated it is the Brotherhood duty to destroy her. This goes to battle.
-			Cait_Neutral()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Hates()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Trait_Violent(0.25)
+			 Trait_Mean(0.25)
 
 		elseif eventID == 3
 		; STAGE 201 on Quest DN036
 		; DESCRIPTION: After hearing what happened, the player has blamed her for Samuel's death
 		; (depends on the companion how they should feel about this)
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Trait_Mean(0.50)
 
 		elseif eventID == 4
 		; STAGE 202 on Quest DN036
 		; DESCRIPTION: After hearing what happened, the player mentions Shaun to try to connect with her
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Hates()
+			 Trait_Nice(0.25)
 
 		elseif eventID == 5
 		; STAGE 203 on Quest DN036
 		; DESCRIPTION: After hearing what happened, the player tried to tell her it wasn't her fault
-			Cait_Dislikes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Neutral()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Dislikes()
+			 Trait_Nice(0.50)
+			 Trait_Peaceful(0.50)
 
 		elseif eventID == 6
 		; STAGE 510 on Quest DN036
 		; DESCRIPTION: Player asked her to join the minutemen
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Dislikes()
-			Deacon_Neutral()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
 
 		elseif eventID == 7
 		; STAGE 511 on Quest DN036
 		; DESCRIPTION: Player told her to just deal with it and move on
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Dislikes()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
 
 		elseif eventID == 8
 		; STAGE 512 on Quest DN036
 		; DESCRIPTION: Player told her to help others or take it at day at a time
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Neutral()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Peaceful(0.50)
 
 		elseif eventID == 9
 		; STAGE 513 on Quest DN036
 		; DESCRIPTION: Player told her to leave the commonwealth (not in a jerk way)
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
 
 		elseif eventID == 10
 		; STAGE 514 on Quest DN036
 		; DESCRIPTION: Player told her to go to Covenant and ask to take the test (she will later
 		; appear there dead)
-			Cait_Neutral()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Hates()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
 
 		elseif eventID == 11
 		; STAGE 701 on Quest DN036
 		; DESCRIPTION: The player has killed Phyllis before even knowing that she may be a synth
 		; (though she does have a gun pointed at you)
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Trait_Violent(0.50)
 
 		elseif eventID == 12
 		; STAGE 702 on Quest DN036
 		; DESCRIPTION: The player has killed Phyllis after finding out she may be a synth, but before
 		; hearing the full story.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Hates()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Neutral()
+			 Trait_Violent(1.0)
 
 		elseif eventID == 13
 		; STAGE 703 on Quest DN036
 		; DESCRIPTION: Player has killed Phyllis after finding out she may be a synth and hearing that she
 		; killed her grandson Samuel (which may have just been an accident)
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DN036 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_DN036_Post(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == DN036_Post
-		if eventID == 1
-		; STAGE 15 on Quest DN036_Post
-		; DESCRIPTION: The player let Phyllis live, and reported her to the Institute. (they will send a
-		; courser to investigate, she will disappear without a trace, with some blood enabled there)
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Hates()
-			X688_Likes()
-
-		elseif eventID == 2
-		; STAGE 25 on Quest DN036_Post
-		; DESCRIPTION: The player let Phyllis live, and told the Railroad about her. (She will leave but
-		; leave a thank you note and loot)
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Dislikes()
-			Deacon_Loves()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Hates()
-
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_DN036_Post got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_DN036_Post(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == DN036_Post
+;		if eventID == 1
+;		; STAGE 15 on Quest DN036_Post
+;		; DESCRIPTION: The player let Phyllis live, and reported her to the Institute. (they will send a
+;		; courser to investigate, she will disappear without a trace, with some blood enabled there)
+;
+;		elseif eventID == 2
+;		; STAGE 25 on Quest DN036_Post
+;		; DESCRIPTION: The player let Phyllis live, and told the Railroad about her. (She will leave but
+;		; leave a thank you note and loot)
+;
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_DN036_Post got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_DN053(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -5915,35 +5220,14 @@ function HandleQuestStageBump_DN053(Quest eventQuest, int eventID)
 		; DESCRIPTION: Player brought Virgil the FEV Serum from his old lab in the Institute, which Virgil
 		; hopes will make him human again. The player promised to do this in exchange for Virgil's help
 		; earlier, so he's kept his word.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Loves()
-			Danse_Dislikes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Hates()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Generous(1.0)
+			 Trait_Nice(0.25)
 
 		elseif eventID == 2
 		; STAGE 100 on Quest DN053
 		; DESCRIPTION: The player murdered Virgil. Virgil is not normally hostile, so the player provoked the
 		; confrontation in some way, either by attacking him or by inciting him through dialogue.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Loves()
-			Valentine_Hates()
-			X688_Neutral()
+			 Trait_Violent(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DN053 got event from wrong quest " + eventQuest)
@@ -5957,54 +5241,20 @@ function HandleQuestStageBump_DN079(Quest eventQuest, int eventID)
 		; STAGE 25 on Quest DN079
 		; DESCRIPTION: The player has questioned Theo repeatedly about the rumors that people have been
 		; getting sick from eating his canned meat.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Loves()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Neutral()
 
 		elseif eventID == 2
 		; STAGE 900 on Quest DN079
 		; DESCRIPTION: After finding out about the ghoul meat and getting Theo into bleed out he
 		; surrendered and the player has agreed to spare him and look the other way in exchange for a cut
 		; of the profit 
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Likes()
-			Hancock_Dislikes()
-			MacCready_Loves()
-			Piper_Hates()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Trait_Selfish(1.0)
 
 		elseif eventID == 3
 		; STAGE 951 on Quest DN079
 		; DESCRIPTION: Player has killed Theodore Collins after finding out that he has been using ghoul
 		; meat in some of his cans, which is why people have been getting sick. Theo also attacked the
 		; player 
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Neutral()
+			 Trait_Nice(0.25)
 
 		elseif eventID == 4
 		; STAGE 955 on Quest DN079
@@ -6012,19 +5262,7 @@ function HandleQuestStageBump_DN079(Quest eventQuest, int eventID)
 		; knowing anything about the situation, so this is murder. Theodore just looks like a normal trader,
 		; but is out in a cannery on the coast. He repaired some of the retorts and has been selling canned
 		; meat.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Neutral()
-
+			 Trait_Violent(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DN079 got event from wrong quest " + eventQuest)
@@ -6038,69 +5276,35 @@ function HandleQuestStageBump_DN083_Barney(Quest eventQuest, int eventID)
 		; STAGE 90 on Quest DN083_Barney
 		; DESCRIPTION: Player helped Barney set up automated turrets around Salem to defend it from being
 		; overrun by mirelurks. Barney is the only one that lives there.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Nice(0.25)
 
 		elseif eventID == 2
 		; STAGE 100 on Quest DN083_Barney
 		; DESCRIPTION: Barney wants to defend Salem from being overrun by mirelurks. Player decided to murder
 		; Barney without provocation.
-			Cait_Neutral()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Hates()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Trait_Violent(1.00)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DN083_Barney got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_DN101(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == DN101
-		if eventID == 1
-		; STAGE 70 on Quest DN101
-		; DESCRIPTION: The player stumbled upon Raiders ransacking the Pickman Gallery looking to kill
-		; Pickman. Over the course of the level, the player discovers paintings of Raiders tortured by
-		; Pickman and his torture chairs. At the end of the level, the player discovers Pickman caught by
-		; the Raiders and about to be executed. The player can choose to save the serial killer Pickman
-		; from the Raider gang he has been hunting. The stage fires when the player talks to Pickman after
-		; killing the Raiders.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Dislikes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Neutral()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_DN101 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_DN101(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == DN101
+;		if eventID == 1
+;		; STAGE 70 on Quest DN101
+;		; DESCRIPTION: The player stumbled upon Raiders ransacking the Pickman Gallery looking to kill
+;		; Pickman. Over the course of the level, the player discovers paintings of Raiders tortured by
+;		; Pickman and his torture chairs. At the end of the level, the player discovers Pickman caught by
+;		; the Raiders and about to be executed. The player can choose to save the serial killer Pickman
+;		; from the Raider gang he has been hunting. The stage fires when the player talks to Pickman after
+;		; killing the Raiders.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_DN101 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_DN109(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -6110,18 +5314,8 @@ function HandleQuestStageBump_DN109(Quest eventQuest, int eventID)
 		; DESCRIPTION: The player has gone to Quincy and killed one of the Gunner bosses, named Baker,
 		; who had betrayed the minutemen (he was a minuteman) and led to Preston & his group fleeing
 		; Quincy.
-			Cait_Likes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Loves()
-			MacCready_Loves()
-			Piper_Likes()
-			Preston_Loves()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Nice(1.00)
+			 Trait_Violent(0.25)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DN109 got event from wrong quest " + eventQuest)
@@ -6136,18 +5330,7 @@ function HandleQuestStageBump_DN119Fight(Quest eventQuest, int eventID)
 		; DESCRIPTION: The player discovers a random Scavenger being attacked by Molerats, and can choose
 		; to help the Scavenger kill them. The stage triggers when the player talks to the Scavenger after
 		; killing the Molerats.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Nice(1.00)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DN119Fight got event from wrong quest " + eventQuest)
@@ -6165,152 +5348,45 @@ function HandleQuestStageBump_DN121(Quest eventQuest, int eventID)
 		; want to but thinks they will kill him and his family if he doesn't, the player has the chance
 		; to sway him
 		; DESCRIPTION: Player attempted to haggle with Abraham over the price of retrieving the sword. 
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Neutral()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Neutral()
-			X688_Neutral()
+			 Trait_Selfish(1.00)
 
 		elseif eventID == 2
 		; STAGE 350 on Quest DN121
 		; DESCRIPTION: The player killed the prisoner that Jake Finch was told to kill. This can happen
 		; after the fight.
-			Cait_Neutral()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Hates()
-			MacCready_Dislikes()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Neutral()
-
+			 Trait_Violent(1.00)
 		elseif eventID == 3
 		; STAGE 495 on Quest DN121
 		; DESCRIPTION: Player has finished helping Jake reunite with his family (prisoner may or may not
 		; have survived)
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Dislikes()
-
+			 Trait_Nice(1.00)
 		elseif eventID == 4
 		; STAGE 501 on Quest DN121
 		; DESCRIPTION: Jake has decided to kill the prisoner, but the player kills Jake before he gets the
 		; shot off.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
 		elseif eventID == 5
 		; STAGE 502 on Quest DN121
 		; DESCRIPTION: Jake decided not to kill the prisoner, but the player killed Jake anyway
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
+			 Trait_Mean(1.00)
+			 Trait_Violent(1.00)
 		elseif eventID == 6
 		; STAGE 503 on Quest DN121
 		; DESCRIPTION: Jake killed the prisoner, but survived long enough to surrender, and appears repentant,
 		; but the player has killed him
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Neutral()
-			Valentine_Hates()
-			X688_Neutral()
-
 		elseif eventID == 7
 		; STAGE 504 on Quest DN121
 		; DESCRIPTION: Jake did not kill the prisoner, but did fight against the player (player initiated
 		; the combat in some way) and has surrendered, but the player has killed him anyway
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
+			 Trait_Mean(1.00)
 		elseif eventID == 8
 		; STAGE 505 on Quest DN121
 		; DESCRIPTION: Any other case where Jake is killed by the player, usually after helping him out
 		; (which is murder)
-			Cait_Neutral()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Neutral()
-
+			 Trait_Violent(1.00)
 		elseif eventID == 9
 		; STAGE 722 on Quest DN121
 		; DESCRIPTION: (Jake died) The player has lied to Abraham to spare his feelings.
-			Cait_Neutral()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Dislikes()
+			 Trait_Nice(0.25)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_DN121 got event from wrong quest " + eventQuest)
@@ -6324,18 +5400,7 @@ function HandleQuestStageBump_FFBunkerHill03(Quest eventQuest, int eventID)
 		; STAGE 200 on Quest FFBunkerHill03
 		; DESCRIPTION: Some raiders (Zeller's Army) have captured and imprisoned a bunch of innocent traders.
 		; The player has just rescued the last of them.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Loves()
-			MacCready_Neutral()
-			Piper_Loves()
-			Preston_Loves()
-			Strong_Neutral()
-			Valentine_Loves()
-			X688_Neutral()
+			 Trait_Nice(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_FFBunkerHill03 got event from wrong quest " + eventQuest)
@@ -6349,108 +5414,47 @@ function HandleQuestStageBump_FFGoodneighbor07(Quest eventQuest, int eventID)
 		; STAGE 30 on Quest FFGoodneighbor07
 		; DESCRIPTION: Player has attacked Bobbi No-Nose after siding with her during MS16 - The Big Dig
 		; - but then took the job from Hancock to kill her and take back Hancock's stolen caps.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Hates()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Likes()
+			 Trait_Selfish(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_FFGoodneighbor07 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_Inst301(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == Inst301
-		if eventID == 1
-		; STAGE 500 on Quest Inst301
-		; DESCRIPTION: Player has just teamed up with a Courser to attack Libertalia and try to reclaim
-		; a rogue synth. Player's mission to reclaim the rogue synth was a success, and the Courser has
-		; teleported him back to the Institute
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Neutral()
-			X688_Neutral()
+; function HandleQuestStageBump_Inst301(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == Inst301
+;		if eventID == 1
+;		; STAGE 500 on Quest Inst301
+;		; DESCRIPTION: Player has just teamed up with a Courser to attack Libertalia and try to reclaim
+;		; a rogue synth. Player's mission to reclaim the rogue synth was a success, and the Courser has
+;		; teleported him back to the Institute
+;		elseif eventID == 2
+;		; STAGE 300 on Quest Inst301
+;		; DESCRIPTION: Player has just teamed up with a Courser to attack Libertalia and try to reclaim a
+;		; rogue synth. This is mainly here for companions that might have strong feelings about fighting
+;		; alongside a Courser.
+;		elseif eventID == 3
+;		; STAGE 400 on Quest Inst301
+;		; DESCRIPTION: Player's mission to reclaim the rogue synth was a failure, because the boss died
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_Inst301 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
-		elseif eventID == 2
-		; STAGE 300 on Quest Inst301
-		; DESCRIPTION: Player has just teamed up with a Courser to attack Libertalia and try to reclaim a
-		; rogue synth. This is mainly here for companions that might have strong feelings about fighting
-		; alongside a Courser.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Neutral()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
-		elseif eventID == 3
-		; STAGE 400 on Quest Inst301
-		; DESCRIPTION: Player's mission to reclaim the rogue synth was a failure, because the boss died
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Neutral()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_Inst301 got event from wrong quest " + eventQuest)
-	endif
-endFunction
-
-function HandleQuestStageBump_Inst307(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == Inst307
-		if eventID == 1
-		; STAGE 200 on Quest Inst307
-		; DESCRIPTION: The Player has successfully attacked the airport and destroyed the Prydwen using
-		; Liberty Prime to shoot it down
-			Cait_Likes(CheckCompanionProximity = false)
-			Codsworth_Dislikes(CheckCompanionProximity = false)
-			Curie_Dislikes(CheckCompanionProximity = false)
-			Danse_Hates(CheckCompanionProximity = false)
-			Deacon_Neutral(CheckCompanionProximity = false)
-			Hancock_Dislikes(CheckCompanionProximity = false)
-			MacCready_Neutral(CheckCompanionProximity = false)
-			Piper_Hates(CheckCompanionProximity = false)
-			Preston_Likes(CheckCompanionProximity = false)
-			Strong_Loves(CheckCompanionProximity = false)
-			Valentine_Hates(CheckCompanionProximity = false)
-			X688_Loves(CheckCompanionProximity = false)
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_FFGoodneighbor07 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_Inst307(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == Inst307
+;		if eventID == 1
+;		; STAGE 200 on Quest Inst307
+;		; DESCRIPTION: The Player has successfully attacked the airport and destroyed the Prydwen using
+;		; Liberty Prime to shoot it down
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_FFGoodneighbor07 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_InstM01(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -6459,64 +5463,31 @@ function HandleQuestStageBump_InstM01(Quest eventQuest, int eventID)
 		; STAGE 70 on Quest InstM01
 		; DESCRIPTION: The player talked Bill Sutton, the dangerous foreman who was just a moment ago pointing
 		; a gun at a family, into standing down and giving up his crusade to expose Roger Warwick as a synth.
-			Cait_Neutral()
-			Codsworth_Loves()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Loves()
-
+			 Trait_Nice(1.0)
+			 Trait_Peaceful(1.0)
 		elseif eventID == 2
 		; STAGE 90 on Quest InstM01
 		; DESCRIPTION: Player murdered the farm foreman, when he was supposed to keep a low profile. Player
 		; has acted against the Institute here, violating his orders and failing the mission.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Hates()
+			 Trait_Violent(0.25)
+			 Trait_Nice(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_InstM01 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_InstR03NEW(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == InstR03NEW
-		if eventID == 1
-		; STAGE 500 on Quest InstR03NEW
-		; DESCRIPTION: Player stole blueprints from the Brotherhood of Steel to give to the Institute for study
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Likes()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_InstR03NEW got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_InstR03NEW(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == InstR03NEW
+;		if eventID == 1
+;		; STAGE 500 on Quest InstR03NEW
+;		; DESCRIPTION: Player stole blueprints from the Brotherhood of Steel to give to the Institute for study
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_InstR03NEW got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_InstR04(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -6525,65 +5496,29 @@ function HandleQuestStageBump_InstR04(Quest eventQuest, int eventID)
 		; STAGE 40 on Quest InstR04
 		; DESCRIPTION: Player killed the synth he was sent to rescue, violating his orders and acting against
 		; the Institute's wishes
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Hates()
-
+			 Trait_Violent(0.25)
 		elseif eventID == 2
 		; STAGE 200 on Quest InstR04
 		; DESCRIPTION: Player successfully delivered the homing beacon to the abducted synth, completing a
 		; tough mission for the Institute.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Likes()
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_InstR04 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_InstR05(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == InstR05
-		if eventID == 1
-		; STAGE XXX on Quest InstR05
-		; DESCRIPTION: Player collected an intelligence report from the synth MayorMcDonough, who has been
-		; spying on everyone in Diamond City for the Institute.
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Dislikes()
-			Piper_Hates()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Likes()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_InstR05 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_InstR05(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == InstR05
+;		if eventID == 1
+;		; STAGE XXX on Quest InstR05
+;		; DESCRIPTION: Player collected an intelligence report from the synth MayorMcDonough, who has been
+;		; spying on everyone in Diamond City for the Institute.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_InstR05 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_Min01(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -6592,18 +5527,8 @@ function HandleQuestStageBump_Min01(Quest eventQuest, int eventID)
 		; STAGE 1500 on Quest Min01
 		; DESCRIPTION: Player helped the people of Sanctuary establish their settlement (building beds,
 		; water, food, defenses).
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Loves()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Dislikes()
+			 Trait_Nice(1.0)
+			 Trait_Generous(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_Min01 got event from wrong quest " + eventQuest)
@@ -6617,98 +5542,52 @@ function HandleQuestStageBump_Min02(Quest eventQuest, int eventID)
 		; STAGE 600 on Quest Min02
 		; DESCRIPTION: Player helped reestablish the Castle as a Minutemen stronghold, and got Radio
 		; Freedom (Minutemen radio station) up and running.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Dislikes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Loves()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Dislikes()
+			 Trait_Generous(1.0)
+			 Trait_Nice(0.25)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_Min02 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_Min03(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == Min03
-		if eventID == 1
-		; STAGE 920 on Quest Min03
-		; DESCRIPTION: Player built and tested artillery, which is now available to build at friendly
-		; settlements. Player now has artillery support available.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Dislikes()
-			Deacon_Neutral()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Loves()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Dislikes()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_Min03 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_Min03(Quest eventQuest, int eventID)
+;	; double-check that this is the right quest
+;	i;f eventQuest == Min03
+;		if eventID == 1
+;		; STAGE 920 on Quest Min03
+;		; DESCRIPTION: Player built and tested artillery, which is now available to build at friendly
+;		; settlements. Player now has artillery support available.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_Min03 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
-function HandleQuestStageBump_Min207(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == Min207
-		if eventID == 1
-		; STAGE 200 on Quest Min207
-		; DESCRIPTION: Player gave Sturges the holotape containing the stolen Institute data (which will
-		; eventually be used to figure out how to attack the Institute).
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Hates()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_Min207 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_Min207(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == Min207
+;		if eventID == 1
+;		; STAGE 200 on Quest Min207
+;		; DESCRIPTION: Player gave Sturges the holotape containing the stolen Institute data (which will
+;		; eventually be used to figure out how to attack the Institute).
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_Min207 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
-function HandleQuestStageBump_Min301(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == Min301
-		if eventID == 1
-		; STAGE 50 on Quest Min301
-		; DESCRIPTION: Player has built up the strength of the Minutemen by recruiting settlements to the
-		; cause. The Minutemen are now strong enough to consider attacking the Institute.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Dislikes()
-			Deacon_Neutral()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Dislikes()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_Min301 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_Min301(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == Min301
+;		if eventID == 1
+;		; STAGE 50 on Quest Min301
+;		; DESCRIPTION: Player has built up the strength of the Minutemen by recruiting settlements to the
+;		; cause. The Minutemen are now strong enough to consider attacking the Institute.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_Min301 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_MinDefendCastle(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -6718,151 +5597,49 @@ function HandleQuestStageBump_MinDefendCastle(Quest eventQuest, int eventID)
 		; DESCRIPTION: Player has helped the Minutemen defend the Castle from various attackers.
 		; Affinity varies based on attacker type
 		; 0=Raiders, 1=Gunners, 2=SM, 3/6=BoS, 4/5=Inst
-			if MinCastleAttacker.GetValue() == 0 || MinCastleAttacker.GetValue() == 1
-				Cait_Likes()
-				Codsworth_Likes()
-				Curie_Likes()
-				Danse_Neutral()
-				Deacon_Likes()
-				Hancock_Likes()
-				MacCready_Likes()
-				Piper_Likes()
-				Preston_Loves()
-				Strong_Likes()
-				Valentine_Likes()
-				X688_Neutral()
-			elseif MinCastleAttacker.GetValue() == 2
-				Cait_Likes()
-				Codsworth_Likes()
-				Curie_Likes()
-				Danse_Likes()
-				Deacon_Likes()
-				Hancock_Likes()
-				MacCready_Likes()
-				Piper_Likes()
-				Preston_Loves()
-				Strong_Neutral()
-				Valentine_Likes()
-				X688_Neutral()
-			elseif MinCastleAttacker.GetValue() == 3 || MinCastleAttacker.GetValue() == 6
-				Cait_Likes()
-				Codsworth_Likes()
-				Curie_Likes()
-				Danse_Hates()
-				Deacon_Likes()
-				Hancock_Likes()
-				MacCready_Likes()
-				Piper_Likes()
-				Preston_Loves()
-				Strong_Likes()
-				Valentine_Likes()
-				X688_Likes()
-			elseif MinCastleAttacker.GetValue() == 4 || MinCastleAttacker.GetValue() == 5
-				Cait_Likes()
-				Codsworth_Likes()
-				Curie_Likes()
-				Danse_Likes()
-				Deacon_Likes()
-				Hancock_Likes()
-				MacCready_Likes()
-				Piper_Likes()
-				Preston_Loves()
-				Strong_Likes()
-				Valentine_Likes()
-				X688_Hates()
-			endif						
+			 Trait_Nice(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MinDefendCastle got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_MinDestBOS(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == MinDestBOS
-		if eventID == 1
-		; STAGE 500 on Quest MinDestBOS
-		; DESCRIPTION: Player ordered a successful artillery strike on the Prydwen.
-			Cait_Likes(CheckCompanionProximity = false)
-			Codsworth_Dislikes(CheckCompanionProximity = false)
-			Curie_Neutral(CheckCompanionProximity = false)
-			Danse_Hates(CheckCompanionProximity = false)
-			Deacon_Likes(CheckCompanionProximity = false)
-			Hancock_Likes(CheckCompanionProximity = false)
-			MacCready_Likes(CheckCompanionProximity = false)
-			Piper_Neutral(CheckCompanionProximity = false)
-			Preston_Loves(CheckCompanionProximity = false)
-			Strong_Likes(CheckCompanionProximity = false)
-			Valentine_Neutral(CheckCompanionProximity = false)
-			X688_Likes(CheckCompanionProximity = false)
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_MinDestBOS got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_MinDestBOS(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == MinDestBOS
+;		if eventID == 1
+;		; STAGE 500 on Quest MinDestBOS
+;		; DESCRIPTION: Player ordered a successful artillery strike on the Prydwen.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_MinDestBOS got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
-function HandleQuestStageBump_MQ203(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == MQ203
-		if eventID == 1
-		; STAGE 1100 on Quest MQ203
-		; DESCRIPTION: Player learned Virgil's location from Kellogg's memories. Player hopes that Virgil
-		; may help the player figure out how to find the Institute and thus find his son.
-			Cait_Likes()
-			Codsworth_Likes()
-			Curie_Neutral()
-			Danse_Likes()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_MQ203 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_MQ203(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == MQ203
+;		if eventID == 1
+;		; STAGE 1100 on Quest MQ203
+;		; DESCRIPTION: Player learned Virgil's location from Kellogg's memories. Player hopes that Virgil
+;		; may help the player figure out how to find the Institute and thus find his son.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_MQ203 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
-function HandleQuestStageBump_MQ302(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == MQ302
-		if eventID == 1
-		; STAGE 850 on Quest MQ302
-		; DESCRIPTION: The player has just pushed the button to detonate the Fusion Pulse charge and
-		; destroy the Institute.
-		; GLOBAL KEY: 1= BoS Pressed, 2= MinuteMen Pressed, 3= RR Pressed
-				Cait_Likes(CheckCompanionProximity = false)
-				Codsworth_Dislikes(CheckCompanionProximity = false)
-				Curie_Likes(CheckCompanionProximity = false)
-				Hancock_Loves(CheckCompanionProximity = false)
-				MacCready_Likes(CheckCompanionProximity = false)
-				Piper_Loves(CheckCompanionProximity = false)
-				Strong_Likes(CheckCompanionProximity = false)
-				Valentine_Loves(CheckCompanionProximity = false)
-			if MQ302Faction.GetValue() == 1
-				Danse_Loves(CheckCompanionProximity = false)
-				Deacon_Neutral(CheckCompanionProximity = false)
-				Preston_Likes(CheckCompanionProximity = false)
-				X688_Neutral(CheckCompanionProximity = false)
-			elseif MQ302Faction.GetValue() == 2
-				Danse_Likes(CheckCompanionProximity = false)
-				Deacon_Loves(CheckCompanionProximity = false)
-				Preston_Loves(CheckCompanionProximity = false)
-				X688_Neutral(CheckCompanionProximity = false)
-			elseif MQ302Faction.GetValue() == 3
-				Danse_Neutral(CheckCompanionProximity = false)
-				Deacon_Loves(CheckCompanionProximity = false)
-				Preston_Likes(CheckCompanionProximity = false)
-				X688_Neutral(CheckCompanionProximity = false)
-			endif
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_MQ302 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_MQ302(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == MQ302
+;		if eventID == 1
+;		; STAGE 850 on Quest MQ302
+;		; DESCRIPTION: The player has just pushed the button to detonate the Fusion Pulse charge and
+;		; destroy the Institute.
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_MQ302 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_MS01(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -6872,18 +5649,8 @@ function HandleQuestStageBump_MS01(Quest eventQuest, int eventID)
 		; DESCRIPTION: After saving Billy the ghoul from the fridge, and reuniting him with his family, Bullet
 		; the gunner surrounds the house. The player chooses to turn over the whole family to Bullet to become
 		; their slaves rather than fight Bullet.
-			Cait_Hates()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Hates()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Dislikes()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Dislikes()
-			Valentine_Hates()
-			X688_Likes()
+			 Trait_Mean(1.0)
+			 Trait_Selfish(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS01 got event from wrong quest " + eventQuest)
@@ -6898,52 +5665,19 @@ function HandleQuestStageBump_MS04(Quest eventQuest, int eventID)
 		; DESCRIPTION: The player killed an assassin (Kendra) and found a contract on her body. The player
 		; then completes that assassination contract on a complete stranger (who is obviously guilty on no
 		; wrong doing). Probably to collect the reward.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Hates()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Likes()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Likes()
-
+			 Trait_Selfish(1.5)
 		elseif eventID == 2
 		; STAGE 1330 on Quest MS04
 		; DESCRIPTION: Sinjin is holding Kent Connolly at gunpoint. Instead of negotiating with Sinjin,
 		; the player shoots Kent in the head. Kent has been working with the player up until that point.
-			Cait_Neutral()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Likes()
-			Deacon_Dislikes()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Loves()
-			Valentine_Hates()
-			X688_Likes()
-
+			 Trait_Mean(1.5)
+			 Trait_Violent(1.5)
 		elseif eventID == 3
 		; STAGE 1359 on Quest MS04
 		; DESCRIPTION: Kent Connolly, a ghoul who has been working with the player, is being held hostage by
 		; the vicous raider, Sinjin. The player manages to rescue Kent (which is very difficult).
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Dislikes()
-			Deacon_Loves()
-			Hancock_Loves()
-			MacCready_Neutral()
-			Piper_Loves()
-			Preston_Loves()
-			Strong_Likes()
-			Valentine_Loves()
-			X688_Neutral()
+			 Trait_Nice(1.5)
+			 Trait_Peaceful(0.5)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS04 got event from wrong quest " + eventQuest)
@@ -6956,18 +5690,9 @@ function HandleQuestStageBump_MS05B(Quest eventQuest, int eventID)
 		if eventID == 1
 		; STAGE 500 on Quest MS05B
 		; DESCRIPTION: The player has returned the rescued Deathclaw egg to its nest.
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Nice(0.50)
+			 Trait_Peaceful(0.50)
+			 Trait_Generous(0.50)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS05B got event from wrong quest " + eventQuest)
@@ -6980,18 +5705,7 @@ function HandleQuestStageBump_MS05BPostQuest(Quest eventQuest, int eventID)
 		if eventID == 1
 		; STAGE 30 on Quest MS05BPostQuest
 		; DESCRIPTION: Player has stolen back Deathclaw egg they returned to nest in MS05B.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Trait_Selfish(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS05BPostQuest got event from wrong quest " + eventQuest)
@@ -7006,18 +5720,7 @@ function HandleQuestStageBump_MS07a(Quest eventQuest, int eventID)
 		; DESCRIPTION: The player has found Doctor Crocker, Diamond City's surgeon, standing over a butchered
 		; body of a possible missing person in the basement of the Mega Surgery Center. Rather than trying to
 		; talk him down, the player has attacked them.
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Loves()
-			Valentine_Dislikes()
-			X688_Likes()
+			 Trait_Violent(0.50)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS07a got event from wrong quest " + eventQuest)
@@ -7032,18 +5735,7 @@ function HandleQuestStageBump_MS07b(Quest eventQuest, int eventID)
 		; DESCRIPTION: The Player has just completed digging up the ancient grave of a coppersmith from the
 		; 18th century in order to follow a lead on a treasure map. Companions may take issue with greed
 		; overriding decency.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Dislikes()
-			Deacon_Neutral()
-			Hancock_Likes()
-			MacCready_Loves()
-			Piper_Likes()
-			Preston_Dislikes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Selfish(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS07b got event from wrong quest " + eventQuest)
@@ -7058,69 +5750,34 @@ function HandleQuestStageBump_MS07c(Quest eventQuest, int eventID)
 		; DESCRIPTION: The player and Nick have killed Eddie Winter,  an unrepentant old mob boss and nemesis
 		; to the pre-war Nick Valentine, who has been hiding in a bunker for the past 200 years. This means a
 		; lot to Nick.
-			Cait_Likes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Loves()
-			X688_Neutral()
+			 Trait_Nice(0.50)
+			 Trait_Violent(0.50)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS07c got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_MS09(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == MS09
-		if eventID == 1
-		; STAGE 1210 on Quest MS09
-		; DESCRIPTION: Player helps kill Lorenzo - see below. Lorenzo is in the process of freeing himself,
-		; so killing him is the only available option to stop him (aside from letting him get free or
-		; actively helping him get free).
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Neutral()
-			X688_Neutral()
-
-		elseif eventID == 2
-		; STAGE 1260 on Quest MS09
-		; DESCRIPTION: Player frees Lorenzo Cabot from his cell in Parsons State Insane Asylum. Player works
-		; for Jack Cabot, Lorenzo's son, and Jack has warned the player repeatedly that Lorenzo is insane and
-		; very dangerous. However, Jack is also benefiting from Lorenzo's imprisonment by using Lorenzo's
-		; blood to create a serum that prolongs his life. Lorenzo also urges the player to free him, arguing
-		; that Jack is the crazy one and has been lying to the player the whole time.
-			Cait_Dislikes()
-			Codsworth_Dislikes()
-			Curie_Likes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Dislikes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Neutral()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_MS09 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_MS09(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == MS09
+;		if eventID == 1
+;		; STAGE 1210 on Quest MS09
+;		; DESCRIPTION: Player helps kill Lorenzo - see below. Lorenzo is in the process of freeing himself,
+;		; so killing him is the only available option to stop him (aside from letting him get free or
+;		; actively helping him get free).
+;		elseif eventID == 2
+;		; STAGE 1260 on Quest MS09
+;		; DESCRIPTION: Player frees Lorenzo Cabot from his cell in Parsons State Insane Asylum. Player works
+;		; for Jack Cabot, Lorenzo's son, and Jack has warned the player repeatedly that Lorenzo is insane and
+;		; very dangerous. However, Jack is also benefiting from Lorenzo's imprisonment by using Lorenzo's
+;		; blood to create a serum that prolongs his life. Lorenzo also urges the player to free him, arguing
+;		; that Jack is the crazy one and has been lying to the player the whole time.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_MS09 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_MS11(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -7130,37 +5787,14 @@ function HandleQuestStageBump_MS11(Quest eventQuest, int eventID)
 		; DESCRIPTION: The player sides with scavengers to sabotage the USS Constitution's rockets. This
 		; screws over the zany robotic crew of the ship (Ironsides and company). This happens when the player
 		; actually sabotages the rocket directly.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
+			 Trait_Mean(0.50)
 		elseif eventID == 2
 		; STAGE 950 on Quest MS11
 		; DESCRIPTION: The player has successfully fixed all of the components of the USS Constitution. At
 		; this point, the player watches the ship take off into the sky (and land inside a skyscraper in
 		; the distance). The robotic crew are very pleased and the scavengers that wanted the salvage are
 		; long dead.
-			Cait_Dislikes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Likes()
-			Deacon_Loves()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Nice(0.50)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS11 got event from wrong quest " + eventQuest)
@@ -7174,37 +5808,14 @@ function HandleQuestStageBump_MS16(Quest eventQuest, int eventID)
 		; STAGE 260 on Quest MS16
 		; DESCRIPTION: The player helped known criminal Bobbi No-Nose rob the mayor of Goodneighbor's
 		; storeroom. The player had to break in forcefully and kill his bodyguard to finish the job.
-			Cait_Loves()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Hates()
-			Hancock_Neutral()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Dislikes()
-			X688_Likes()
-
+			 Trait_Violent(1.0)
 		elseif eventID == 2
 		; STAGE 270 on Quest MS16
 		; DESCRIPTION:  The player was working for known criminal Bobbi No-Nose to help dig a tunnel to
 		; break into a loot vault. The player did not know who they were robbing until confronted by
 		; Hancock's bodyguard. After having all the information, they refused to help Bobbi. Player either
 		; killed Bobbi or talked her out of completing the job.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Neutral()
+			 Trait_Peaceful(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS16 got event from wrong quest " + eventQuest)
@@ -7218,54 +5829,18 @@ function HandleQuestStageBump_MS17(Quest eventQuest, int eventID)
 		; STAGE 90 on Quest MS17
 		; DESCRIPTION: The player somehow gets into Covenant without taking their SAFE test up front. This
 		; causes the whole town to go hostile. Most likely occurs when the player jump jets over the wall.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
 		elseif eventID == 2
 		; STAGE 450 on Quest MS17
 		; DESCRIPTION: Doctor Chambers has been torturing people to perfect her Synth detection test. She has
 		; killed a lot of innocent people and Synths in the process. She is unrepentent when confronted. She
 		; will not attack the player, but the player shoots her (there is no quest objective to do so).
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Loves()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Likes()
-
 		elseif eventID == 3
 		; STAGE 490 on Quest MS17
 		; DESCRIPTION: Amelia Stockton was imprisoned by Covenant. They've been torturing her to try and get
 		; her to confess she's a Synth. She hasn't confessed yet - though Doctor Chambers was convinced she's
 		; a Synth. For this event the player kills Amelia Stockton instead of rescuing her.
-			Cait_Neutral()
-			Codsworth_Hates()
-			Curie_Hates()
-			Danse_Dislikes()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Neutral()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Hates()			
+			 Trait_Mean(1.0)
+			 Trait_Violent(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_MS17 got event from wrong quest " + eventQuest)
@@ -7279,69 +5854,22 @@ function HandleQuestStageBump_RECampLC01(Quest eventQuest, int eventID)
 		; STAGE 96 on Quest RECampLC01
 		; DESCRIPTION: Player has encountered two humans threatening to kill a runaway Synth. The player
 		; attacked the Synth.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Hates()
-			MacCready_Likes()
-			Piper_Hates()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Hates()
-
+			 Trait_Mean(0.50)
 		elseif eventID == 2
 		; STAGE 97 on Quest RECampLC01
 		; DESCRIPTION: Player has encounter two people threatening to kill someone (player doesn't know he's
 		; a Synth). Player has attacked the person being threatened.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Neutral()
-			Hancock_Dislikes()
-			MacCready_Dislikes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
+			 Trait_Mean(1.0)
 		elseif eventID == 3
 		; STAGE 601 on Quest RECampLC01
 		; DESCRIPTION: Player has encountered two humans threatening to kill a runaway Synth. The player
 		; attacked the people threatening the Synth.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Likes()
-			Hancock_Loves()
-			MacCready_Dislikes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Loves()
-
+			 Trait_Nice(0.50)
 		elseif eventID == 4
 		; STAGE 602 on Quest RECampLC01
 		; DESCRIPTION: Player has encounter two people threatening to kill someone (player doesn't know he's
 		; a Synth). Player has attacked the aggressors.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Neutral()
-			Hancock_Likes()
-			MacCready_Dislikes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()			
+			 Trait_Nice(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_RECampLC01 got event from wrong quest " + eventQuest)
@@ -7355,71 +5883,21 @@ function HandleQuestStageBump_RESceneLC01(Quest eventQuest, int eventID)
 		; STAGE 111 on Quest RESceneLC01
 		; DESCRIPTION: Player has come across two men with the same face, both claiming the other is a
 		; Synth. The player has uncovered which is the Synth and attacked him 
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Dislikes()
-			Hancock_Likes()
-			MacCready_Likes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Hates()
-
 		elseif eventID == 2
 		; STAGE 112 on Quest RESceneLC01
 		; DESCRIPTION: Player has come across two men with the same face, both claiming the other is a
 		; Synth. Player has attacked the hostage (but player doesn't know whether or not the man is
 		; actually a Synth)
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
+			 Trait_Violent(0.25)
 		elseif eventID == 3
 		; STAGE 121 on Quest RESceneLC01
 		; DESCRIPTION: Player has come across two men with the same face, both claiming the other is a
 		; Synth. The player has uncovered which is the Synth and attacked the man holding him prisoner
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Likes()
-			Hancock_Hates()
-			MacCready_Dislikes()
-			Piper_Hates()
-			Preston_Hates()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Loves()
-
 		elseif eventID == 4
 		; STAGE 122 on Quest RESceneLC01
 		; DESCRIPTION: Player has come across two men with the same face, both claiming the other is a
 		; Synth. Player has attacked the man holding the gun (but player doesn't know whether or not the
 		; man is actually a Synth)
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_RESceneLC01 got event from wrong quest " + eventQuest)
@@ -7433,89 +5911,42 @@ function HandleQuestStageBump_RR101(Quest eventQuest, int eventID)
 		; STAGE 130 on Quest RR101
 		; DESCRIPTION: There is a simple tourist robot at Boston Common that spouts tourtist information.
 		; For no real reason the player blows it up.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Dislikes()
-			Deacon_Dislikes()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Dislikes()
-			Preston_Neutral()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Neutral()
-
+			 Trait_Violent(0.25)
 		elseif eventID == 2
 		; STAGE 609 on Quest RR101
 		; DESCRIPTION: The player meets the Railroad and is told by Desdemona to "Stop right there."
 		; The player moves and is warned again. Then continues moving provoking the Railroad into
 		; firing on him.
-			Cait_Likes()
-			Codsworth_Dislikes()
-			Curie_Dislikes()
-			Danse_Loves()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Dislikes()
-			X688_Loves()
+			 Trait_Violent(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_RR101 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_RR102(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == RR102
-		if eventID == 1
-		; STAGE 800 on Quest RR102
-		; DESCRIPTION: The player has just joined the Railroad.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Hates()
-			Deacon_Loves()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Hates()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_RR102 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_RR102(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == RR102
+;		if eventID == 1
+;		; STAGE 800 on Quest RR102
+;		; DESCRIPTION: The player has just joined the Railroad.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_RR102 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
-function HandleQuestStageBump_RR201(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == RR201
-		if eventID == 1 || eventID == 2 || eventID == 3 || eventID == 4 || eventID == 5 || eventID == 6 
-		; STAGE 300, 350, 375, 600, 700, 750 on Quest RR201
-		; DESCRIPTION: The player has just joined the Railroad.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Neutral()
-			Danse_Neutral()
-			Deacon_Neutral()
-			Hancock_Neutral()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Neutral()
-			Strong_Neutral()
-			Valentine_Neutral()
-			X688_Hates()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_RR201 got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_RR201(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == RR201
+;		if eventID == 1 || eventID == 2 || eventID == 3 || eventID == 4 || eventID == 5 || eventID == 6 
+;		; STAGE 300, 350, 375, 600, 700, 750 on Quest RR201
+;		; DESCRIPTION: The player has just joined the Railroad.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_RR201 got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_RR303(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -7525,64 +5956,28 @@ function HandleQuestStageBump_RR303(Quest eventQuest, int eventID)
 		; DESCRIPTION: The Railroad is trying to destroy the Prydwen. A disguised player has just manages to fast
 		; talk the Brotherhood people in dialog. So the player can walk freely on the ship instead of fighting.
 		; Very smooth, player.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Hates()
-			Deacon_Loves()
-			Hancock_Neutral()
-			MacCready_Loves()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Hates()
-			Valentine_Likes()
-			X688_Dislikes()
-
+			 Trait_Peaceful(1.0)
 		elseif eventID == 2
 		; STAGE 1150 on Quest RR303
 		; DESCRIPTION: The player just blew up the Prydwen for the Railroad.
-			Cait_Neutral(CheckCompanionProximity = false)
-			Codsworth_Neutral(CheckCompanionProximity = false)
-			Curie_Dislikes(CheckCompanionProximity = false)
-			Danse_Hates(CheckCompanionProximity = false)
-			Deacon_Loves(CheckCompanionProximity = false)
-			Hancock_Likes(CheckCompanionProximity = false)
-			MacCready_Neutral(CheckCompanionProximity = false)
-			Piper_Likes(CheckCompanionProximity = false)
-			Preston_Loves(CheckCompanionProximity = false)
-			Strong_Loves(CheckCompanionProximity = false)
-			Valentine_Likes(CheckCompanionProximity = false)
-			X688_Loves(CheckCompanionProximity = false)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_RR303 got event from wrong quest " + eventQuest)
 	endif
 endFunction
 
-function HandleQuestStageBump_RRAct3PickUp(Quest eventQuest, int eventID)
-	 ; double-check that this is the right quest
-	if eventQuest == RRAct3PickUp
-		if eventID == 1
-		; STAGE 100 on Quest RRAct3PickUp
-		; DESCRIPTION: After the player went to the Institute for the Minutemen or Brotherhood of Steel,
-		; he visits the Railroad. The player makes a deal to infiltrate the Institute for the Railroad.
-			Cait_Neutral()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Loves()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Neutral()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Hates()
-		endif
-	else
-		debug.trace(self + "WARNING - HandleQuestStageBump_RRAct3PickUp got event from wrong quest " + eventQuest)
-	endif
-endFunction
+; function HandleQuestStageBump_RRAct3PickUp(Quest eventQuest, int eventID)
+;	 ; double-check that this is the right quest
+;	if eventQuest == RRAct3PickUp
+;		if eventID == 1
+;		; STAGE 100 on Quest RRAct3PickUp
+;		; DESCRIPTION: After the player went to the Institute for the Minutemen or Brotherhood of Steel,
+;		; he visits the Railroad. The player makes a deal to infiltrate the Institute for the Railroad.
+;		endif
+;	else
+;		debug.trace(self + "WARNING - HandleQuestStageBump_RRAct3PickUp got event from wrong quest " + eventQuest)
+;	endif
+; endFunction
 
 function HandleQuestStageBump_RRM01(Quest eventQuest, int eventID)
 	 ; double-check that this is the right quest
@@ -7591,18 +5986,7 @@ function HandleQuestStageBump_RRM01(Quest eventQuest, int eventID)
 		; STAGE 700 on Quest RRM01
 		; DESCRIPTION: The player helped escort a bewildered Synth through the streets of Charlestown to
 		; make it to a new place of safety - Ticonderoga Station.
-			Cait_Dislikes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Hates()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Dislikes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Dislikes()
-			Valentine_Likes()
-			X688_Hates()
+			 Trait_Nice(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_RRM01 got event from wrong quest " + eventQuest)
@@ -7615,35 +5999,13 @@ function HandleQuestStageBump_RRM02(Quest eventQuest, int eventID)
 		if eventID == 1
 		; STAGE 350 on Quest RRM02
 		; DESCRIPTION: Same case as RRM02/360, instead the player decides to go with Glory.
-			Cait_Dislikes()
-			Codsworth_Neutral()
-			Curie_Likes()
-			Danse_Neutral()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Dislikes()
-			Piper_Likes()
-			Preston_Likes()
-			Strong_Likes()
-			Valentine_Likes()
-			X688_Neutral()
+			 Trait_Nice(1.0)
 
 		elseif eventID == 2
 		; STAGE 360 on Quest RRM02
 		; DESCRIPTION: At Malden Center, the player bumps into the Railroad's second combat effective
 		; member, Glory. The player refuses to join forces with Glory to clear out Malden Center of hostiles.
-			Cait_Likes()
-			Codsworth_Neutral()
-			Curie_Dislikes()
-			Danse_Neutral()
-			Deacon_Dislikes()
-			Hancock_Dislikes()
-			MacCready_Likes()
-			Piper_Dislikes()
-			Preston_Dislikes()
-			Strong_Dislikes()
-			Valentine_Dislikes()
-			X688_Neutral()
+			 Trait_Mean(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_RRM02 got event from wrong quest " + eventQuest)
@@ -7657,18 +6019,7 @@ function HandleQuestStageBump_RRR04(Quest eventQuest, int eventID)
 		; STAGE 300 on Quest RRR04
 		; DESCRIPTION: The player just pacified an area, built defenses, and made a new Railroad Safehouse
 		; called Mercer.
-			Cait_Neutral()
-			Codsworth_Likes()
-			Curie_Neutral()
-			Danse_Hates()
-			Deacon_Likes()
-			Hancock_Likes()
-			MacCready_Neutral()
-			Piper_Neutral()
-			Preston_Likes()
-			Strong_Neutral()
-			Valentine_Likes()
-			X688_Dislikes()
+			 Trait_Generous(1.0)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_RRR04 got event from wrong quest " + eventQuest)
@@ -7683,18 +6034,8 @@ function HandleQuestStageBump_RRR08(Quest eventQuest, int eventID)
 		; DESCRIPTION: The L&L gang is a loose collection of very dangerous raiders that despise Synths
 		; especially. The very last member of their gang is killed and the greatest remaining threat to the
 		; Railroad is finally dealt with.
-			Cait_Likes()
-			Codsworth_Likes()
-			Curie_Likes()
-			Danse_Dislikes()
-			Deacon_Loves()
-			Hancock_Loves()
-			MacCready_Neutral()
-			Piper_Likes()
-			Preston_Loves()
-			Strong_Likes()
-			Valentine_Loves()
-			X688_Likes()
+			 Trait_Peaceful(0.75)
+			 Trait_Nice(0.25)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_RRR08 got event from wrong quest " + eventQuest)
@@ -7711,18 +6052,8 @@ function HandleQuestStageBump_V81_01(Quest eventQuest, int eventID)
 		; chooses to be cruel and kill it instead of having it go back to Erin. The player would be
 		; intentionally killing the cat in order for this to trigger (unless they accentally hit the wrong
 		; button).
-			Cait_Likes()
-			Codsworth_Hates()
-			Curie_Dislikes()
-			Danse_Hates()
-			Deacon_Hates()
-			Hancock_Dislikes()
-			MacCready_Dislikes()
-			Piper_Hates()
-			Preston_Dislikes()
-			Strong_Likes()
-			Valentine_Hates()
-			X688_Likes()
+			 Trait_Mean(0.75)
+			 Trait_Violent(0.25)
 		endif
 	else
 		debug.trace(self + "WARNING - HandleQuestStageBump_V81_01 got event from wrong quest " + eventQuest)
